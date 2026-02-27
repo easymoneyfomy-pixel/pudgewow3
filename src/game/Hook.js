@@ -37,10 +37,14 @@ export class Hook {
 
     update(dt, map, entityManager) {
         if (this.owner.state === State.DEAD) {
-            // Если владелец умер - хук пропадает
+            // Owner died — release any hooked entity
             entityManager.remove(this);
             if (this.hookedEntity) {
-                this.hookedEntity.state = State.IDLE;
+                if (this.hookedEntity.onDropped) {
+                    this.hookedEntity.onDropped();
+                } else {
+                    this.hookedEntity.state = State.IDLE;
+                }
             }
             return;
         }
@@ -272,7 +276,13 @@ export class Hook {
                 if (this.hookedEntity) {
                     this.hookedEntity.x = this.owner.x + this.dirX * (this.owner.radius + this.hookedEntity.radius + 5);
                     this.hookedEntity.y = this.owner.y + this.dirY * (this.owner.radius + this.hookedEntity.radius + 5);
-                    this.hookedEntity.state = State.IDLE;
+
+                    // WC3: Mine is dropped and returns to normal armed behavior
+                    if (this.hookedEntity.onDropped) {
+                        this.hookedEntity.onDropped();
+                    } else {
+                        this.hookedEntity.state = State.IDLE;
+                    }
                 }
 
                 entityManager.remove(this);
