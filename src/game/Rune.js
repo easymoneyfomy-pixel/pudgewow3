@@ -1,0 +1,97 @@
+import { State } from '../engine/State.js';
+
+export class Rune {
+    constructor(x, y, type) {
+        this.id = 'rune_' + Math.random().toString(36).substr(2, 9);
+        this.type = 'RUNE';
+        this.x = x;
+        this.y = y;
+        this.runeType = type; // 'haste', 'dd', 'heal', 'illusion'
+        this.radius = 20;
+
+        // Visual properties based on type
+        switch (type) {
+            case 'haste': this.color = '#ff0000'; this.icon = '⚡'; break;
+            case 'dd': this.color = '#0000ff'; this.icon = '⚔️'; break;
+            case 'heal': this.color = '#00ff00'; this.icon = '💚'; break;
+            case 'illusion': this.color = '#ffff00'; this.icon = '👥'; break;
+            default: this.color = '#ffffff'; this.icon = '❓'; break;
+        }
+
+        this.state = State.IDLE;
+        this.lifeTime = 120; // 2 minutes before decaying if not picked up
+        this._entityManagerRef = null;
+    }
+
+    takeDamage(amount) {
+        // Runes can't be destroyed by damage, but could be hooked (we'll let them exist)
+    }
+
+    update(dt, map, entityManager) {
+        this._entityManagerRef = entityManager;
+        this.lifeTime -= dt;
+        if (this.lifeTime <= 0) {
+            entityManager.remove(this);
+            return;
+        }
+
+        // Check for player pickup
+        for (const entity of entityManager.entities) {
+            if (entity.type === 'CHARACTER' && entity.state !== State.DEAD) {
+                const edx = entity.x - this.x;
+                const edy = entity.y - this.y;
+                const edist = Math.sqrt(edx * edx + edy * edy);
+
+                if (edist < this.radius + (entity.radius || 16)) {
+                    this.applyEffect(entity);
+                    entityManager.remove(this);
+                    break;
+                }
+            }
+        }
+    }
+
+    applyEffect(character) {
+        // Apply the relevant buff to the character
+        switch (this.runeType) {
+            case 'haste':
+                character.hasteTimer = 30; // 30 sec of max speed
+                break;
+            case 'dd':
+                character.ddTimer = 45; // 45 sec of double damage
+                break;
+            case 'heal':
+                character.hp = Math.min(character.maxHp, character.hp + 100);
+                break;
+            case 'illusion':
+                // Simple version for now: doesn't physically spawn bots yet, just gives temp invuln
+                character.invulnerableTimer = 5;
+                break;
+        }
+    }
+
+    render(renderer) {
+        const ctx = renderer.ctx;
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // Glowing effect
+        const glowParams = Math.abs(Math.sin(Date.now() / 300)) * 10;
+        ctx.shadowBlur = 10 + glowParams;
+        ctx.shadowColor = this.color;
+
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius - 5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#fff';
+        ctx.font = '16px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(this.icon, 0, 0);
+
+        ctx.restore();
+    }
+}

@@ -191,8 +191,12 @@ export class Character {
 
         // ROT AOE damage
         if (this.rotActive && entityManager) {
-            // Self damage
-            this.takeDamage(this.rotSelfDamagePerSec * dt);
+            // Self damage (can deny)
+            const rotDamage = this.rotSelfDamagePerSec * dt;
+            if (this.hp - rotDamage <= 0 && this.state !== State.DEAD) {
+                this.deniedJustHappened = true; // WC3 Mechanic: Rot Deny
+            }
+            this.takeDamage(rotDamage);
 
             // Damage nearby enemies
             for (const entity of entityManager.entities) {
@@ -224,6 +228,14 @@ export class Character {
             }
         }
 
+        // Tick rune buffs
+        if (this.hasteTimer > 0) {
+            this.hasteTimer -= dt;
+        }
+        if (this.ddTimer > 0) {
+            this.ddTimer -= dt;
+        }
+
         if (this.state === State.HOOKED) {
             this.targetX = this.x;
             this.targetY = this.y;
@@ -236,7 +248,12 @@ export class Character {
             const dist = Math.sqrt(dx * dx + dy * dy);
 
             if (dist > 1) {
-                const actualSpeed = this.rotActive ? this.speed * this.rotSlowFactor : this.speed;
+                let actualSpeed = this.rotActive ? this.speed * this.rotSlowFactor : this.speed;
+                // WC3 Mechanic: Haste Rune makes you run very fast
+                if (this.hasteTimer > 0) {
+                    actualSpeed *= 1.8;
+                }
+
                 const moveAmt = actualSpeed * dt;
                 const dirX = dx / dist;
                 const dirY = dy / dist;

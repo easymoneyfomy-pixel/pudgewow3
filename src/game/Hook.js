@@ -193,6 +193,16 @@ export class Hook {
                                     totalHitDamage += Math.floor(this.speed * 0.1);
                                 }
 
+                                // WC3 Mechanic: Double Damage Rune
+                                if (this.owner.ddTimer > 0) {
+                                    totalHitDamage *= 2;
+                                }
+
+                                // WC3 Mechanic: Ally Deny via Hook
+                                if (isAlly && entity.hp - totalHitDamage <= 0 && entity.state !== State.DEAD) {
+                                    entity.deniedJustHappened = true;
+                                }
+
                                 entity.takeDamage(totalHitDamage);
 
                                 if (!isAlly) {

@@ -271,7 +271,7 @@ export class ServerGame {
 
         for (const entity of this.entityManager.entities) {
             if (entity instanceof Character) {
-                state.entities.push({
+                eData = {
                     type: 'CHARACTER',
                     id: entity.id,
                     x: entity.x,
@@ -296,21 +296,20 @@ export class ServerGame {
                     xpToLevel: entity.xpToLevel || 100,
                     burnTimer: entity.burnTimer || 0,
                     ruptureTimer: entity.ruptureTimer || 0,
-                    invulnerableTimer: entity.invulnerableTimer || 0,
-                    isHealing: entity.isHealing || false
-                });
+                    invulnerableTimer: entity.invulnerableTimer || 0
+                };
                 entity.headshotJustHappened = false; // Reset after sending
                 entity.deniedJustHappened = false; // Reset after sending
             } else if (entity instanceof Hook) {
-                state.entities.push({
+                eData = {
                     type: 'HOOK',
                     x: entity.x,
                     y: entity.y,
                     ownerId: entity.owner.id,
                     radius: entity.radius
-                });
+                };
             } else if (entity instanceof Barricade) {
-                state.entities.push({
+                eData = {
                     type: 'BARRICADE',
                     id: entity.id,
                     x: entity.x,
@@ -319,16 +318,30 @@ export class ServerGame {
                     hp: entity.hp,
                     maxHp: entity.maxHp,
                     state: entity.state
-                });
+                };
             } else if (entity.type === 'LANDMINE') {
-                state.entities.push({
-                    type: 'LANDMINE',
+                eData = {
                     id: entity.id,
+                    type: 'LANDMINE',
+                    team: entity.team,
                     x: entity.x,
                     y: entity.y,
-                    team: entity.team,
                     isArmed: entity.isArmed
-                });
+                };
+            } else if (entity.type === 'RUNE') {
+                eData = {
+                    id: entity.id,
+                    type: 'RUNE',
+                    x: entity.x,
+                    y: entity.y,
+                    runeType: entity.runeType,
+                    color: entity.color,
+                    icon: entity.icon
+                };
+            }
+
+            if (eData) {
+                state.entities.push(eData);
             }
         }
 

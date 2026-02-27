@@ -1,5 +1,6 @@
 import { State } from './State.js';
 import { GAME } from '../shared/GameConstants.js';
+import { Rune } from '../game/Rune.js';
 
 export class GameRules {
     constructor() {
@@ -10,10 +11,20 @@ export class GameRules {
         this.roundTimeLeft = GAME.ROUND_TIME;
         this.isGameOver = false;
         this.winner = null;
+
+        // Runes spawn every 2 minutes
+        this.runeSpawnTimer = 120;
     }
 
     update(dt, entityManager) {
         if (this.isGameOver) return;
+
+        // Tick Rune Spawn
+        this.runeSpawnTimer -= dt;
+        if (this.runeSpawnTimer <= 0) {
+            this.spawnRune(entityManager);
+            this.runeSpawnTimer = 120; // reset
+        }
 
         this.roundTimeLeft -= dt;
         if (this.roundTimeLeft <= 0) {
@@ -71,5 +82,22 @@ export class GameRules {
         } else {
             this.winner = 'Draw';
         }
+    }
+
+    spawnRune(entityManager) {
+        const types = ['haste', 'dd', 'heal', 'illusion'];
+        const type = types[Math.floor(Math.random() * types.length)];
+
+        // Spawn at random river pillar or center coordinate
+        const spawnPoints = [
+            { x: 11 * 64 + 32, y: 11 * 64 + 32 },
+            { x: 12 * 64 + 32, y: 12 * 64 + 32 },
+            { x: 11 * 64 + 32, y: 5 * 64 + 32 },
+            { x: 12 * 64 + 32, y: 18 * 64 + 32 }
+        ];
+        const pt = spawnPoints[Math.floor(Math.random() * spawnPoints.length)];
+
+        const rune = new Rune(pt.x, pt.y, type);
+        entityManager.add(rune);
     }
 }

@@ -153,6 +153,37 @@ export class MainScene {
                     mine.isArmed = eData.isArmed;
                     this.localEntities.push(mine);
                 }
+            } else if (eData.type === 'RUNE') {
+                this.localEntities.push({
+                    x: eData.x,
+                    y: eData.y,
+                    color: eData.color,
+                    icon: eData.icon,
+                    render: function (renderer) {
+                        const ctx = renderer.ctx;
+                        ctx.save();
+                        ctx.translate(this.x, this.y);
+
+                        // Glowing effect
+                        const glowParams = Math.abs(Math.sin(Date.now() / 300)) * 10;
+                        ctx.shadowBlur = 10 + glowParams;
+                        ctx.shadowColor = this.color;
+
+                        ctx.fillStyle = this.color;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, 15, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        ctx.shadowBlur = 0;
+                        ctx.fillStyle = '#fff';
+                        ctx.font = '16px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(this.icon, 0, 0);
+
+                        ctx.restore();
+                    }
+                });
             }
         }
 
