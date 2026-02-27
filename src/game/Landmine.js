@@ -17,6 +17,7 @@ export class Landmine {
         this.isArmed = false;
         this.hasExploded = false;
         this.state = State.IDLE;
+        this.isBeingHooked = false;
 
         // Needed so explode can remove itself from entityManager
         this._entityManagerRef = null;
@@ -48,17 +49,23 @@ export class Landmine {
             return;
         }
 
-        if (this.isArmed) {
-            // Check for enemies stepping on it
+        if (this.isArmed || this.isBeingHooked) {
+            // Check for entities to explode on
             for (const entity of entityManager.entities) {
-                if (entity.state !== State.DEAD && entity.takeDamage && entity.team !== this.team) {
-                    const edx = entity.x - this.x;
-                    const edy = entity.y - this.y;
-                    const edist = Math.sqrt(edx * edx + edy * edy);
+                // Ignore self, dead entities, and ensure it can take damage
+                if (entity !== this && entity.state !== State.DEAD && entity.takeDamage) {
+                    // Normal behavior: explode on enemies.
+                    // Hook behavior: explode on ANYONE (friend or foe) if being hooked.
+                    if (this.isBeingHooked || entity.team !== this.team) {
+                        const edx = entity.x - this.x;
+                        const edy = entity.y - this.y;
+                        const edist = Math.sqrt(edx * edx + edy * edy);
 
-                    if (edist < this.radius + (entity.radius || 16)) {
-                        this.explode(entityManager);
-                        break;
+                        // If it collides with a character radius
+                        if (edist < this.radius + (entity.radius || 16)) {
+                            this.explode(entityManager);
+                            break;
+                        }
                     }
                 }
             }
@@ -76,9 +83,8 @@ export class Landmine {
                 const edist = Math.sqrt(edx * edx + edy * edy);
 
                 if (edist < this.explosionRadius) {
-                    // Deal full damage to enemies, half damage to allies/self
-                    const dmg = entity.team === this.team ? this.damage / 2 : this.damage;
-                    entity.takeDamage(dmg);
+                    // Massive AOE damage to all nearby units (friend or foe)
+                    entity.takeDamage(this.damage);
                 }
             }
         }
