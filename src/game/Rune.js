@@ -70,28 +70,16 @@ export class Rune {
         }
     }
 
-    render(renderer) {
-        const ctx = renderer.ctx;
-        ctx.save();
-        ctx.translate(this.x, this.y);
-
-        // Glowing effect
-        const glowParams = Math.abs(Math.sin(Date.now() / 300)) * 10;
-        ctx.shadowBlur = 10 + glowParams;
-        ctx.shadowColor = this.color;
-
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(0, 0, this.radius - 5, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.shadowBlur = 0;
-        ctx.fillStyle = '#fff';
-        ctx.font = '16px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(this.icon, 0, 0);
-
-        ctx.restore();
+    /** Returns a plain-data snapshot for server→client broadcast. */
+    serialize() {
+        return {
+            id: this.id,
+            type: 'RUNE',
+            x: this.x,
+            y: this.y,
+            runeType: this.runeType,
+            color: this.color,
+            icon: this.icon,
+        };
     }
 }

@@ -35,39 +35,17 @@ export class Barricade {
         }
     }
 
-    render(renderer) {
-        if (this.state === State.DEAD) return;
-
-        const ctx = renderer.ctx;
-        ctx.save();
-        ctx.translate(this.x, this.y);
-
-        // Shadow
-        ctx.fillStyle = 'rgba(0,0,0,0.3)';
-        ctx.fillRect(-12, -12, 24, 24);
-
-        // Posts
-        ctx.fillStyle = '#666';
-        ctx.strokeStyle = '#222';
-        ctx.lineWidth = 1;
-        ctx.fillRect(-10, -10, 6, 20);
-        ctx.strokeRect(-10, -10, 6, 20);
-        ctx.fillRect(4, -10, 6, 20);
-        ctx.strokeRect(4, -10, 6, 20);
-
-        // Energy shield
-        const pulse = Math.sin(Date.now() / 150) * 0.3 + 0.5;
-        ctx.fillStyle = this.team === 'red' ? `rgba(255, 50, 50, ${pulse})` : `rgba(50, 50, 255, ${pulse})`;
-        ctx.fillRect(-6, -8, 12, 16);
-
-        // HP Bar
-        const hpRatio = this.hp / this.maxHp;
-        ctx.fillStyle = '#f00';
-        ctx.fillRect(-12, -16, 24, 3);
-        ctx.fillStyle = '#0f0';
-        ctx.fillRect(-12, -16, 24 * hpRatio, 3);
-        ctx.strokeRect(-12, -16, 24, 3);
-
-        ctx.restore();
+    /** Returns a plain-data snapshot for server→client broadcast. */
+    serialize() {
+        return {
+            type: 'BARRICADE',
+            id: this.id,
+            x: this.x,
+            y: this.y,
+            team: this.team,
+            hp: this.hp,
+            maxHp: this.maxHp,
+            state: this.state,
+        };
     }
 }

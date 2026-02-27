@@ -96,28 +96,15 @@ export class Landmine {
         this.state = State.DEAD;
     }
 
-    render(renderer) {
-        // Let's render it as a small barrel, maybe slightly transparent if armed (stealthy)
-        const ctx = renderer.ctx;
-        ctx.save();
-        ctx.translate(this.x, this.y);
-
-        ctx.globalAlpha = this.isArmed ? 0.3 : 1.0;
-
-        ctx.fillStyle = '#8B4513'; // Brown barrel
-        ctx.beginPath();
-        ctx.arc(0, 0, 10, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        ctx.fillStyle = '#333';
-        ctx.beginPath();
-        ctx.arc(0, 0, 4, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.restore();
+    /** Returns a plain-data snapshot for server→client broadcast. */
+    serialize() {
+        return {
+            id: this.id,
+            type: 'LANDMINE',
+            team: this.team,
+            x: this.x,
+            y: this.y,
+            isArmed: this.isArmed,
+        };
     }
 }

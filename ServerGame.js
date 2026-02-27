@@ -270,79 +270,15 @@ export class ServerGame {
         };
 
         for (const entity of this.entityManager.entities) {
-            if (entity instanceof Character) {
-                eData = {
-                    type: 'CHARACTER',
-                    id: entity.id,
-                    x: entity.x,
-                    y: entity.y,
-                    team: entity.team,
-                    hp: entity.hp,
-                    maxHp: entity.maxHp,
-                    state: entity.state,
-                    hookCooldown: entity.hookCooldown,
-                    maxHookCooldown: entity.maxHookCooldown,
-                    gold: entity.gold,
-                    hookDamage: entity.hookDamage,
-                    hookSpeed: entity.hookSpeed,
-                    hookMaxDist: entity.hookMaxDist,
-                    hookRadius: entity.hookRadius,
-                    isHeadshot: entity.headshotJustHappened,
-                    isDenied: entity.deniedJustHappened,
-                    rotActive: entity.rotActive,
-                    items: entity.items || [],
-                    level: entity.level || 1,
-                    xp: entity.xp || 0,
-                    xpToLevel: entity.xpToLevel || 100,
-                    burnTimer: entity.burnTimer || 0,
-                    ruptureTimer: entity.ruptureTimer || 0,
-                    invulnerableTimer: entity.invulnerableTimer || 0
-                };
-                entity.headshotJustHappened = false; // Reset after sending
-                entity.deniedJustHappened = false; // Reset after sending
-            } else if (entity instanceof Hook) {
-                eData = {
-                    type: 'HOOK',
-                    x: entity.x,
-                    y: entity.y,
-                    ownerId: entity.owner.id,
-                    radius: entity.radius
-                };
-            } else if (entity instanceof Barricade) {
-                eData = {
-                    type: 'BARRICADE',
-                    id: entity.id,
-                    x: entity.x,
-                    y: entity.y,
-                    team: entity.team,
-                    hp: entity.hp,
-                    maxHp: entity.maxHp,
-                    state: entity.state
-                };
-            } else if (entity.type === 'LANDMINE') {
-                eData = {
-                    id: entity.id,
-                    type: 'LANDMINE',
-                    team: entity.team,
-                    x: entity.x,
-                    y: entity.y,
-                    isArmed: entity.isArmed
-                };
-            } else if (entity.type === 'RUNE') {
-                eData = {
-                    id: entity.id,
-                    type: 'RUNE',
-                    x: entity.x,
-                    y: entity.y,
-                    runeType: entity.runeType,
-                    color: entity.color,
-                    icon: entity.icon
-                };
+            if (entity.serialize) {
+                state.entities.push(entity.serialize());
             }
+        }
 
-            if (eData) {
-                state.entities.push(eData);
-            }
+        // Reset one-frame flags on Characters after serializing them
+        for (const char of this.players.values()) {
+            char.headshotJustHappened = false;
+            char.deniedJustHappened = false;
         }
 
         this.roomManager.broadcastToRoom(this.roomId, state);

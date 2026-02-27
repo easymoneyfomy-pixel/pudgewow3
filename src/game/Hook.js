@@ -300,23 +300,14 @@ export class Hook {
         }
     }
 
-    render(renderer) {
-        const ctx = renderer.ctx;
-
-        // Chain
-        ctx.strokeStyle = '#888';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(this.owner.x, this.owner.y);
-        ctx.lineTo(this.x, this.y);
-        ctx.stroke();
-
-        // Hook head
-        ctx.fillStyle = '#ccc';
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, 8, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#000';
-        ctx.stroke();
+    /** Returns a plain-data snapshot for server→client broadcast. */
+    serialize() {
+        return {
+            type: 'HOOK',
+            x: this.x,
+            y: this.y,
+            ownerId: this.owner.id,
+            radius: this.radius,
+        };
     }
 }

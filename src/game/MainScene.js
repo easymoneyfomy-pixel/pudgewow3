@@ -1,15 +1,25 @@
 import { Camera } from '../engine/Camera.js';
 import { GameMap } from '../engine/GameMap.js';
 import { UIManager } from '../ui/UIManager.js';
-import { Character } from './Character.js';
-import { Hook } from './Hook.js';
-import { Barricade } from './Barricade.js';
-import { Landmine } from './Landmine.js';
 import { ParticleSystem } from '../engine/ParticleSystem.js';
 import { FloatingTextManager } from '../engine/FloatingText.js';
 import { KillFeed } from '../ui/KillFeed.js';
+import { EntityRenderer } from '../client/EntityRenderer.js';
 import { GAME } from '../shared/GameConstants.js';
 
+/**
+ * MainScene — client-side game scene.
+ *
+ * Responsibilities:
+ *  - Receive plain-data server state snapshots via `onServerState(data)`.
+ *  - Store entity state as plain data objects (no class instances needed).
+ *  - Translate player input into network messages.
+ *  - Render the world via Camera + EntityRenderer + UIManager.
+ *
+ * Entity class files (Character, Hook, etc.) are NOT imported here — they
+ * run only on the server.  The client works exclusively with the serialized
+ * eData objects that arrive over the network.
+ */
 export class MainScene {
     constructor(game) {
         this.game = game;
@@ -18,204 +28,101 @@ export class MainScene {
         this.camera = new Camera(0, 0, 1);
         this.ui = new UIManager(game);
 
-        this.serverState = null;
-        this.localEntities = [];
-        this.localPlayer = null;
-        this.enemies = []; // All enemy characters (for 5v5)
+        /** @type {object[]} — plain eData objects from the last server tick */
+        this.entities = [];
 
+        /** @type {object|null} — eData of the local player character */
+        this.localPlayer = null;
+
+        /** @type {object[]} — eData objects of enemy characters */
+        this.enemies = [];
+
+        /** Build a fast owner-lookup for hooks: ownerId → character eData */
+        this.characterMap = new Map();
+
+        this.serverState = null;
         this.particles = new ParticleSystem();
         this.floatingTexts = new FloatingTextManager();
         this.killFeed = new KillFeed();
 
-        // Track previous states
-        this._prevAliveStates = new Map();
+        // One-frame tracking for camera shake and kill feed
         this._prevHp = new Map();
+        this._prevAliveStates = new Map();
         this._firstBloodDone = false;
     }
 
     init() { }
     destroy() { }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // SERVER STATE INGESTION
+    // ─────────────────────────────────────────────────────────────────────────
+
     onServerState(data) {
         this.serverState = data;
 
-        this.localEntities = [];
+        this.entities = [];
         this.localPlayer = null;
         this.enemies = [];
+        this.characterMap.clear();
 
+        const myId = this.game.network.playerId;
         const myTeam = this.game.network.team;
 
+        // ── First pass: collect all eData objects ──
         for (const eData of data.entities) {
+            this.entities.push(eData);
+
             if (eData.type === 'CHARACTER') {
-                const char = new Character(eData.x, eData.y, eData.team);
-                char.id = eData.id;
-                char.hp = eData.hp;
-                char.maxHp = eData.maxHp;
-                char.state = eData.state;
-                char.hookCooldown = eData.hookCooldown;
-                char.maxHookCooldown = eData.maxHookCooldown;
-                char.gold = eData.gold;
-                char.hookDamage = eData.hookDamage;
-                char.hookSpeed = eData.hookSpeed;
-                char.hookMaxDist = eData.hookMaxDist;
-                char.hookRadius = eData.hookRadius;
-                char.isHeadshot = eData.isHeadshot;
-                char.rotActive = eData.rotActive;
-                char.items = eData.items || [];
-                char.level = eData.level || 1;
-                char.xp = eData.xp || 0;
-                char.xpToLevel = eData.xpToLevel || 100;
-                char.burnTimer = eData.burnTimer || 0;
-                char.ruptureTimer = eData.ruptureTimer || 0;
-                char.invulnerableTimer = eData.invulnerableTimer || 0;
-                char.isHealing = eData.isHealing || false;
+                this.characterMap.set(eData.id, eData);
 
-                this.localEntities.push(char);
-
-                // Match local player by strictly checking ID
-                if (eData.id === this.game.network.playerId) {
-                    // Screen shake: compare HP to previous frame
+                if (eData.id === myId) {
+                    // Camera shake on damage
                     const prevHp = this._prevHp.get(eData.id);
                     if (prevHp !== undefined && eData.hp < prevHp) {
                         this.camera.shake(8);
                     }
-                    this.localPlayer = char;
                     this._prevHp.set(eData.id, eData.hp);
-                } else if (char.team !== myTeam) {
-                    this.enemies.push(char);
+                    this.localPlayer = eData;
+                } else if (eData.team !== myTeam) {
+                    this.enemies.push(eData);
                 }
-            } else if (eData.type === 'HOOK') {
-                const owner = this.localEntities.find(c => c.id === eData.ownerId);
-                if (owner) {
-                    const hook = new Hook(owner, eData.x, eData.y);
-                    hook.x = eData.x;
-                    hook.y = eData.y;
-                    hook.radius = eData.radius;
-
-                    // Top-down hook rendering
-                    hook.render = function (renderer) {
-                        const ctx = renderer.ctx;
-                        const ox = this.owner.x;
-                        const oy = this.owner.y;
-                        const hx = this.x;
-                        const hy = this.y;
-
-                        // Chain
-                        ctx.strokeStyle = '#aaaaaa';
-                        ctx.lineWidth = 3;
-                        ctx.setLineDash([8, 6]);
-                        ctx.beginPath();
-                        ctx.moveTo(ox, oy);
-                        ctx.lineTo(hx, hy);
-                        ctx.stroke();
-                        ctx.setLineDash([]);
-
-                        // Hook blade
-                        ctx.fillStyle = '#666';
-                        ctx.strokeStyle = '#222';
-                        ctx.lineWidth = 2;
-
-                        const angle = Math.atan2(hy - oy, hx - ox);
-
-                        ctx.save();
-                        ctx.translate(hx, hy);
-                        ctx.rotate(angle);
-
-                        ctx.beginPath();
-                        ctx.moveTo(0, 0);
-                        ctx.lineTo(15, -10);
-                        ctx.lineTo(25, -5);
-                        ctx.lineTo(15, 0);
-                        ctx.lineTo(25, 10);
-                        ctx.lineTo(15, 5);
-                        ctx.lineTo(0, 10);
-                        ctx.closePath();
-                        ctx.fill();
-                        ctx.stroke();
-
-                        ctx.restore();
-                    };
-
-                    this.localEntities.push(hook);
-                }
-            } else if (eData.type === 'BARRICADE') {
-                const barricade = new Barricade(eData.x, eData.y, eData.team);
-                barricade.id = eData.id;
-                barricade.hp = eData.hp;
-                barricade.maxHp = eData.maxHp;
-                barricade.state = eData.state;
-                this.localEntities.push(barricade);
-            } else if (eData.type === 'LANDMINE') {
-                // WC3 Techies mines are invisible to enemies, only render for allies
-                if (eData.team === myTeam) {
-                    const mine = new Landmine(eData.x, eData.y, eData.team);
-                    mine.id = eData.id;
-                    mine.isArmed = eData.isArmed;
-                    this.localEntities.push(mine);
-                }
-            } else if (eData.type === 'RUNE') {
-                this.localEntities.push({
-                    x: eData.x,
-                    y: eData.y,
-                    color: eData.color,
-                    icon: eData.icon,
-                    render: function (renderer) {
-                        const ctx = renderer.ctx;
-                        ctx.save();
-                        ctx.translate(this.x, this.y);
-
-                        // Glowing effect
-                        const glowParams = Math.abs(Math.sin(Date.now() / 300)) * 10;
-                        ctx.shadowBlur = 10 + glowParams;
-                        ctx.shadowColor = this.color;
-
-                        ctx.fillStyle = this.color;
-                        ctx.beginPath();
-                        ctx.arc(0, 0, 15, 0, Math.PI * 2);
-                        ctx.fill();
-
-                        ctx.shadowBlur = 0;
-                        ctx.fillStyle = '#fff';
-                        ctx.font = '16px Arial';
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillText(this.icon, 0, 0);
-
-                        ctx.restore();
-                    }
-                });
             }
         }
 
-        // Floating text tracking
-        this.floatingTexts.trackEntities(this.localEntities, this.particles);
-
-        // Kill feed tracking
+        // ── Kill-feed tracking (second pass over characters only) ──
         for (const eData of data.entities) {
-            if (eData.type === 'CHARACTER') {
-                const wasAlive = this._prevAliveStates.get(eData.id);
-                const isDead = eData.state === 'dead';
+            if (eData.type !== 'CHARACTER') continue;
 
-                if (wasAlive && isDead) {
-                    const victimTeam = eData.team;
-                    const killerTeam = victimTeam === 'red' ? 'blue' : 'red';
+            const wasAlive = this._prevAliveStates.get(eData.id);
+            const isDead = eData.state === 'dead';
 
-                    if (eData.isDenied) {
-                        this.killFeed.addDeny(eData.team, victimTeam);
-                    } else if (!this._firstBloodDone) {
-                        this.killFeed.addFirstBlood(killerTeam);
-                        this._firstBloodDone = true;
-                    } else if (eData.isHeadshot) {
-                        this.killFeed.addKill(killerTeam, victimTeam, true);
-                    } else {
-                        this.killFeed.addKill(killerTeam, victimTeam);
-                    }
+            if (wasAlive && isDead) {
+                const victimTeam = eData.team;
+                const killerTeam = victimTeam === 'red' ? 'blue' : 'red';
+
+                if (eData.isDenied) {
+                    this.killFeed.addDeny(eData.team, victimTeam);
+                } else if (!this._firstBloodDone) {
+                    this.killFeed.addFirstBlood(killerTeam);
+                    this._firstBloodDone = true;
+                } else if (eData.isHeadshot) {
+                    this.killFeed.addKill(killerTeam, victimTeam, true);
+                } else {
+                    this.killFeed.addKill(killerTeam, victimTeam);
                 }
-
-                this._prevAliveStates.set(eData.id, !isDead);
             }
+
+            this._prevAliveStates.set(eData.id, !isDead);
         }
+
+        // Floating text system tracks entity positions and emits damage/regen numbers
+        this.floatingTexts.trackEntities(this.entities, this.particles);
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // UPDATE (input & local systems)
+    // ─────────────────────────────────────────────────────────────────────────
 
     update(dt) {
         if (this.serverState && this.serverState.rules.isGameOver) {
@@ -229,55 +136,46 @@ export class MainScene {
         const cx = this.game.canvas.width / 2;
         const cy = this.game.canvas.height / 2;
 
-        // Top-down mouse-to-world
+        // Convert screen coords to world coords
         const worldX = mousePos.x - cx + this.camera.x;
         const worldY = mousePos.y - cy + this.camera.y;
 
-        // ============================================
+        // ============================================================
         // WC3 PUDGE WARS CONTROLS
-        // Left-click  = Hook (throw toward cursor)
-        // Right-click  = Move (walk to cursor)
-        // Q            = Hook (alternative)
-        // W            = Toggle Rot
-        // E            = Barricade
-        // B            = Toggle Shop
+        // Right-click  = Move     |  Left-click = Hook
+        // Q            = Hook     |  W          = Toggle Rot
+        // E            = Barricade|  B          = Toggle Shop
         // 1-4          = Stat Upgrades
         // Z,X,C,V,D,F  = Active Items
-        // ============================================
+        // ============================================================
 
-        // Move (right-click — WC3 standard)
         if (this.game.input.isMouseButtonPressed(2)) {
             this.game.network.sendInput({ type: 'MOVE', x: worldX, y: worldY });
         }
 
-        // Left-click: Hook (WC3 Pudge Wars: left-click = hook)
-        // Shop buying is handled by DOM click events in UIManager
         if (this.game.input.isMouseButtonPressed(0) && !this.ui.shopOpen) {
             this.game.network.sendInput({ type: 'HOOK', x: worldX, y: worldY });
         }
 
-        // Hook alternative (Q key — for accessibility)
         if (this.game.input.isKeyPressed('KeyQ')) {
             this.game.network.sendInput({ type: 'HOOK', x: worldX, y: worldY });
         }
 
-        // Rot Toggle (W)
         if (this.game.input.isKeyPressed('KeyW')) {
             this.game.network.sendInput({ type: 'ROT' });
         }
 
-        // Barricade (E)
         if (this.game.input.isKeyPressed('KeyE')) {
             this.game.network.sendInput({ type: 'BARRICADE' });
         }
 
-        // Shop Upgrades (1-4)
+        // Stat upgrades (1-4)
         if (this.game.input.isKeyPressed('Digit1')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'DAMAGE' });
         if (this.game.input.isKeyPressed('Digit2')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'SPEED' });
         if (this.game.input.isKeyPressed('Digit3')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'DISTANCE' });
         if (this.game.input.isKeyPressed('Digit4')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'RADIUS' });
 
-        // Item Usage (Z, X, C, V, D, F)
+        // Active items (Z,X,C,V,D,F → slots 0-5)
         const itemKeys = ['KeyZ', 'KeyX', 'KeyC', 'KeyV', 'KeyD', 'KeyF'];
         for (let i = 0; i < 6; i++) {
             if (this.game.input.isKeyPressed(itemKeys[i])) {
@@ -285,36 +183,16 @@ export class MainScene {
             }
         }
 
-        // Shop toggle (B key)
-        let nearShop = false;
-        if (this.localPlayer) {
-            const tx = Math.floor(this.localPlayer.x / GAME.TILE_SIZE);
-            const ty = Math.floor(this.localPlayer.y / GAME.TILE_SIZE);
-            for (let dx = -2; dx <= 2; dx++) {
-                for (let dy = -2; dy <= 2; dy++) {
-                    const cx = tx + dx;
-                    const cy = ty + dy;
-                    if (cx >= 0 && cx < this.map.width && cy >= 0 && cy < this.map.height) {
-                        if (this.map.grid[cx][cy].type === 'shop') nearShop = true;
-                    }
-                }
-            }
-        }
-
+        // Shop proximity & toggle (B)
+        const nearShop = this._isNearShop();
         if (this.game.input.isKeyPressed('KeyB')) {
-            if (nearShop) {
-                this.ui.shopOpen = !this.ui.shopOpen;
-            } else {
-                this.ui.shopOpen = false;
-            }
+            this.ui.shopOpen = nearShop ? !this.ui.shopOpen : false;
         }
-
-        // Auto close shop if walking away
         if (this.ui.shopOpen && !nearShop) {
             this.ui.shopOpen = false;
         }
 
-        // Camera follow
+        // Camera follow local player
         if (this.localPlayer) {
             this.camera.x += (this.localPlayer.x - this.camera.x) * 10 * dt;
             this.camera.y += (this.localPlayer.y - this.camera.y) * 10 * dt;
@@ -326,38 +204,64 @@ export class MainScene {
         this.camera.update(dt);
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // RENDER
+    // ─────────────────────────────────────────────────────────────────────────
+
     render(renderer) {
         this.camera.apply(renderer);
 
         this.map.render(renderer, this.game.deltaTime);
 
-        // Render entities sorted by Y
-        const sorted = [...this.localEntities].sort((a, b) => a.y - b.y);
-        for (const entity of sorted) {
-            if (entity.render) {
-                entity.render(renderer);
-            }
+        // Sort entities by Y for painter's-algorithm depth ordering
+        const sorted = [...this.entities].sort((a, b) => a.y - b.y);
+
+        // Only allies (and self) see their mines — filter here client-side
+        const myTeam = this.game.network.team;
+
+        for (const eData of sorted) {
+            if (eData.type === 'LANDMINE' && eData.team !== myTeam) continue; // WC3: stealth mines
+            EntityRenderer.draw(renderer, eData, this.characterMap);
         }
 
         this.particles.render(renderer);
         this.floatingTexts.render(renderer);
 
-        // Release camera BEFORE fog of war (fog must be in screen coords)
+        // Fog of War — must be drawn in screen space AFTER camera release
         this.camera.release(renderer);
 
-        // Fog of War — drawn in screen space after camera release
         if (this.localPlayer) {
-            const cx = this.game.canvas.width / 2;
-            const cy = this.game.canvas.height / 2;
-            renderer.drawFogOfWar(cx, cy, 450);
+            const scx = this.game.canvas.width / 2;
+            const scy = this.game.canvas.height / 2;
+            renderer.drawFogOfWar(scx, scy, 450);
         }
 
-        // UI (screen space)
+        // HUD / UI is always in screen space
         if (this.serverState && this.localPlayer) {
             this.ui.render(renderer.ctx, this.serverState.rules, this.localPlayer, this.enemies[0]);
         }
 
-        // Kill Feed (always on top)
         this.killFeed.render(renderer.ctx, this.game.canvas.width);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // HELPERS
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /** Returns true if the local player is within 2 tiles of a shop tile. */
+    _isNearShop() {
+        if (!this.localPlayer) return false;
+        const tx = Math.floor(this.localPlayer.x / GAME.TILE_SIZE);
+        const ty = Math.floor(this.localPlayer.y / GAME.TILE_SIZE);
+        for (let dx = -2; dx <= 2; dx++) {
+            for (let dy = -2; dy <= 2; dy++) {
+                const cx = tx + dx;
+                const cy = ty + dy;
+                if (cx >= 0 && cx < this.map.width && cy >= 0 && cy < this.map.height) {
+                    if (this.map.grid[cx][cy].type === 'shop') return true;
+                }
+            }
+        }
+        return false;
     }
 }

@@ -291,143 +291,35 @@ export class Character {
         }
     }
 
-    render(renderer) {
-        if (this.state === State.DEAD) return;
-
-        const ctx = renderer.ctx;
-        const sx = this.x;
-        const sy = this.y;
-
-        ctx.save();
-        ctx.translate(sx, sy);
-
-        // Rot AOE visual (green toxic cloud, top-down circle)
-        if (this.rotActive) {
-            const rotPulse = Math.sin(Date.now() / 200) * 0.15 + 0.25;
-            ctx.fillStyle = `rgba(0, 180, 0, ${rotPulse})`;
-            ctx.beginPath();
-            ctx.arc(0, 0, 60, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        // WC3 Selection circle (team color)
-        ctx.strokeStyle = this.team === 'red' ? 'rgba(255,50,50,0.7)' : 'rgba(50,50,255,0.7)';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(0, 0, 22, 0, Math.PI * 2);
-        ctx.stroke();
-
-        // Shadow
-        ctx.fillStyle = 'rgba(0,0,0,0.3)';
-        ctx.beginPath();
-        ctx.arc(0, 0, 18, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Body (top-down circle with team color)
-        ctx.fillStyle = this.team === 'red' ? '#993333' : '#333399';
-        ctx.beginPath();
-        ctx.arc(0, 0, 16, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-
-        // Inner body detail (flesh color for Pudge)
-        ctx.fillStyle = '#886655';
-        ctx.beginPath();
-        ctx.arc(0, 0, 8, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Head (small darker circle on top)
-        ctx.fillStyle = '#664444';
-        ctx.beginPath();
-        ctx.arc(0, -6, 6, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#333';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        // Arms/Shoulders
-        ctx.fillStyle = this.team === 'red' ? '#884444' : '#444488';
-        ctx.fillRect(-18, -4, 8, 8);
-        ctx.fillRect(10, -4, 8, 8);
-
-        // Cleaver in right hand
-        ctx.save();
-        ctx.translate(16, -3);
-        ctx.rotate(-0.5);
-        ctx.fillStyle = '#aaa';
-        ctx.strokeStyle = '#555';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(4, -12);
-        ctx.lineTo(12, -10);
-        ctx.lineTo(10, 2);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = '#4a2c15';
-        ctx.fillRect(-1, 0, 3, 8);
-        ctx.restore();
-
-        // Healing visual
-        if (this.isHealing) {
-            const hPulse = Math.sin(Date.now() / 150) * 0.2 + 0.5;
-            ctx.fillStyle = `rgba(0, 255, 100, ${hPulse})`;
-            ctx.font = 'bold 14px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText('+', Math.sin(Date.now() / 200) * 6, -18);
-        }
-
-        // Invulnerability Shield
-        if (this.invulnerableTimer > 0) {
-            const sp = Math.sin(Date.now() / 100) * 0.1 + 0.35;
-            ctx.strokeStyle = `rgba(100, 200, 255, ${sp + 0.3})`;
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(0, 0, 20, 0, Math.PI * 2);
-            ctx.stroke();
-        }
-
-        ctx.restore();
-
-        // === HP Bar above character ===
-        const hpBarW = 40;
-        const hpBarH = 5;
-        const hpBarX = sx - hpBarW / 2;
-        const hpBarY = sy - 28;
-
-        ctx.fillStyle = '#330000';
-        ctx.fillRect(hpBarX, hpBarY, hpBarW, hpBarH);
-
-        const hpRatio = Math.max(0, this.hp / this.maxHp);
-        const hpColor = hpRatio > 0.5 ? '#00cc00' : hpRatio > 0.25 ? '#cccc00' : '#cc0000';
-        ctx.fillStyle = hpColor;
-        ctx.fillRect(hpBarX, hpBarY, hpBarW * hpRatio, hpBarH);
-
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(hpBarX, hpBarY, hpBarW, hpBarH);
-
-        // Level badge
-        ctx.fillStyle = '#ffd700';
-        ctx.font = 'bold 9px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(`Lv.${this.level}`, sx, hpBarY - 2);
-
-        // Burn indicator
-        if (this.burnTimer && this.burnTimer > 0) {
-            ctx.fillStyle = '#ff4400';
-            ctx.font = '9px Arial';
-            ctx.fillText('🔥', sx + 24, hpBarY + 4);
-        }
-
-        // Rupture indicator
-        if (this.ruptureTimer && this.ruptureTimer > 0) {
-            ctx.fillStyle = '#cc0000';
-            ctx.font = '9px Arial';
-            ctx.fillText('🩸', sx - 24, hpBarY + 4);
-        }
+    /** Returns a plain-data snapshot for server→client broadcast and client-side reconstruction. */
+    serialize() {
+        return {
+            type: 'CHARACTER',
+            id: this.id,
+            x: this.x,
+            y: this.y,
+            team: this.team,
+            hp: this.hp,
+            maxHp: this.maxHp,
+            state: this.state,
+            hookCooldown: this.hookCooldown,
+            maxHookCooldown: this.maxHookCooldown,
+            gold: this.gold,
+            hookDamage: this.hookDamage,
+            hookSpeed: this.hookSpeed,
+            hookMaxDist: this.hookMaxDist,
+            hookRadius: this.hookRadius,
+            isHeadshot: this.headshotJustHappened,
+            isDenied: this.deniedJustHappened,
+            rotActive: this.rotActive,
+            items: this.items || [],
+            level: this.level || 1,
+            xp: this.xp || 0,
+            xpToLevel: this.xpToLevel || 100,
+            burnTimer: this.burnTimer || 0,
+            ruptureTimer: this.ruptureTimer || 0,
+            invulnerableTimer: this.invulnerableTimer || 0,
+            isHealing: this.isHealing || false,
+        };
     }
 }
