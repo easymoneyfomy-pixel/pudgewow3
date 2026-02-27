@@ -264,7 +264,8 @@ export class Hook {
 
                 if (rdist <= moveAmt) {
                     // Хук вернулся (или мы притянулись)
-                    this.owner.state = State.IDLE; // Владелец может двигаться дальше
+                    this.owner.state = State.IDLE;
+                    this.owner.isPaused = false; // FINALLY RELEASE LOCK
 
                     if (this.isGrappling) {
                         // Owner arrived at the grapple point
@@ -319,6 +320,8 @@ export class Hook {
             x: this.x,
             y: this.y,
             ownerId: this.owner.id,
+            ownerX: this.owner.x,
+            ownerY: this.owner.y,
             radius: this.radius,
         };
     }

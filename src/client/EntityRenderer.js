@@ -156,44 +156,53 @@ export class EntityRenderer {
      */
     static drawHook(renderer, hook) {
         const ctx = renderer.ctx;
-        const { x: hx, y: hy, ownerX: ox, ownerY: oy } = hook;
+        let { x: hx, y: hy, ownerX: ox, ownerY: oy } = hook;
 
-        // Draw Chain Segments (WC3 style)
+        // Fallback if owner position is missing (should not happen with new serialization)
+        if (ox === undefined || oy === undefined) {
+            ox = hx;
+            oy = hy;
+        }
+
         const dx = hx - ox;
         const dy = hy - oy;
         const totalDist = Math.sqrt(dx * dx + dy * dy);
-        const segmentDist = 15; // Distance between links
-        const linkCount = Math.floor(totalDist / segmentDist);
-        const linkAngle = Math.atan2(dy, dx);
 
-        ctx.fillStyle = '#999';
-        ctx.strokeStyle = '#222';
-        ctx.lineWidth = 1;
+        // 1. Draw Chain Segments (WC3 style)
+        if (totalDist > 5) {
+            const segmentDist = 12; // Tighter spacing for better chain feel
+            const linkCount = Math.floor(totalDist / segmentDist);
+            const linkAngle = Math.atan2(dy, dx);
 
-        for (let i = 0; i <= linkCount; i++) {
-            const t = i / linkCount;
-            const lx = ox + dx * t;
-            const ly = oy + dy * t;
+            ctx.fillStyle = '#999';
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
 
-            ctx.save();
-            ctx.translate(lx, ly);
-            ctx.rotate(linkAngle);
+            for (let i = 0; i < linkCount; i++) {
+                const t = i / linkCount;
+                const lx = ox + dx * t;
+                const ly = oy + dy * t;
 
-            // Draw a small chain "link" or bone
-            ctx.beginPath();
-            ctx.roundRect(-4, -2, 8, 4, 2);
-            ctx.fill();
-            ctx.stroke();
+                ctx.save();
+                ctx.translate(lx, ly);
+                ctx.rotate(linkAngle);
 
-            ctx.restore();
+                // Draw a more "meaty" bone-like link
+                ctx.beginPath();
+                ctx.roundRect(-6, -3, 12, 6, 3);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.restore();
+            }
         }
 
-        // Hook blade
-        ctx.fillStyle = '#666';
+        // 2. Hook blade (The Head)
+        ctx.fillStyle = '#777';
         ctx.strokeStyle = '#222';
         ctx.lineWidth = 2;
 
-        const angle = Math.atan2(hy - oy, hx - ox);
+        const angle = Math.atan2(dy, dx);
 
         ctx.save();
         ctx.translate(hx, hy);
@@ -201,12 +210,12 @@ export class EntityRenderer {
 
         ctx.beginPath();
         ctx.moveTo(0, 0);
-        ctx.lineTo(15, -10);
-        ctx.lineTo(25, -5);
-        ctx.lineTo(15, 0);
-        ctx.lineTo(25, 10);
-        ctx.lineTo(15, 5);
-        ctx.lineTo(0, 10);
+        ctx.lineTo(15, -12);
+        ctx.lineTo(28, -6);
+        ctx.lineTo(18, 0);
+        ctx.lineTo(28, 6);
+        ctx.lineTo(15, 12);
+        ctx.lineTo(0, 5);
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
