@@ -27,6 +27,13 @@ export class EntityManager {
             }
         }
 
+        // Phase 17: Resolve Character-to-Character collisions
+        for (const entity of this.entities) {
+            if (entity.type === 'CHARACTER' && entity.handleCharacterCollisions) {
+                entity.handleCharacterCollisions(this);
+            }
+        }
+
         // Удаляем мертвые/уничтоженные
         if (this.entitiesToRemove.size > 0) {
             let keepCount = 0;

@@ -175,9 +175,22 @@ export class Hook {
 
         entity.takeDamage(damage, this);
 
+        // Phase 17: Apply Status Effects based on caller's items
         if (!isAlly) {
+            for (const item of this.owner.items || []) {
+                if (item.id === 'fire_hook' || item.effect === 'burn') {
+                    entity.burnTimer = 3; // Burn for 3 seconds
+                }
+                if (item.id === 'claws' || item.effect === 'rupture') {
+                    entity.ruptureTimer = 5; // Rupture for 5 seconds
+                }
+                if (item.id === 'lifesteal' || item.effect === 'lifesteal') {
+                    const heal = damage * 0.4; // 40% lifesteal
+                    this.owner.hp = Math.min(this.owner.maxHp, this.owner.hp + heal);
+                }
+            }
+
             this.owner.gold += GAME.GOLD_ON_HIT;
-            // Removed XP on hit: Only on kill now
         }
     }
 

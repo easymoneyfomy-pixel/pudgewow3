@@ -77,13 +77,10 @@ export class Character {
         this.isHealing = false;
         this.shieldRadius = 25;
 
-        // Barricade ability — REMOVED (replaced by Flesh Heap passive)
-
         // Passive HP regen
         this.hpRegen = GAME.CHAR_HP_REGEN;
 
         // === FLESH HEAP (WC3 Pudge Wars Passive) ===
-        // Each kill permanently increases max HP by FLESH_HEAP_HP_PER_KILL
         this.fleshHeapStacks = 0;
         this.fleshHeapHpPerStack = GAME.FLESH_HEAP_HP;
 
@@ -97,13 +94,17 @@ export class Character {
         this.ddTimer = 0;
         this.lastAttacker = null;
 
+        // Phase 17 Status effects
+        this.burnTimer = 0;
+        this.ruptureTimer = 0;
+
         // Active Items
         this.salveTimer = 0;
 
         // WC3 Hook Lock
         this.isPaused = false;
 
-        // Ensure stats are correct after all properties (level, items, etc.) are initialized
+        // Ensure stats are correct after all properties are initialized
         this.recalculateStats();
     }
 
@@ -121,19 +122,14 @@ export class Character {
     }
 
     gainFleshHeap() {
-        // Flesh Heap: killed an enemy — permanently gain stacks
         this.fleshHeapStacks++;
         this.recalculateStats();
-        // Restore amount immediately
         this.hp = Math.min(this.hp + this.fleshHeapHpPerStack, this.maxHp);
     }
 
     castHook(targetX, targetY, entityManager) {
         if (this.state !== State.DEAD && this.state !== State.HOOKED && this.hookCooldown <= 0) {
-            // Disabled: Lock movements during forward hook (per user request)
-            // this.isPaused = true;
             this.hookCooldown = this.maxHookCooldown;
-
             const hook = new Hook(this, targetX, targetY);
             entityManager.add(hook);
         }
@@ -142,11 +138,9 @@ export class Character {
     takeDamage(amount, attacker = null) {
         if (this.state === State.DEAD || this.invulnerableTimer > 0) return;
 
-        // Taking damage breaks Healing Salve effect
         this.salveTimer = 0;
 
         if (attacker && attacker !== this) {
-            // attribution fix: if attacker is a hook, credit the owner
             this.lastAttacker = attacker.owner || attacker;
         }
 
@@ -156,7 +150,6 @@ export class Character {
             this.die();
         }
     }
-
 
     gainXp(amount) {
         this.xp += amount;
@@ -170,51 +163,32 @@ export class Character {
         this.level++;
         this.xpToLevel = Math.floor(this.xpToLevel * 1.5);
         this.recalculateStats();
-        // Fully restore HP on level up
         this.hp = this.maxHp;
     }
 
     die() {
         this.state = State.DEAD;
         this.respawnTimer = this.respawnDelay;
+        this.rotActive = false;
     }
 
     respawn() {
-        // 1. Re-calculate stats first to ensure maxHp is current
         this.recalculateStats();
-
-        // 2. Set HP to correctly calculated maxHp
         this.hp = this.maxHp;
-
         this.state = State.IDLE;
         this.x = this.spawnX;
         this.y = this.spawnY;
         this.targetX = this.spawnX;
         this.targetY = this.spawnY;
-        this.isDeathProcessed = false; // Phase 15 reset
+        this.isDeathProcessed = false;
 
-        // Reset per-life flags
-        this.killedByMine = false;
         this.burnTimer = 0;
         this.ruptureTimer = 0;
-
-        // 3 sec of invulnerability after respawn
-        this.invulnerableTimer = GAME.RESPAWN_DELAY; // Use respawn delay for post-spawn protection too
+        this.invulnerableTimer = GAME.RESPAWN_DELAY;
     }
 
     update(dt, map, entityManager) {
-        // Обновляем кулдауны
-        if (this.hookCooldown > 0) {
-            this.hookCooldown -= dt;
-        }
-
-        // Tick invulnerability
-        if (this.invulnerableTimer > 0) {
-            this.invulnerableTimer -= dt;
-        }
-
         if (this.state === State.DEAD) {
-            this.rotActive = false;
             this.respawnTimer -= dt;
             if (this.respawnTimer <= 0) {
                 this.respawn();
@@ -222,131 +196,69 @@ export class Character {
             return;
         }
 
-        // Passive HP regen
-        let currentRegen = this.hpRegen;
-        if (this.isHealing) {
-            currentRegen += 10; // Healing fountain bonus
-        }
+        // Cache previous position for Rupture calculation
+        const px = this.x;
+        const py = this.y;
 
-        if (this.hp < this.maxHp) {
-            this.hp = Math.min(this.maxHp, this.hp + currentRegen * dt);
-        }
+        // 1. Movement
+        this.updateMovement(dt, map);
 
-        // ROT AOE damage
-        if (this.rotActive && entityManager) {
-            // Self damage (can deny)
-            const rotDamage = this.rotSelfDamagePerSec * dt;
-            if (this.hp - rotDamage <= 0 && this.state !== State.DEAD) {
-                this.deniedJustHappened = true; // WC3 Mechanic: Rot Deny
-            }
-            this.takeDamage(rotDamage);
-
-            // Damage nearby enemies
-            for (const entity of entityManager.entities) {
-                if (entity === this) continue;
-                if (!entity.takeDamage || entity.state === State.DEAD) continue;
-                if (entity.team === this.team) continue; // Don't hurt allies
-
-                const edx = entity.x - this.x;
-                const edy = entity.y - this.y;
-                const edist = Math.sqrt(edx * edx + edy * edy);
-
-                if (edist < this.rotRadius) {
-                    entity.takeDamage(this.rotDamagePerSec * dt);
-                }
-            }
-        }
-
-        // Burn DOT (Flaming Hook effect)
-        if (this.burnTimer && this.burnTimer > 0) {
-            this.burnTimer -= dt;
-            this.takeDamage(this.burnDps * dt);
-        }
-
-        // Rupture DOT (Strygwyr's Claws effect - damage while moving)
-        if (this.ruptureTimer && this.ruptureTimer > 0) {
-            this.ruptureTimer -= dt;
-            if (this.state === State.MOVING) {
-                this.takeDamage(this.ruptureDps * dt);
-            }
-        }
-
-        // Tick rune buffs
-        if (this.hasteTimer > 0) {
-            this.hasteTimer -= dt;
-        }
-        if (this.ddTimer > 0) {
-            this.ddTimer -= dt;
-        }
-
-        // Healing Salve tick
+        // 2. Timers
+        if (this.invulnerableTimer > 0) this.invulnerableTimer -= dt;
+        if (this.hasteTimer > 0) this.hasteTimer -= dt;
+        if (this.ddTimer > 0) this.ddTimer -= dt;
         if (this.salveTimer > 0) {
             this.salveTimer -= dt;
-            this.hp = Math.min(this.maxHp, this.hp + 10 * dt); // 100 HP over 10s (Salves are hardcoded in ItemDefs but this is fine for now)
+            this.hp = Math.min(this.maxHp, this.hp + 20 * dt);
         }
 
-        // CHARACTER COLLISION & UNSTUCK
-        if (entityManager) {
-            this.handleCharacterCollisions(entityManager);
+        // 3. Status Effects (Phase 17)
+        if (this.burnTimer > 0) {
+            this.burnTimer -= dt;
+            this.takeDamage(15 * dt, this.lastAttacker);
         }
+
+        if (this.ruptureTimer > 0) {
+            this.ruptureTimer -= dt;
+            const moveDist = Math.sqrt(Math.pow(this.x - px, 2) + Math.pow(this.y - py, 2));
+            if (moveDist > 0.1) {
+                this.takeDamage(moveDist * 0.25, this.lastAttacker);
+            }
+        }
+
+        // 4. Rot Logic
+        if (this.rotActive) {
+            this.updateRot(dt, entityManager);
+        } else {
+            let currentRegen = this.hpRegen;
+            if (this.isHealing) currentRegen += 15; // Fountain healing
+
+            if (this.hp < this.maxHp) {
+                this.hp = Math.min(this.maxHp, this.hp + currentRegen * dt);
+            }
+        }
+
+        // 5. Cooldowns
+        if (this.hookCooldown > 0) this.hookCooldown -= dt;
+
+        // 6. Terrain checks
         if (map) {
             this.checkUnstuck(map);
         }
+    }
 
-        if (this.state === State.HOOKED) {
-            this.targetX = this.x;
-            this.targetY = this.y;
-            return;
+    updateRot(dt, entityManager) {
+        const rotDamage = this.rotSelfDamagePerSec * dt;
+        if (this.hp - rotDamage <= 0 && this.state !== State.DEAD) {
+            this.deniedJustHappened = true;
         }
+        this.takeDamage(rotDamage);
 
-        if (this.state === State.MOVING) {
-            if (this.isPaused) {
-                return; // Movement locked
-            }
-            const dx = this.targetX - this.x;
-            const dy = this.targetY - this.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-
-            if (dist > 1) {
-                let actualSpeed = this.rotActive ? this.speed * this.rotSlowFactor : this.speed;
-                // WC3 Mechanic: Haste Rune makes you run very fast
-                if (this.hasteTimer > 0) {
-                    actualSpeed *= 1.8;
-                }
-
-                const moveAmt = actualSpeed * dt;
-                const dirX = dx / dist;
-                const dirY = dy / dist;
-
-                const nextX = this.x + dirX * moveAmt;
-                const nextY = this.y + dirY * moveAmt;
-
-                let canMove = false;
-                if (map) {
-                    // Check if the entire bounding box is walkable to prevent wall clipping
-                    const r = this.radius;
-                    canMove = map.isWalkable(nextX - r, nextY - r) &&
-                        map.isWalkable(nextX + r, nextY - r) &&
-                        map.isWalkable(nextX - r, nextY + r) &&
-                        map.isWalkable(nextX + r, nextY + r);
-                }
-
-                if (canMove) {
-                    if (moveAmt >= dist) {
-                        this.x = this.targetX;
-                        this.y = this.targetY;
-                        this.state = State.IDLE;
-                    } else {
-                        this.x = nextX;
-                        this.y = nextY;
-                    }
-                } else {
-                    this.targetX = this.x;
-                    this.targetY = this.y;
-                    this.state = State.IDLE;
-                }
-            } else {
-                this.state = State.IDLE;
+        for (const entity of entityManager.entities) {
+            if (entity === this || !entity.takeDamage || entity.state === State.DEAD || entity.team === this.team) continue;
+            const dist = Math.sqrt(Math.pow(entity.x - this.x, 2) + Math.pow(entity.y - this.y, 2));
+            if (dist < this.rotRadius) {
+                entity.takeDamage(this.rotDamagePerSec * dt, this);
             }
         }
     }
@@ -368,8 +280,7 @@ export class Character {
                 const nx = dx / dist;
                 const ny = dy / dist;
 
-                // Push both away (Firmer resolution)
-                const pushX = nx * overlap * 1.1; // 10% extra to prevent jitter
+                const pushX = nx * overlap * 1.1;
                 const pushY = ny * overlap * 1.1;
                 this.x -= pushX;
                 this.y -= pushY;
@@ -379,49 +290,77 @@ export class Character {
         }
     }
 
-    checkUnstuck(map) {
-        if (this.state === State.DEAD || this.state === State.HOOKED) return;
+    updateMovement(dt, map) {
+        if (this.isPaused || this.state === State.HOOKED) return;
 
+        if (this.state === State.MOVING) {
+            const dx = this.targetX - this.x;
+            const dy = this.targetY - this.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist > 1) {
+                let actualSpeed = this.hasteTimer > 0 ? this.speed * 1.8 : this.speed;
+                if (this.rotActive) actualSpeed *= this.rotSlowFactor;
+
+                const moveAmt = actualSpeed * dt;
+                const dirX = dx / dist;
+                const dirY = dy / dist;
+
+                const nextX = this.x + dirX * moveAmt;
+                const nextY = this.y + dirY * moveAmt;
+
+                let canMove = true;
+                if (map) {
+                    const r = this.radius;
+                    canMove = map.isWalkable(nextX - r, nextY - r) && map.isWalkable(nextX + r, nextY - r) &&
+                        map.isWalkable(nextX - r, nextY + r) && map.isWalkable(nextX + r, nextY + r);
+                }
+
+                if (canMove) {
+                    if (moveAmt >= dist) {
+                        this.x = this.targetX;
+                        this.y = this.targetY;
+                        this.state = State.IDLE;
+                    } else {
+                        this.x = nextX;
+                        this.y = nextY;
+                    }
+                } else {
+                    this.state = State.IDLE;
+                }
+            } else {
+                this.state = State.IDLE;
+            }
+        }
+    }
+
+    checkUnstuck(map) {
         const r = this.radius;
-        const isStuck = !map.isWalkable(this.x - r, this.y - r) ||
-            !map.isWalkable(this.x + r, this.y - r) ||
-            !map.isWalkable(this.x - r, this.y + r) ||
-            !map.isWalkable(this.x + r, this.y + r);
+        const isStuck = !map.isWalkable(this.x - r, this.y - r) || !map.isWalkable(this.x + r, this.y - r) ||
+            !map.isWalkable(this.x - r, this.y + r) || !map.isWalkable(this.x + r, this.y + r);
 
         if (isStuck) {
-            // Find nearest walkable direction
-            const directions = [
-                { x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 },
-                { x: 1, y: 1 }, { x: -1, y: -1 }, { x: 1, y: -1 }, { x: -1, y: 1 }
-            ];
-
-            for (let step = 4; step <= 200; step += 16) {
+            const directions = [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }];
+            for (let step = 16; step <= 128; step += 16) {
                 for (const d of directions) {
                     const tx = this.x + d.x * step;
                     const ty = this.y + d.y * step;
-                    if (map.isWalkable(tx - r, ty - r) &&
-                        map.isWalkable(tx + r, ty - r) &&
-                        map.isWalkable(tx - r, ty + r) &&
-                        map.isWalkable(tx + r, ty + r)) {
-                        this.x = tx;
-                        this.y = ty;
-                        return;
+                    if (map.isWalkable(tx - r, ty - r) && map.isWalkable(tx + r, ty - r) &&
+                        map.isWalkable(tx - r, ty + r) && map.isWalkable(tx + r, ty + r)) {
+                        this.x = tx; this.y = ty; return;
                     }
                 }
             }
         }
     }
 
-    /** Returns a plain-data snapshot for server→client broadcast and client-side reconstruction. */
     serialize() {
         return {
             type: 'CHARACTER',
             id: this.id,
-            x: this.x,
-            y: this.y,
+            x: this.x, y: this.y,
             team: this.team,
-            hp: this.hp,
-            maxHp: this.maxHp,
+            hp: this.hp, maxHp: this.maxHp,
             state: this.state,
             hookCooldown: this.hookCooldown,
             maxHookCooldown: this.maxHookCooldown,
@@ -449,26 +388,20 @@ export class Character {
     }
 
     recalculateStats() {
-        // 1. Reset base values and apply scaling
         this.speed = GAME.CHAR_SPEED;
-
-        // Core scaling (Level based)
         this.maxHp = 100 + (this.level - 1) * 15;
         this.hookDamage = GAME.HOOK_DAMAGE + (this.level - 1) * 3;
         this.hookSpeed = GAME.HOOK_SPEED + (this.level - 1) * 25;
         this.hookMaxDist = GAME.HOOK_MAX_DIST + (this.level - 1) * 100;
         this.hookRadius = GAME.HOOK_RADIUS + (this.level - 1) * 2;
 
-        // 2. Apply Shop Upgrades
         this.hookDamage += (this.dmgUpgrades || 0) * 10;
         this.hookSpeed += (this.spdUpgrades || 0) * 50;
         this.hookMaxDist += (this.distUpgrades || 0) * 100;
         this.hookRadius += (this.radUpgrades || 0) * 4;
 
-        // 3. Apply Flesh Heap stacks
         this.maxHp += (this.fleshHeapStacks || 0) * (this.fleshHeapHpPerStack || 8);
 
-        // 4. Apply items bonuses
         for (const item of this.items || []) {
             if (item.effect === 'speed') this.speed += 40;
         }
