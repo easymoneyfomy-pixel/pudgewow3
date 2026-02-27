@@ -14,7 +14,7 @@ export class Barricade {
         this.hp = this.maxHp;
         this.state = State.IDLE;
 
-        this.lifeTimer = 15; // Lasts 15 seconds
+        this.lifeTimer = 15;
         this.isBarricade = true;
     }
 
@@ -29,7 +29,6 @@ export class Barricade {
 
     update(dt, map, entityManager) {
         if (this.state === State.DEAD) return;
-
         this.lifeTimer -= dt;
         if (this.lifeTimer <= 0) {
             this.state = State.DEAD;
@@ -39,41 +38,36 @@ export class Barricade {
     render(renderer) {
         if (this.state === State.DEAD) return;
 
-        const screenPos = renderer.worldToScreen(this.x, this.y, 0);
+        const ctx = renderer.ctx;
+        ctx.save();
+        ctx.translate(this.x, this.y);
 
-        renderer.ctx.save();
-        renderer.ctx.translate(screenPos.x, screenPos.y);
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.fillRect(-12, -12, 24, 24);
 
-        // Base shadow
-        renderer.ctx.fillStyle = 'rgba(0,0,0,0.5)';
-        renderer.ctx.beginPath();
-        renderer.ctx.ellipse(0, 0, 24, 12, 0, 0, Math.PI * 2);
-        renderer.ctx.fill();
+        // Posts
+        ctx.fillStyle = '#666';
+        ctx.strokeStyle = '#222';
+        ctx.lineWidth = 1;
+        ctx.fillRect(-10, -10, 6, 20);
+        ctx.strokeRect(-10, -10, 6, 20);
+        ctx.fillRect(4, -10, 6, 20);
+        ctx.strokeRect(4, -10, 6, 20);
 
-        // Concrete / Metal posts
-        renderer.ctx.fillStyle = '#666';
-        renderer.ctx.strokeStyle = '#222';
-        renderer.ctx.lineWidth = 1;
-
-        renderer.ctx.fillRect(-15, -25, 8, 25);
-        renderer.ctx.strokeRect(-15, -25, 8, 25);
-
-        renderer.ctx.fillRect(7, -25, 8, 25);
-        renderer.ctx.strokeRect(7, -25, 8, 25);
-
-        // Energy shield between posts
-        const energyPulse = Math.sin(Date.now() / 150) * 0.3 + 0.5;
-        renderer.ctx.fillStyle = this.team === 'red' ? `rgba(255, 50, 50, ${energyPulse})` : `rgba(50, 50, 255, ${energyPulse})`;
-        renderer.ctx.fillRect(-10, -20, 20, 20);
+        // Energy shield
+        const pulse = Math.sin(Date.now() / 150) * 0.3 + 0.5;
+        ctx.fillStyle = this.team === 'red' ? `rgba(255, 50, 50, ${pulse})` : `rgba(50, 50, 255, ${pulse})`;
+        ctx.fillRect(-6, -8, 12, 16);
 
         // HP Bar
         const hpRatio = this.hp / this.maxHp;
-        renderer.ctx.fillStyle = '#f00';
-        renderer.ctx.fillRect(-15, -30, 30, 4);
-        renderer.ctx.fillStyle = '#0f0';
-        renderer.ctx.fillRect(-15, -30, 30 * hpRatio, 4);
-        renderer.ctx.strokeRect(-15, -30, 30, 4);
+        ctx.fillStyle = '#f00';
+        ctx.fillRect(-12, -16, 24, 3);
+        ctx.fillStyle = '#0f0';
+        ctx.fillRect(-12, -16, 24 * hpRatio, 3);
+        ctx.strokeRect(-12, -16, 24, 3);
 
-        renderer.ctx.restore();
+        ctx.restore();
     }
 }

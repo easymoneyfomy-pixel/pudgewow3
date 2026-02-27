@@ -5,7 +5,7 @@ export class Camera {
         this.zoom = zoom;
 
         this.shakeIntensity = 0;
-        this.shakeDecay = 40; // High decay for punchy snap
+        this.shakeDecay = 40;
         this.shakeX = 0;
         this.shakeY = 0;
     }
@@ -33,13 +33,10 @@ export class Camera {
 
         renderer.save();
 
-        // Screen center
-        renderer.translate(panX + this.shakeX, panY + this.shakeY);
+        // WC3 top-down: simply translate so camera target is at screen center
+        renderer.translate(panX + this.shakeX - this.x, panY + this.shakeY - this.y);
 
         renderer.ctx.scale(this.zoom, this.zoom);
-
-        const targetScreen = renderer.worldToScreen(this.x, this.y);
-        renderer.translate(-targetScreen.x, -targetScreen.y);
     }
 
     release(renderer) {

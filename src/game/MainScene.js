@@ -191,12 +191,12 @@ export class MainScene {
         const cx = this.game.canvas.width / 2;
         const cy = this.game.canvas.height / 2;
 
-        const targetScreen = this.game.renderer.worldToScreen(this.camera.x, this.camera.y);
-        const worldScreenX = (mousePos.x - cx) + targetScreen.x;
-        const worldScreenY = (mousePos.y - cy) + targetScreen.y;
-        const worldTarget = this.game.renderer.screenToWorld(worldScreenX, worldScreenY);
+        // Top-down: mouse position relative to camera center
+        const worldX = mousePos.x - cx + this.camera.x;
+        const worldY = mousePos.y - cy + this.camera.y;
+        const worldTarget = { x: worldX, y: worldY };
 
-        // Move
+        // Move (right click)
         if (this.game.input.isMouseButtonPressed(2)) {
             this.game.network.sendInput({ type: 'MOVE', x: worldTarget.x, y: worldTarget.y });
         }

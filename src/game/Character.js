@@ -267,154 +267,140 @@ export class Character {
     render(renderer) {
         if (this.state === State.DEAD) return;
 
-        const screenPos = renderer.worldToScreen(this.x, this.y, this.z);
+        const ctx = renderer.ctx;
+        const sx = this.x;
+        const sy = this.y;
 
-        // Тень
-        const groundPos = renderer.worldToScreen(this.x, this.y, 0);
-        renderer.ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-        renderer.ctx.beginPath();
-        renderer.ctx.ellipse(groundPos.x, groundPos.y, 22, 11, 0, 0, Math.PI * 2);
-        renderer.ctx.fill();
+        ctx.save();
+        ctx.translate(sx, sy);
 
-        // Тело (WC3 Pudge Style)
-        renderer.ctx.save();
-        renderer.ctx.translate(screenPos.x, screenPos.y - 15);
-
-        // Rot AOE visual (green toxic cloud)
+        // Rot AOE visual (green toxic cloud, top-down circle)
         if (this.rotActive) {
-            const rotPulse = Math.sin(Date.now() / 200) * 0.15 + 0.3;
-            renderer.ctx.fillStyle = `rgba(0, 200, 0, ${rotPulse})`;
-            renderer.ctx.beginPath();
-            renderer.ctx.arc(0, 5, 60, 0, Math.PI * 2);
-            renderer.ctx.fill();
+            const rotPulse = Math.sin(Date.now() / 200) * 0.15 + 0.25;
+            ctx.fillStyle = `rgba(0, 180, 0, ${rotPulse})`;
+            ctx.beginPath();
+            ctx.arc(0, 0, 60, 0, Math.PI * 2);
+            ctx.fill();
         }
 
-        // Healing Fountain visual (green crosses / glow)
+        // WC3 Selection circle (team color)
+        ctx.strokeStyle = this.team === 'red' ? 'rgba(255,50,50,0.7)' : 'rgba(50,50,255,0.7)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, 18, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.beginPath();
+        ctx.arc(0, 0, 14, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Body (top-down circle with team color)
+        ctx.fillStyle = this.team === 'red' ? '#993333' : '#333399';
+        ctx.beginPath();
+        ctx.arc(0, 0, 13, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Inner body detail (flesh color for Pudge)
+        ctx.fillStyle = '#886655';
+        ctx.beginPath();
+        ctx.arc(0, 0, 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Head (small darker circle on top)
+        ctx.fillStyle = '#664444';
+        ctx.beginPath();
+        ctx.arc(0, -5, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Arms/Shoulders
+        ctx.fillStyle = this.team === 'red' ? '#884444' : '#444488';
+        ctx.fillRect(-15, -3, 6, 6);
+        ctx.fillRect(9, -3, 6, 6);
+
+        // Cleaver in right hand
+        ctx.save();
+        ctx.translate(14, -2);
+        ctx.rotate(-0.5);
+        ctx.fillStyle = '#aaa';
+        ctx.strokeStyle = '#555';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(4, -12);
+        ctx.lineTo(12, -10);
+        ctx.lineTo(10, 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#4a2c15';
+        ctx.fillRect(-1, 0, 3, 8);
+        ctx.restore();
+
+        // Healing visual
         if (this.isHealing) {
-            const healPulse = Math.sin(Date.now() / 150) * 0.2 + 0.4;
-            renderer.ctx.fillStyle = `rgba(0, 255, 100, ${healPulse})`;
-            renderer.ctx.font = '20px Arial';
-            renderer.ctx.fillText('+', Math.sin(Date.now() / 200) * 10, -30 + Math.cos(Date.now() / 200) * 5);
-            renderer.ctx.fillText('+', Math.cos(Date.now() / 300) * 12, -45 + Math.sin(Date.now() / 300) * 8);
+            const hPulse = Math.sin(Date.now() / 150) * 0.2 + 0.5;
+            ctx.fillStyle = `rgba(0, 255, 100, ${hPulse})`;
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('+', Math.sin(Date.now() / 200) * 6, -18);
         }
 
-        // Invulnerability Shield (blue bubble)
+        // Invulnerability Shield
         if (this.invulnerableTimer > 0) {
-            const shieldPulse = Math.sin(Date.now() / 100) * 0.1 + 0.4;
-            const grad = renderer.ctx.createRadialGradient(0, 0, 5, 0, 0, this.shieldRadius);
-            grad.addColorStop(0, 'rgba(100, 200, 255, 0)');
-            grad.addColorStop(1, `rgba(100, 200, 255, ${shieldPulse})`);
-
-            renderer.ctx.fillStyle = grad;
-            renderer.ctx.beginPath();
-            renderer.ctx.arc(0, 0, this.shieldRadius, 0, Math.PI * 2);
-            renderer.ctx.fill();
-
-            renderer.ctx.strokeStyle = `rgba(150, 220, 255, ${shieldPulse + 0.2})`;
-            renderer.ctx.lineWidth = 2;
-            renderer.ctx.stroke();
+            const sp = Math.sin(Date.now() / 100) * 0.1 + 0.35;
+            ctx.strokeStyle = `rgba(100, 200, 255, ${sp + 0.3})`;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(0, 0, 20, 0, Math.PI * 2);
+            ctx.stroke();
         }
 
-        // Подсветка команды (аура под ногами)
-        renderer.ctx.strokeStyle = this.team === 'red' ? 'rgba(255,0,0,0.3)' : 'rgba(0,0,255,0.3)';
-        renderer.ctx.lineWidth = 3;
-        renderer.ctx.beginPath();
-        renderer.ctx.ellipse(0, 15, 20, 10, 0, 0, Math.PI * 2);
-        renderer.ctx.stroke();
+        ctx.restore();
 
-        // Туловище (массивное)
-        renderer.ctx.fillStyle = this.color;
-        renderer.ctx.beginPath();
-        renderer.ctx.ellipse(0, 0, 20, 25, 0, 0, Math.PI * 2);
-        renderer.ctx.fill();
-        renderer.ctx.strokeStyle = '#000';
-        renderer.ctx.lineWidth = 1.5;
-        renderer.ctx.stroke();
+        // === HP Bar above character ===
+        const hpBarW = 40;
+        const hpBarH = 5;
+        const hpBarX = sx - hpBarW / 2;
+        const hpBarY = sy - 28;
 
-        // Голова
-        renderer.ctx.fillStyle = '#664444';
-        renderer.ctx.beginPath();
-        renderer.ctx.arc(0, -20, 10, 0, Math.PI * 2);
-        renderer.ctx.fill();
-        renderer.ctx.stroke();
+        ctx.fillStyle = '#330000';
+        ctx.fillRect(hpBarX, hpBarY, hpBarW, hpBarH);
 
-        // Руки
-        renderer.ctx.fillStyle = this.color;
-        // Левая рука
-        renderer.ctx.beginPath();
-        renderer.ctx.ellipse(-20, 0, 8, 12, Math.PI / 4, 0, Math.PI * 2);
-        renderer.ctx.fill();
-        renderer.ctx.stroke();
-        // Right arm
-        renderer.ctx.beginPath();
-        renderer.ctx.ellipse(20, 0, 8, 12, -Math.PI / 4, 0, Math.PI * 2);
-        renderer.ctx.fill();
-        renderer.ctx.stroke();
-
-        // Butcher Cleaver (Right hand)
-        renderer.ctx.save();
-        renderer.ctx.translate(25, 0);
-        renderer.ctx.rotate(-Math.PI / 6);
-        renderer.ctx.fillStyle = '#999';
-        renderer.ctx.strokeStyle = '#444';
-        renderer.ctx.lineWidth = 1;
-
-        // Blade
-        renderer.ctx.beginPath();
-        renderer.ctx.moveTo(0, 0);
-        renderer.ctx.lineTo(8, -25);
-        renderer.ctx.lineTo(25, -22);
-        renderer.ctx.lineTo(22, 5);
-        renderer.ctx.closePath();
-        renderer.ctx.fill();
-        renderer.ctx.stroke();
-
-        // Handle
-        renderer.ctx.fillStyle = '#4a2c15';
-        renderer.ctx.fillRect(-2, 0, 4, 15);
-        renderer.ctx.restore();
-
-        renderer.ctx.restore();
-
-        // === HP Bar above character (visible for ALL players) ===
-        const hpBarW = 50;
-        const hpBarH = 6;
-        const hpBarX = screenPos.x - hpBarW / 2;
-        const hpBarY = screenPos.y - 55;
-
-        // Background
-        renderer.ctx.fillStyle = '#330000';
-        renderer.ctx.fillRect(hpBarX, hpBarY, hpBarW, hpBarH);
-
-        // Fill
         const hpRatio = Math.max(0, this.hp / this.maxHp);
         const hpColor = hpRatio > 0.5 ? '#00cc00' : hpRatio > 0.25 ? '#cccc00' : '#cc0000';
-        renderer.ctx.fillStyle = hpColor;
-        renderer.ctx.fillRect(hpBarX, hpBarY, hpBarW * hpRatio, hpBarH);
+        ctx.fillStyle = hpColor;
+        ctx.fillRect(hpBarX, hpBarY, hpBarW * hpRatio, hpBarH);
 
-        // Border
-        renderer.ctx.strokeStyle = '#000';
-        renderer.ctx.lineWidth = 1;
-        renderer.ctx.strokeRect(hpBarX, hpBarY, hpBarW, hpBarH);
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(hpBarX, hpBarY, hpBarW, hpBarH);
 
         // Level badge
-        renderer.ctx.fillStyle = '#ffd700';
-        renderer.ctx.font = 'bold 10px Arial';
-        renderer.ctx.textAlign = 'center';
-        renderer.ctx.fillText(`Lv.${this.level}`, screenPos.x, hpBarY - 3);
+        ctx.fillStyle = '#ffd700';
+        ctx.font = 'bold 9px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(`Lv.${this.level}`, sx, hpBarY - 2);
 
         // Burn indicator
         if (this.burnTimer && this.burnTimer > 0) {
-            renderer.ctx.fillStyle = '#ff4400';
-            renderer.ctx.font = 'bold 9px Arial';
-            renderer.ctx.fillText('🔥', screenPos.x + 30, hpBarY + 5);
+            ctx.fillStyle = '#ff4400';
+            ctx.font = '9px Arial';
+            ctx.fillText('🔥', sx + 24, hpBarY + 4);
         }
 
         // Rupture indicator
         if (this.ruptureTimer && this.ruptureTimer > 0) {
-            renderer.ctx.fillStyle = '#cc0000';
-            renderer.ctx.font = 'bold 9px Arial';
-            renderer.ctx.fillText('🩸', screenPos.x - 30, hpBarY + 5);
+            ctx.fillStyle = '#cc0000';
+            ctx.font = '9px Arial';
+            ctx.fillText('🩸', sx - 24, hpBarY + 4);
         }
     }
 }
