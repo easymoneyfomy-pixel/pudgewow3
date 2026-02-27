@@ -284,7 +284,24 @@ export class Hook {
                 }
 
                 if (this.isGrappling) {
+                    // Прямой пулл владельца к хуку (без хлебных крошек)
+                    const rdx = this.x - this.owner.x;
+                    const rdy = this.y - this.owner.y;
+                    const rdist = Math.sqrt(rdx * rdx + rdy * rdy);
 
+                    if (rdist <= moveAmt) {
+                        this.owner.state = State.IDLE;
+                        this.owner.isPaused = false;
+                        this.owner.x = this.x;
+                        this.owner.y = this.y;
+                        this.owner.setTarget(this.x, this.y);
+                        entityManager.remove(this);
+                    } else {
+                        this.owner.x += (rdx / rdist) * moveAmt;
+                        this.owner.y += (rdy / rdist) * moveAmt;
+                        this.owner.setTarget(this.owner.x, this.owner.y);
+                    }
+                } else {
                     // 2. Retract hook head along pathNodes
                     let currentMoveAmt = moveAmt;
 
@@ -338,7 +355,7 @@ export class Hook {
                         }
                     }
 
-                    // 3. Тащим привязанного
+                    // 3. Тащим привязанного (только для обычного хука)
                     if (this.hookedEntity && this.hookedEntity.state !== State.DEAD) {
                         this.hookedEntity.x = this.x;
                         this.hookedEntity.y = this.y;
