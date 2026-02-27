@@ -37,6 +37,7 @@ export class Hook {
         // Position tracking for curving/delta movement
         this.ownerPrevX = owner.x;
         this.ownerPrevY = owner.y;
+        this.pathNodes = []; // List of breadcrumbs {x, y} for polyline chain
     }
 
     update(dt, map, entityManager) {
@@ -56,15 +57,19 @@ export class Hook {
 
         const moveAmt = this.speed * dt;
 
-        // Delta shift: If Pudge is moved (Blinked/Hooked), the hook head moves with him
+        // Delta shift prep
         const pdx = this.owner.x - this.ownerPrevX;
         const pdy = this.owner.y - this.ownerPrevY;
-        this.x += pdx;
-        this.y += pdy;
         this.ownerPrevX = this.owner.x;
         this.ownerPrevY = this.owner.y;
 
+        const wasReturning = this.isReturning;
+
         if (!this.isReturning) {
+            // Forward flight: Delta shift the hook head if Pudge is moved externally
+            this.x += pdx;
+            this.y += pdy;
+
             // Искривление хука (Hook Curving) - subtle influence from click direction
             if (this.owner.state === State.MOVING) {
                 const ox = this.owner.targetX - this.owner.x;
@@ -251,62 +256,99 @@ export class Hook {
                         }
                     }
                 }
-            } else {
-                // Возвращаемся к владельцу
-                const rdx = this.owner.x - this.x;
-                const rdy = this.owner.y - this.y;
-                const rdist = Math.sqrt(rdx * rdx + rdy * rdy);
+            } // End of !this.isReturning
 
-                // Если привязанная сущность умерла в полете от чего-то еще (не от хука)
+            if (!wasReturning && this.isReturning) {
+                // Hook JUST started returning! Initialize breadcrumb path
+                this.pathNodes = [{ x: this.owner.x, y: this.owner.y }];
+            }
+
+            if (this.isReturning) {
+                // Если привязанная сущность умерла в полете от чего-то еще
                 if (this.hookedEntity && this.hookedEntity.state === State.DEAD) {
                     this.hookedEntity = null;
                 }
 
-                if (rdist <= moveAmt) {
-                    // Хук вернулся (или мы притянулись)
-                    this.owner.state = State.IDLE;
-                    this.owner.isPaused = false; // FINALLY RELEASE LOCK
+                if (this.isGrappling) {
+                    // Прямой пулл владельца к хуку (без хлебных крошек)
+                    const rdx = this.x - this.owner.x;
+                    const rdy = this.y - this.owner.y;
+                    const rdist = Math.sqrt(rdx * rdx + rdy * rdy);
 
-                    if (this.isGrappling) {
-                        // Owner arrived at the grapple point
+                    if (rdist <= moveAmt) {
+                        this.owner.state = State.IDLE;
+                        this.owner.isPaused = false;
                         this.owner.x = this.x;
                         this.owner.y = this.y;
                         this.owner.setTarget(this.x, this.y);
-                    }
-
-                    if (this.hookedEntity) {
-                        this.hookedEntity.x = this.owner.x + this.dirX * (this.owner.radius + this.hookedEntity.radius + 5);
-                        this.hookedEntity.y = this.owner.y + this.dirY * (this.owner.radius + this.hookedEntity.radius + 5);
-
-                        // WC3: Mine is dropped and returns to normal armed behavior
-                        if (this.hookedEntity.onDropped) {
-                            this.hookedEntity.onDropped();
-                        } else {
-                            this.hookedEntity.state = State.IDLE;
-                        }
-                    }
-
-                    entityManager.remove(this);
-                } else {
-                    // Движемся назад
-                    const rDirX = rdx / rdist;
-                    const rDirY = rdy / rdist;
-
-                    if (this.isGrappling) {
-                        // Pull the owner to the hook
-                        this.owner.x -= rDirX * moveAmt;
-                        this.owner.y -= rDirY * moveAmt;
-                        this.owner.setTarget(this.owner.x, this.owner.y); // lock position
+                        entityManager.remove(this);
                     } else {
-                        // Hook returns to owner
-                        this.x += rDirX * moveAmt;
-                        this.y += rDirY * moveAmt;
+                        this.owner.x += (rdx / rdist) * moveAmt;
+                        this.owner.y += (rdy / rdist) * moveAmt;
+                        this.owner.setTarget(this.owner.x, this.owner.y);
+                    }
+                } else {
+                    // 1. Drop breadcrumbs as Pudge moves
+                    const lastNode = this.pathNodes[this.pathNodes.length - 1];
+                    let lx = lastNode ? lastNode.x : this.owner.x;
+                    let ly = lastNode ? lastNode.y : this.owner.y;
 
-                        // Тащим привязанного
-                        if (this.hookedEntity) {
-                            this.hookedEntity.x = this.x;
-                            this.hookedEntity.y = this.y;
+                    const dxToLast = this.owner.x - lx;
+                    const dyToLast = this.owner.y - ly;
+                    if (dxToLast * dxToLast + dyToLast * dyToLast >= 144) { // 12px threshold for smooth polyline
+                        this.pathNodes.push({ x: this.owner.x, y: this.owner.y });
+                    }
+
+                    // 2. Retract hook head along pathNodes
+                    let currentMoveAmt = moveAmt;
+
+                    while (currentMoveAmt > 0) {
+                        let targetNode = this.pathNodes.length > 0 ? this.pathNodes[0] : this.owner;
+
+                        let rdx = targetNode.x - this.x;
+                        let rdy = targetNode.y - this.y;
+                        let rdist = Math.sqrt(rdx * rdx + rdy * rdy);
+
+                        if (rdist <= currentMoveAmt) {
+                            // Достигли ноды
+                            this.x = targetNode.x;
+                            this.y = targetNode.y;
+                            currentMoveAmt -= rdist;
+
+                            if (this.pathNodes.length > 0) {
+                                this.pathNodes.shift(); // Съедаем крошку
+                            } else {
+                                // Полностью вернулись к владельцу
+                                this.owner.state = State.IDLE;
+                                this.owner.isPaused = false;
+
+                                if (this.hookedEntity) {
+                                    // Поправка позиции жертвы (чтобы не сливалась воедино)
+                                    this.hookedEntity.x = this.owner.x + this.dirX * (this.owner.radius + this.hookedEntity.radius + 5);
+                                    this.hookedEntity.y = this.owner.y + this.dirY * (this.owner.radius + this.hookedEntity.radius + 5);
+
+                                    if (this.hookedEntity.onDropped) {
+                                        this.hookedEntity.onDropped();
+                                    } else {
+                                        this.hookedEntity.state = State.IDLE;
+                                    }
+                                }
+
+                                entityManager.remove(this);
+                                break; // Выход из while
+                            }
+                        } else {
+                            // Просто летим к ноде
+                            this.x += (rdx / rdist) * currentMoveAmt;
+                            this.y += (rdy / rdist) * currentMoveAmt;
+                            currentMoveAmt = 0;
                         }
+                    }
+
+                    // 3. Тащим привязанного
+                    if (this.hookedEntity && this.hookedEntity.state !== State.DEAD) {
+                        this.hookedEntity.x = this.x;
+                        this.hookedEntity.y = this.y;
                     }
                 }
             }
@@ -323,6 +365,7 @@ export class Hook {
             ownerX: this.owner.x,
             ownerY: this.owner.y,
             radius: this.radius,
+            pathNodes: this.pathNodes.map(p => ({ x: p.x, y: p.y }))
         };
     }
 }

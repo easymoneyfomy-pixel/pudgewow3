@@ -20,7 +20,7 @@ export class Character {
 
         // Характеристики хука (прокачиваемые)
         this.hookDamage = 25;
-        this.hookSpeed = 1100; // Быстрее летит
+        this.hookSpeed = 800; // WC3 Pudge Wars authentic speed (was 1100)
         this.hookMaxDist = 800; // Дальше летит через широкую реку
         this.hookRadius = 20; // Чуть шире хитбокс
         this.hookCurvePower = 0.5; // Сила закругления при движении

@@ -156,53 +156,74 @@ export class EntityRenderer {
      */
     static drawHook(renderer, hook) {
         const ctx = renderer.ctx;
-        let { x: hx, y: hy, ownerX: ox, ownerY: oy } = hook;
+        let { x: hx, y: hy, ownerX: ox, ownerY: oy, pathNodes } = hook;
 
-        // Fallback if owner position is missing (should not happen with new serialization)
+        // Fallback if owner position is missing
         if (ox === undefined || oy === undefined) {
             ox = hx;
             oy = hy;
         }
 
-        const dx = hx - ox;
-        const dy = hy - oy;
-        const totalDist = Math.sqrt(dx * dx + dy * dy);
+        // 1. Draw Chain Segments (WC3 style polyline)
+        ctx.fillStyle = '#999';
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 1;
 
-        // 1. Draw Chain Segments (WC3 style)
-        if (totalDist > 5) {
-            const segmentDist = 12; // Tighter spacing for better chain feel
-            const linkCount = Math.floor(totalDist / segmentDist);
-            const linkAngle = Math.atan2(dy, dx);
+        const segmentDist = 12; // Tighter spacing for better chain feel
 
-            ctx.fillStyle = '#999';
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 1;
+        // Construct the full polyline of points.
+        // It starts at HookHead, goes through pathNodes (which represent path from start of retract to Pudge), and ends at Pudge.
+        let points = [{ x: hx, y: hy }];
+        if (pathNodes && pathNodes.length > 0) {
+            points = points.concat(pathNodes);
+        }
+        points.push({ x: ox, y: oy });
 
-            for (let i = 0; i < linkCount; i++) {
-                const t = i / linkCount;
-                const lx = ox + dx * t;
-                const ly = oy + dy * t;
+        // Draw segmented chain along the polyline
+        for (let i = 0; i < points.length - 1; i++) {
+            const p1 = points[i];
+            const p2 = points[i + 1];
 
-                ctx.save();
-                ctx.translate(lx, ly);
-                ctx.rotate(linkAngle);
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
 
-                // Draw a more "meaty" bone-like link
-                ctx.beginPath();
-                ctx.roundRect(-6, -3, 12, 6, 3);
-                ctx.fill();
-                ctx.stroke();
+            if (dist > 5) {
+                const linkCount = Math.floor(dist / segmentDist);
+                const linkAngle = Math.atan2(dy, dx);
 
-                ctx.restore();
+                // If the segment is shorter than segmentDist, compute t properly to just draw what fits,
+                // or ensure we draw at least one link if dist > 5.
+                const actualCount = Math.max(1, linkCount);
+
+                for (let j = 0; j <= actualCount; j++) {
+                    const t = j / actualCount;
+                    const lx = p1.x + dx * t;
+                    const ly = p1.y + dy * t;
+
+                    ctx.save();
+                    ctx.translate(lx, ly);
+                    ctx.rotate(linkAngle);
+
+                    // Draw a more "meaty" bone-like link
+                    ctx.beginPath();
+                    ctx.roundRect(-6, -3, 12, 6, 3);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    ctx.restore();
+                }
             }
         }
 
-        // 2. Hook blade (The Head)
+        // 2. Hook blade (The Head) starts from points[0] and points to points[1]
         ctx.fillStyle = '#777';
         ctx.strokeStyle = '#222';
         ctx.lineWidth = 2;
 
-        const angle = Math.atan2(dy, dx);
+        const headDx = points[1].x - hx;
+        const headDy = points[1].y - hy;
+        const angle = Math.atan2(headDy, headDx);
 
         ctx.save();
         ctx.translate(hx, hy);
