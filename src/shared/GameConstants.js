@@ -6,7 +6,7 @@ export const GAME = {
     MAX_PLAYERS: 10,
     MAX_SCORE: 50,
     ROUND_TIME: 3600,
-    TICK_RATE: 20,
+    TICK_RATE: 60,
     SPAWN_RED_X: 4,
     SPAWN_BLUE_X: 19,
     SPAWN_MID_Y: 12,

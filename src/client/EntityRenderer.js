@@ -194,46 +194,6 @@ export class EntityRenderer {
         ctx.restore();
     }
 
-    // ─────────────────────── BARRICADE ───────────────────────────────────────
-
-    static drawBarricade(renderer, barricade) {
-        if (barricade.state === 'dead') return;
-
-        const ctx = renderer.ctx;
-        ctx.save();
-        ctx.translate(barricade.x, barricade.y);
-
-        // Shadow
-        ctx.fillStyle = 'rgba(0,0,0,0.3)';
-        ctx.fillRect(-12, -12, 24, 24);
-
-        // Posts
-        ctx.fillStyle = '#666';
-        ctx.strokeStyle = '#222';
-        ctx.lineWidth = 1;
-        ctx.fillRect(-10, -10, 6, 20);
-        ctx.strokeRect(-10, -10, 6, 20);
-        ctx.fillRect(4, -10, 6, 20);
-        ctx.strokeRect(4, -10, 6, 20);
-
-        // Energy shield
-        const pulse = Math.sin(Date.now() / 150) * 0.3 + 0.5;
-        ctx.fillStyle = barricade.team === 'red'
-            ? `rgba(255, 50, 50, ${pulse})`
-            : `rgba(50, 50, 255, ${pulse})`;
-        ctx.fillRect(-6, -8, 12, 16);
-
-        // HP Bar
-        const hpRatio = barricade.hp / barricade.maxHp;
-        ctx.fillStyle = '#f00';
-        ctx.fillRect(-12, -16, 24, 3);
-        ctx.fillStyle = '#0f0';
-        ctx.fillRect(-12, -16, 24 * hpRatio, 3);
-        ctx.strokeRect(-12, -16, 24, 3);
-
-        ctx.restore();
-    }
-
     // ─────────────────────── LANDMINE ────────────────────────────────────────
 
     static drawLandmine(renderer, mine) {
@@ -313,9 +273,6 @@ export class EntityRenderer {
                 }
                 break;
             }
-            case 'BARRICADE':
-                EntityRenderer.drawBarricade(renderer, eData);
-                break;
             case 'LANDMINE':
                 EntityRenderer.drawLandmine(renderer, eData);
                 break;

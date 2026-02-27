@@ -3,7 +3,6 @@ import { EntityManager } from './src/engine/EntityManager.js';
 import { GameRules } from './src/engine/GameRules.js';
 import { Character } from './src/game/Character.js';
 import { Hook } from './src/game/Hook.js';
-import { Barricade } from './src/game/Barricade.js';
 import { TossedUnit } from './src/game/TossedUnit.js';
 import { Landmine } from './src/game/Landmine.js';
 import { ITEM_MAP } from './src/shared/ItemDefs.js';
@@ -23,7 +22,8 @@ export class ServerGame {
 
         this.lastTime = performance.now();
         this.tickRate = GAME.TICK_RATE;
-        this.tickInterval = null;
+        this.tickTimeout = null; // Changed from tickInterval
+        this.expectedNextTick = 0; // Added for drift compensation
     }
 
     addPlayer(playerId, team) {
@@ -235,14 +235,35 @@ export class ServerGame {
         if (this.running) return;
         this.running = true;
         this.lastTime = performance.now();
+        this.expectedNextTick = this.lastTime + (1000 / this.tickRate);
 
-        this.tickInterval = setInterval(() => this.loop(), 1000 / this.tickRate);
+        // Use a drift-compensated recursive timeout instead of setInterval
+        const scheduleNextFrame = () => {
+            if (!this.running) return;
+
+            const now = performance.now();
+            let delay = this.expectedNextTick - now;
+
+            // If we are lagging behind, just run immediately and reset expectation
+            if (delay < 0) {
+                delay = 0;
+                this.expectedNextTick = now;
+            }
+
+            this.tickTimeout = setTimeout(() => {
+                this.loop();
+                this.expectedNextTick += (1000 / this.tickRate);
+                scheduleNextFrame();
+            }, delay);
+        };
+
+        scheduleNextFrame();
     }
 
     stop() {
         this.running = false;
-        if (this.tickInterval) {
-            clearInterval(this.tickInterval);
+        if (this.tickTimeout) {
+            clearTimeout(this.tickTimeout);
         }
     }
 
@@ -250,6 +271,9 @@ export class ServerGame {
         const currentTime = performance.now();
         const dt = (currentTime - this.lastTime) / 1000;
         this.lastTime = currentTime;
+
+        // Cap dt to prevent massive jumps if server hangs
+        const cappedDt = Math.min(dt, 0.1);
 
         if (!this.rules.isGameOver) {
             for (const entity of this.entityManager.entities) {

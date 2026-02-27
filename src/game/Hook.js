@@ -147,25 +147,6 @@ export class Hook {
                         // WC3 Hook Radius logic
                         const rSum = this.radius + entity.radius;
                         if (edistSq < rSum * rSum) {
-                            if (entity.isBarricade) {
-                                // Hit a barricade - bounce or return
-                                if (this.bouncesLeft > 0) {
-                                    this.bouncesLeft--;
-                                    // Simple reflection based on relative position
-                                    if (Math.abs(edx) > Math.abs(edy)) {
-                                        this.dirX = -this.dirX;
-                                    } else {
-                                        this.dirY = -this.dirY;
-                                    }
-
-                                    this.x += this.dirX * 10;
-                                    this.y += this.dirY * 10;
-                                } else {
-                                    this.isReturning = true;
-                                }
-                                entity.takeDamage(this.owner.hookDamage);
-                                break;
-                            }
 
                             if (entity.type === 'LANDMINE') {
                                 this.isReturning = true;
@@ -252,61 +233,61 @@ export class Hook {
                         }
                     }
                 }
-            }
-        } else {
-            // Возвращаемся к владельцу
-            const rdx = this.owner.x - this.x;
-            const rdy = this.owner.y - this.y;
-            const rdist = Math.sqrt(rdx * rdx + rdy * rdy);
-
-            // Если привязанная сущность умерла в полете от чего-то еще (не от хука)
-            if (this.hookedEntity && this.hookedEntity.state === State.DEAD) {
-                this.hookedEntity = null;
-            }
-
-            if (rdist <= moveAmt) {
-                // Хук вернулся (или мы притянулись)
-                this.owner.state = State.IDLE; // Владелец может двигаться дальше
-
-                if (this.isGrappling) {
-                    // Owner arrived at the grapple point
-                    this.owner.x = this.x;
-                    this.owner.y = this.y;
-                    this.owner.setTarget(this.x, this.y);
-                }
-
-                if (this.hookedEntity) {
-                    this.hookedEntity.x = this.owner.x + this.dirX * (this.owner.radius + this.hookedEntity.radius + 5);
-                    this.hookedEntity.y = this.owner.y + this.dirY * (this.owner.radius + this.hookedEntity.radius + 5);
-
-                    // WC3: Mine is dropped and returns to normal armed behavior
-                    if (this.hookedEntity.onDropped) {
-                        this.hookedEntity.onDropped();
-                    } else {
-                        this.hookedEntity.state = State.IDLE;
-                    }
-                }
-
-                entityManager.remove(this);
             } else {
-                // Движемся назад
-                const rDirX = rdx / rdist;
-                const rDirY = rdy / rdist;
+                // Возвращаемся к владельцу
+                const rdx = this.owner.x - this.x;
+                const rdy = this.owner.y - this.y;
+                const rdist = Math.sqrt(rdx * rdx + rdy * rdy);
 
-                if (this.isGrappling) {
-                    // Pull the owner to the hook
-                    this.owner.x -= rDirX * moveAmt;
-                    this.owner.y -= rDirY * moveAmt;
-                    this.owner.setTarget(this.owner.x, this.owner.y); // lock position
-                } else {
-                    // Hook returns to owner
-                    this.x += rDirX * moveAmt;
-                    this.y += rDirY * moveAmt;
+                // Если привязанная сущность умерла в полете от чего-то еще (не от хука)
+                if (this.hookedEntity && this.hookedEntity.state === State.DEAD) {
+                    this.hookedEntity = null;
+                }
 
-                    // Тащим привязанного
+                if (rdist <= moveAmt) {
+                    // Хук вернулся (или мы притянулись)
+                    this.owner.state = State.IDLE; // Владелец может двигаться дальше
+
+                    if (this.isGrappling) {
+                        // Owner arrived at the grapple point
+                        this.owner.x = this.x;
+                        this.owner.y = this.y;
+                        this.owner.setTarget(this.x, this.y);
+                    }
+
                     if (this.hookedEntity) {
-                        this.hookedEntity.x = this.x;
-                        this.hookedEntity.y = this.y;
+                        this.hookedEntity.x = this.owner.x + this.dirX * (this.owner.radius + this.hookedEntity.radius + 5);
+                        this.hookedEntity.y = this.owner.y + this.dirY * (this.owner.radius + this.hookedEntity.radius + 5);
+
+                        // WC3: Mine is dropped and returns to normal armed behavior
+                        if (this.hookedEntity.onDropped) {
+                            this.hookedEntity.onDropped();
+                        } else {
+                            this.hookedEntity.state = State.IDLE;
+                        }
+                    }
+
+                    entityManager.remove(this);
+                } else {
+                    // Движемся назад
+                    const rDirX = rdx / rdist;
+                    const rDirY = rdy / rdist;
+
+                    if (this.isGrappling) {
+                        // Pull the owner to the hook
+                        this.owner.x -= rDirX * moveAmt;
+                        this.owner.y -= rDirY * moveAmt;
+                        this.owner.setTarget(this.owner.x, this.owner.y); // lock position
+                    } else {
+                        // Hook returns to owner
+                        this.x += rDirX * moveAmt;
+                        this.y += rDirY * moveAmt;
+
+                        // Тащим привязанного
+                        if (this.hookedEntity) {
+                            this.hookedEntity.x = this.x;
+                            this.hookedEntity.y = this.y;
+                        }
                     }
                 }
             }
