@@ -7,8 +7,11 @@ export class Renderer {
         this.tileSize = GAME.TILE_SIZE; // WC3-style tile size (64)
 
         // Load Sprites
-        this.pudgeSprite = new Image();
-        this.pudgeSprite.src = 'assets/player/pudge_player.png';
+        this.radiantSprite = new Image();
+        this.radiantSprite.src = 'assets/player/1.png';
+
+        this.direSprite = new Image();
+        this.direSprite.src = 'assets/player/2.png';
 
         this.hookSprite = new Image();
         this.hookSprite.src = 'assets/hook.png';

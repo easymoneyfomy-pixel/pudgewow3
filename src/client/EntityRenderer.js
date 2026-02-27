@@ -18,12 +18,6 @@ export class EntityRenderer {
         const sy = char.y;
         const ctx = renderer.ctx;
 
-        // NEW: Load the Pudge model asset (cached on renderer)
-        if (!renderer.pudgeSprite) {
-            renderer.pudgeSprite = new Image();
-            renderer.pudgeSprite.src = 'assets/player/pudge_player.png';
-        }
-
         ctx.save();
         const z = char.z || 0;
         ctx.translate(sx, sy - z);
@@ -45,13 +39,14 @@ export class EntityRenderer {
         ctx.stroke();
 
         // HP Bar and other UI handled below
-        // Pudge Sprite (original logic from Phase 12/13)
-        // Pudge Sprite (original logic from Phase 12/13)
-        if (renderer.pudgeSprite && renderer.pudgeSprite.complete) {
+        // Pudge Sprite (Phase 20: Team-specific skins)
+        const teamSprite = (char.team === 'red') ? renderer.radiantSprite : renderer.direSprite;
+
+        if (teamSprite && teamSprite.complete) {
             ctx.save();
             ctx.rotate(char.rot || 0);
             const targetSize = char.radius * 3.5 || 84;
-            ctx.drawImage(renderer.pudgeSprite, -targetSize / 2, -targetSize / 2, targetSize, targetSize);
+            ctx.drawImage(teamSprite, -targetSize / 2, -targetSize / 2, targetSize, targetSize);
             ctx.restore();
         } else {
             // Procedural Pudge (the one they liked as fallback or primary)
