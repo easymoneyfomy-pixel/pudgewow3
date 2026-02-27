@@ -1,8 +1,10 @@
+import { GAME } from '../shared/GameConstants.js';
+
 export class Renderer {
     constructor(canvas) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
-        this.tileSize = 48; // WC3-style tile size
+        this.tileSize = GAME.TILE_SIZE; // WC3-style tile size (64)
     }
 
     clear() {

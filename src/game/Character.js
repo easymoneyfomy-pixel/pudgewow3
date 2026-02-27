@@ -1,5 +1,5 @@
-import { State } from '../engine/State.js';
 import { Hook } from './Hook.js';
+import { GAME } from '../shared/GameConstants.js';
 
 export class Character {
     constructor(x, y, team = 'red') {
@@ -11,19 +11,19 @@ export class Character {
         this.maxHp = 100;
         this.hp = this.maxHp;
 
-        // Размеры и скорость (увеличены для открытой карты)
-        this.radius = 20;
-        this.speed = 280;
+        // Размеры и скорость
+        this.radius = GAME.CHAR_RADIUS;
+        this.speed = GAME.CHAR_SPEED;
 
         // WC3 Апгрейды и Экономика
         this.gold = 0;
 
         // Характеристики хука (прокачиваемые)
-        this.hookDamage = 25;
-        this.hookSpeed = 800; // WC3 Pudge Wars authentic speed (was 1100)
-        this.hookMaxDist = 800; // Дальше летит через широкую реку
-        this.hookRadius = 20; // Чуть шире хитбокс
-        this.hookCurvePower = 0.5; // Сила закругления при движении
+        this.hookDamage = GAME.HOOK_DAMAGE;
+        this.hookSpeed = GAME.HOOK_SPEED;
+        this.hookMaxDist = GAME.HOOK_MAX_DIST;
+        this.hookRadius = GAME.HOOK_RADIUS;
+        this.hookCurvePower = GAME.HOOK_CURVE_POWER;
 
         // Состояние
         this.state = State.IDLE;
@@ -40,18 +40,18 @@ export class Character {
 
         // Таймеры
         this.respawnTimer = 0;
-        this.respawnDelay = 3; // 3 секунды респавна
+        this.respawnDelay = GAME.RESPAWN_DELAY;
 
         // Кулдаун хука
         this.hookCooldown = 0;
-        this.maxHookCooldown = 3; // 3 секунды
+        this.maxHookCooldown = GAME.HOOK_COOLDOWN;
 
         // Rot (W) - AOE toggle skill
         this.rotActive = false;
-        this.rotDamagePerSec = 10; // DPS to nearby enemies
-        this.rotSelfDamagePerSec = 5; // DPS to self
-        this.rotRadius = 120; // AOE radius
-        this.rotSlowFactor = 0.6; // Move speed multiplier when rot is on
+        this.rotDamagePerSec = GAME.ROT_DAMAGE_PER_SEC;
+        this.rotSelfDamagePerSec = GAME.ROT_SELF_DAMAGE_PER_SEC;
+        this.rotRadius = GAME.ROT_RADIUS;
+        this.rotSlowFactor = GAME.ROT_SLOW_FACTOR;
 
         // Items inventory
         this.items = [];
@@ -70,12 +70,12 @@ export class Character {
         // Barricade ability — REMOVED (replaced by Flesh Heap passive)
 
         // Passive HP regen
-        this.hpRegen = 2; // HP per second
+        this.hpRegen = GAME.CHAR_HP_REGEN;
 
         // === FLESH HEAP (WC3 Pudge Wars Passive) ===
         // Each kill permanently increases max HP by FLESH_HEAP_HP_PER_KILL
         this.fleshHeapStacks = 0;
-        this.fleshHeapHpPerStack = 8; // +8 max HP per kill
+        this.fleshHeapHpPerStack = GAME.FLESH_HEAP_HP;
 
         // XP / Level system
         this.level = 1;
@@ -179,7 +179,7 @@ export class Character {
         this.ruptureTimer = 0;
 
         // 3 sec of invulnerability after respawn
-        this.invulnerableTimer = 3;
+        this.invulnerableTimer = GAME.RESPAWN_DELAY; // Use respawn delay for post-spawn protection too
     }
 
     update(dt, map, entityManager) {
@@ -262,7 +262,7 @@ export class Character {
         // Healing Salve tick
         if (this.salveTimer > 0) {
             this.salveTimer -= dt;
-            this.hp = Math.min(this.maxHp, this.hp + 10 * dt); // 100 HP over 10s
+            this.hp = Math.min(this.maxHp, this.hp + 10 * dt); // 100 HP over 10s (Salves are hardcoded in ItemDefs but this is fine for now)
         }
 
         // CHARACTER COLLISION & UNSTUCK

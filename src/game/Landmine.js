@@ -1,4 +1,5 @@
 import { State } from '../engine/State.js';
+import { GAME } from '../shared/GameConstants.js';
 
 /**
  * Landmine (Techies Barrel) — WC3 Pudge Wars mechanics:
