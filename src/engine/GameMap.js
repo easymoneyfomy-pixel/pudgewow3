@@ -6,6 +6,7 @@ export class GameMap {
         this.height = height;
         this.tileSize = tileSize;
         this.grid = [];
+        this._animTime = 0;
 
         this.generatePudgeWarsMap();
     }
@@ -119,8 +120,7 @@ export class GameMap {
     }
 
     render(renderer, dt) {
-        if (!this.time) this.time = 0;
-        this.time += dt || 0.05;
+        this._animTime += dt || 0.05;
 
         const ctx = renderer.ctx;
 
@@ -142,7 +142,7 @@ export class GameMap {
                 }
                 else if (tile.type === TileType.WATER) {
                     // Deep water gradient with simple wave animation
-                    const waveOffset = Math.sin(this.time * 2 + y * 0.5) * 5;
+                    const waveOffset = Math.sin(this._animTime * 2 + y * 0.5) * 5;
                     const grad = ctx.createLinearGradient(px, py, px + size, py + size);
                     grad.addColorStop(0, '#002244');
                     grad.addColorStop(1, '#004488');
@@ -209,7 +209,7 @@ export class GameMap {
                     ctx.fillRect(px, py, size, size);
 
                     // Glowing healing rune
-                    const glowParams = Math.abs(Math.sin(this.time * 3)) * 20;
+                    const glowParams = Math.abs(Math.sin(this._animTime * 3)) * 20;
                     ctx.shadowBlur = 10 + glowParams;
                     ctx.shadowColor = '#00ff00';
                     ctx.fillStyle = '#00aa00';

@@ -33,10 +33,9 @@ export class Camera {
 
         renderer.save();
 
-        // WC3 top-down: simply translate so camera target is at screen center
-        renderer.translate(panX + this.shakeX - this.x, panY + this.shakeY - this.y);
-
+        // Scale first, then translate so zoom is relative to screen center
         renderer.ctx.scale(this.zoom, this.zoom);
+        renderer.translate(panX / this.zoom + this.shakeX - this.x, panY / this.zoom + this.shakeY - this.y);
     }
 
     release(renderer) {

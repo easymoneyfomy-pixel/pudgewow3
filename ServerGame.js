@@ -78,7 +78,7 @@ export class ServerGame {
     }
 
     handleUpgrade(character, type) {
-        const cost = 50;
+        const cost = GAME.UPGRADE_COST;
         if (character.gold >= cost) {
             switch (type) {
                 case 'DAMAGE':

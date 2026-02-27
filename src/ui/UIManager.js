@@ -1,4 +1,5 @@
 import { SHOP_ITEMS } from '../shared/ItemDefs.js';
+import { GAME } from '../shared/GameConstants.js';
 
 export class UIManager {
     constructor(game) {
@@ -264,14 +265,14 @@ export class UIManager {
         mmCtx.fillStyle = '#090909';
         mmCtx.fillRect(0, 0, size, size);
 
-        // Map layout (24x24)
-        const tileSize = size / 24;
-        for (let gx = 0; gx < 24; gx++) {
-            for (let gy = 0; gy < 24; gy++) {
+        // Map layout
+        const tileSize = size / GAME.MAP_WIDTH;
+        for (let gx = 0; gx < GAME.MAP_WIDTH; gx++) {
+            for (let gy = 0; gy < GAME.MAP_HEIGHT; gy++) {
                 const tx = gx * tileSize;
                 const ty = gy * tileSize;
 
-                if (gx < 2 || gy < 2 || gx >= 22 || gy >= 22) {
+                if (gx < 2 || gy < 2 || gx >= GAME.MAP_WIDTH - 2 || gy >= GAME.MAP_HEIGHT - 2) {
                     mmCtx.fillStyle = '#333';
                     mmCtx.fillRect(tx, ty, tileSize, tileSize);
                 } else if (gx >= 10 && gx <= 13) {
@@ -291,7 +292,7 @@ export class UIManager {
 
         // Draw Player Location
         if (player) {
-            const mapWorldSize = 24 * 64; // MAP_WIDTH * TILE_SIZE
+            const mapWorldSize = GAME.MAP_WIDTH * GAME.TILE_SIZE;
             const px = (player.x / mapWorldSize) * size;
             const py = (player.y / mapWorldSize) * size;
 
@@ -305,9 +306,4 @@ export class UIManager {
         }
     }
 
-    // Because we moved getClickedShopItem logic directly into the DOM event listeners,
-    // this old method can just return null so it doesn't break MainScene input handling
-    getClickedShopItem(mouseX, mouseY) {
-        return null;
-    }
 }

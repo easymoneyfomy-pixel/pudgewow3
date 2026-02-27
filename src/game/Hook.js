@@ -1,4 +1,5 @@
 import { State } from '../engine/State.js';
+import { GAME } from '../shared/GameConstants.js';
 
 export class Hook {
     constructor(owner, targetX, targetY) {
@@ -166,8 +167,8 @@ export class Hook {
                                 entity.takeDamage(9999); // Force kill
                                 // If it wasn't an ally headshot
                                 if (entity.team !== this.owner.team) {
-                                    this.owner.gold += 50;
-                                    if (this.owner.gainXp) this.owner.gainXp(80); // Big XP for headshot
+                                    this.owner.gold += GAME.GOLD_ON_HEADSHOT;
+                                    if (this.owner.gainXp) this.owner.gainXp(GAME.XP_ON_HEADSHOT); // Big XP for headshot
                                 }
                                 entity.headshotJustHappened = true; // Flag for client
                             } else {
@@ -205,13 +206,13 @@ export class Hook {
                                     }
 
                                     // Начисляем золото за точный хук
-                                    this.owner.gold += 10;
-                                    if (this.owner.gainXp) this.owner.gainXp(25); // XP for hit
+                                    this.owner.gold += GAME.GOLD_ON_HIT;
+                                    if (this.owner.gainXp) this.owner.gainXp(GAME.XP_ON_HIT); // XP for hit
 
                                     // Если убил хуком
                                     if (entity.state === State.DEAD) {
-                                        this.owner.gold += 50;
-                                        if (this.owner.gainXp) this.owner.gainXp(50); // Bonus XP for kill
+                                        this.owner.gold += GAME.GOLD_ON_KILL;
+                                        if (this.owner.gainXp) this.owner.gainXp(GAME.XP_ON_KILL); // Bonus XP for kill
                                     }
                                 } else {
                                     // Ally block/deny

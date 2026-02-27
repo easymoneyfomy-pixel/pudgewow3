@@ -2,7 +2,7 @@ export class EntityManager {
     constructor() {
         this.entities = [];
         this.entitiesToAdd = [];
-        this.entitiesToRemove = [];
+        this.entitiesToRemove = new Set();
     }
 
     add(entity) {
@@ -10,7 +10,7 @@ export class EntityManager {
     }
 
     remove(entity) {
-        this.entitiesToRemove.push(entity);
+        this.entitiesToRemove.add(entity);
     }
 
     update(dt, map) {
@@ -28,9 +28,9 @@ export class EntityManager {
         }
 
         // Удаляем мертвые/уничтоженные
-        if (this.entitiesToRemove.length > 0) {
-            this.entities = this.entities.filter(e => !this.entitiesToRemove.includes(e));
-            this.entitiesToRemove = [];
+        if (this.entitiesToRemove.size > 0) {
+            this.entities = this.entities.filter(e => !this.entitiesToRemove.has(e));
+            this.entitiesToRemove.clear();
         }
     }
 }

@@ -24,6 +24,7 @@ export class Game {
         this.lastTime = 0;
         this.deltaTime = 0;
         this.isRunning = false;
+        this._roomPollInterval = null;
 
         this._loop = this._loop.bind(this);
     }
@@ -46,9 +47,9 @@ export class Game {
     }
 
     onConnected() {
-        // Request lobbys
+        // Request lobbies
         this.network.send('GET_ROOMS', {});
-        setInterval(() => {
+        this._roomPollInterval = setInterval(() => {
             if (this.lobbyUI.visible) this.network.send('GET_ROOMS', {});
         }, 3000);
     }
@@ -61,6 +62,10 @@ export class Game {
 
     stop() {
         this.isRunning = false;
+        if (this._roomPollInterval) {
+            clearInterval(this._roomPollInterval);
+            this._roomPollInterval = null;
+        }
     }
 
     _loop(currentTime) {
@@ -72,7 +77,6 @@ export class Game {
 
         if (this.lobbyUI.visible) {
             this.renderer.clear();
-            this.lobbyUI.handleInput(this.input);
             this.lobbyUI.render(this.renderer.ctx);
         } else {
             this.update(this.deltaTime);

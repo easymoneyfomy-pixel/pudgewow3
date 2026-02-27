@@ -63,8 +63,4 @@ export class LobbyUI {
             this.menuContainer.classList.add('hidden');
         }
     }
-
-    handleInput(input) {
-        // Handled by DOM events now
-    }
 }

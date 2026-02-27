@@ -212,18 +212,10 @@ export class MainScene {
             this.game.network.sendInput({ type: 'MOVE', x: worldX, y: worldY });
         }
 
-        // Left-click: Hook OR shop buy
-        if (this.game.input.isMouseButtonPressed(0)) {
-            if (this.ui.shopOpen) {
-                // If shop is open, try to buy the clicked item
-                const clickedItemId = this.ui.getClickedShopItem(mousePos.x, mousePos.y);
-                if (clickedItemId) {
-                    this.game.network.sendInput({ type: 'BUY_ITEM', itemId: clickedItemId });
-                }
-            } else {
-                // Otherwise — HOOK! (WC3 Pudge Wars: left-click = hook)
-                this.game.network.sendInput({ type: 'HOOK', x: worldX, y: worldY });
-            }
+        // Left-click: Hook (WC3 Pudge Wars: left-click = hook)
+        // Shop buying is handled by DOM click events in UIManager
+        if (this.game.input.isMouseButtonPressed(0) && !this.ui.shopOpen) {
+            this.game.network.sendInput({ type: 'HOOK', x: worldX, y: worldY });
         }
 
         // Hook alternative (Q key — for accessibility)
