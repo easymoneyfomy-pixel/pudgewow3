@@ -4,519 +4,310 @@ export class UIManager {
     constructor(game) {
         this.game = game;
         this.shopOpen = false;
-        this.shopItemRects = []; // [{x, y, w, h, itemId}]
         this._lastPlayer = null;
+
+        // Cache DOM elements for fast access
+        this.dom = {
+            gameUi: document.getElementById('game-ui'),
+            scoreRed: document.getElementById('score-red'),
+            scoreBlue: document.getElementById('score-blue'),
+            gameTimer: document.getElementById('game-timer'),
+
+            playerName: document.getElementById('player-name'),
+            playerLevel: document.getElementById('player-level'),
+            playerGold: document.getElementById('player-gold'),
+            hpBar: document.getElementById('hp-bar'),
+            hpText: document.getElementById('hp-text'),
+            xpBar: document.getElementById('xp-bar'),
+            xpText: document.getElementById('xp-text'),
+
+            statDmg: document.getElementById('stat-dmg'),
+            statSpd: document.getElementById('stat-spd'),
+            statRng: document.getElementById('stat-rng'),
+            statRad: document.getElementById('stat-rad'),
+
+            // Skill elements (Q, W)
+            cdQ: document.getElementById('cd-q'),
+            cdTextQ: document.getElementById('cd-text-q'),
+            activeQ: document.getElementById('active-q'),
+
+            cdW: document.getElementById('cd-w'),
+            cdTextW: document.getElementById('cd-text-w'),
+            activeW: document.getElementById('active-w'),
+
+            // Item Grid
+            inventoryGrid: document.getElementById('inventory-grid'),
+
+            // Shop elements
+            shopOverlay: document.getElementById('shop-overlay'),
+            shopItemsGrid: document.getElementById('shop-items-grid'),
+            shopGoldVal: document.getElementById('shop-gold-val'),
+            btnCloseShop: document.getElementById('btn-close-shop'),
+
+            // Game Over
+            gameOverOverlay: document.getElementById('game-over'),
+            victoryTitle: document.getElementById('victory-title'),
+            finalScore: document.getElementById('final-score'),
+            btnReturn: document.getElementById('btn-return'),
+        };
+
+        this._initShop();
+        this._initInventorySlots();
+
+        // Bind events
+        this.dom.btnCloseShop.addEventListener('click', () => {
+            this.shopOpen = false;
+        });
+
+        this.dom.btnReturn.addEventListener('click', () => {
+            location.reload();
+        });
+    }
+
+    _initInventorySlots() {
+        this.dom.inventoryGrid.innerHTML = '';
+        for (let i = 0; i < 6; i++) {
+            const slot = document.createElement('div');
+            slot.className = 'inv-slot';
+            slot.innerHTML = `
+                <div class="hotkey">${['Z', 'X', 'C', 'V', 'D', 'F'][i]}</div>
+                <div class="item-icon" id="inv-icon-${i}"></div>
+                <div class="cooldown-overlay" id="inv-cd-${i}"></div>
+                <div class="cooldown-text" id="inv-text-${i}"></div>
+            `;
+            this.dom.inventoryGrid.appendChild(slot);
+        }
+    }
+
+    _initShop() {
+        this.dom.shopItemsGrid.innerHTML = '';
+        SHOP_ITEMS.forEach(item => {
+            const el = document.createElement('div');
+            el.className = 'shop-item';
+            el.id = `shop-item-${item.id}`;
+            el.dataset.id = item.id;
+            el.dataset.cost = item.cost;
+
+            el.innerHTML = `
+                <div class="s-icon">${item.icon}</div>
+                <div class="s-name">${item.label}</div>
+                <div class="s-desc">${item.desc}</div>
+                <div class="s-cost">${item.cost}g</div>
+            `;
+
+            // Click to buy
+            el.addEventListener('click', () => {
+                if (!this.shopOpen || !this._lastPlayer) return;
+                if (this._lastPlayer.gold >= item.cost) {
+                    this.game.network.sendInput({ type: 'BUY_ITEM', itemId: item.id });
+                }
+            });
+
+            this.dom.shopItemsGrid.appendChild(el);
+        });
     }
 
     render(ctx, rules, player, enemy) {
-        const width = this.game.canvas.width;
-        const height = this.game.canvas.height;
         this._lastPlayer = player;
 
-        // 1. Top Bar
-        this._drawTopBar(ctx, width, rules);
-
-        // 2. Bottom HUD
-        this._drawBottomBar(ctx, width, height, player);
-
-        // 3. Shop Overlay (center screen, toggle with B)
-        if (this.shopOpen) {
-            this._drawShopOverlay(ctx, width, height, player);
+        // Show UI if not visible
+        if (this.dom.gameUi.classList.contains('hidden')) {
+            this.dom.gameUi.classList.remove('hidden');
         }
 
-        // 4. Game Over
-        if (rules.isGameOver) {
-            this._drawGameOver(ctx, width, height, rules);
-        }
-    }
+        // Top Bar
+        this.dom.scoreRed.innerText = rules.scoreRed || 0;
+        this.dom.scoreBlue.innerText = rules.scoreBlue || 0;
 
-    _drawTopBar(ctx, width, rules) {
-        // Centered top panel — WC3 style
-        const boardWidth = 300;
-        const boardHeight = 50;
-        const startX = (width - boardWidth) / 2;
-        const startY = 0;
-
-        // Gradient background
-        const grad = ctx.createLinearGradient(startX, startY, startX, startY + boardHeight);
-        grad.addColorStop(0, 'rgba(20, 15, 10, 0.95)');
-        grad.addColorStop(1, 'rgba(40, 30, 20, 0.85)');
-        ctx.fillStyle = grad;
-        ctx.fillRect(startX, startY, boardWidth, boardHeight);
-
-        // Gold border bottom
-        ctx.strokeStyle = '#c4a44a';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(startX, startY + boardHeight);
-        ctx.lineTo(startX + boardWidth, startY + boardHeight);
-        ctx.stroke();
-
-        // Corner accents
-        ctx.strokeStyle = '#c4a44a';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(startX, startY, boardWidth, boardHeight);
-
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-
-        // Timer
         const mins = Math.floor(rules.roundTimeLeft / 60);
         const secs = Math.floor(rules.roundTimeLeft % 60).toString().padStart(2, '0');
-        ctx.fillStyle = '#f0d78c';
-        ctx.font = 'bold 18px Georgia, serif';
-        ctx.fillText(`⚔ ${mins}:${secs} ⚔`, startX + boardWidth / 2, startY + 16);
+        this.dom.gameTimer.innerText = `${mins}:${secs}`;
 
-        // Scores
-        ctx.font = 'bold 14px Georgia, serif';
-        ctx.fillStyle = '#ff6666';
-        ctx.textAlign = 'left';
-        ctx.fillText(`RED: ${rules.scoreRed}`, startX + 20, startY + 38);
+        // Bottom HUD
+        this.updatePortraitAndStats(player);
+        this.updateSkills(player);
+        this.updateInventory(player);
 
-        ctx.fillStyle = '#6688ff';
-        ctx.textAlign = 'right';
-        ctx.fillText(`BLUE: ${rules.scoreBlue}`, startX + boardWidth - 20, startY + 38);
-    }
+        // Shop Mode
+        if (this.shopOpen) {
+            this.dom.shopOverlay.classList.remove('hidden');
+            this.dom.shopGoldVal.innerText = player.gold;
 
-    _drawBottomBar(ctx, width, height, player) {
-        const barHeight = 140;
-        const startY = height - barHeight;
-
-        // Dark gradient background
-        const grad = ctx.createLinearGradient(0, startY, 0, height);
-        grad.addColorStop(0, 'rgba(15, 12, 8, 0.95)');
-        grad.addColorStop(1, 'rgba(25, 20, 15, 0.98)');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, startY, width, barHeight);
-
-        // Gold line on top
-        ctx.strokeStyle = '#c4a44a';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(0, startY);
-        ctx.lineTo(width, startY);
-        ctx.stroke();
-
-        // === 1. MINIMAP (Left) ===
-        const mapSize = barHeight - 20;
-        const mapX = 10;
-        const mapY = startY + 10;
-        this._drawMinimap(ctx, mapX, mapY, mapSize, player);
-
-        // === 2. Portrait + Stats (Center-Left) ===
-        const portX = mapX + mapSize + 15;
-        this._drawPortraitAndStats(ctx, portX, startY, player);
-
-        // === 3. Skills (Center) ===
-        const skillsX = portX + 280;
-        this._drawSkills(ctx, skillsX, startY, player);
-
-        // === 4. Inventory (Right) ===
-        const invX = skillsX + 140;
-        this._drawInventory(ctx, invX, startY, barHeight, player);
-
-        // === 5. Shop hint ===
-        ctx.fillStyle = '#c4a44a';
-        ctx.font = 'bold 12px Georgia, serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('[B] — Open Shop', invX + 340, startY + barHeight / 2 - 4);
-        ctx.fillStyle = '#888';
-        ctx.font = '10px Arial';
-        ctx.fillText('LMB=Hook  RMB=Move', invX + 340, startY + barHeight / 2 + 12);
-    }
-
-    _drawMinimap(ctx, x, y, size, player) {
-        // Black background with border
-        ctx.fillStyle = '#090909';
-        ctx.fillRect(x, y, size, size);
-        ctx.strokeStyle = '#c4a44a';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(x, y, size, size);
-
-        // Draw simplified map (24x24 grid)
-        const tileSize = size / 24;
-        for (let gx = 0; gx < 24; gx++) {
-            for (let gy = 0; gy < 24; gy++) {
-                const tx = x + gx * tileSize;
-                const ty = y + gy * tileSize;
-
-                // Walls (2-tile border)
-                if (gx < 2 || gy < 2 || gx >= 22 || gy >= 22) {
-                    ctx.fillStyle = '#333';
-                    ctx.fillRect(tx, ty, tileSize, tileSize);
-                }
-                // River (columns 10-13)
-                else if (gx >= 10 && gx <= 13) {
-                    // Bridges at y=5-6, 11-12, 17-18
-                    if ((gy >= 5 && gy <= 6) || (gy >= 11 && gy <= 12) || (gy >= 17 && gy <= 18)) {
-                        ctx.fillStyle = '#2a3a22'; // Bridge (ground)
-                        ctx.fillRect(tx, ty, tileSize, tileSize);
+            // Update affordable states
+            SHOP_ITEMS.forEach(item => {
+                const el = document.getElementById(`shop-item-${item.id}`);
+                if (el) {
+                    if (player.gold >= item.cost) {
+                        el.classList.add('affordable');
+                        el.classList.remove('unaffordable');
                     } else {
-                        ctx.fillStyle = '#003366'; // Water
-                        ctx.fillRect(tx, ty, tileSize, tileSize);
+                        el.classList.remove('affordable');
+                        el.classList.add('unaffordable');
                     }
                 }
-                // Team sides
-                else {
-                    ctx.fillStyle = gx < 10 ? '#1a2a16' : '#16192a';
-                    ctx.fillRect(tx, ty, tileSize, tileSize);
-                }
-            }
+            });
+        } else {
+            this.dom.shopOverlay.classList.add('hidden');
         }
 
-        // Player dot (based on world position, map is 20*64 = 1280 world units)
-        if (player) {
-            const mapWorldSize = 24 * 64;
-            const px = x + (player.x / mapWorldSize) * size;
-            const py = y + (player.y / mapWorldSize) * size;
-
-            ctx.fillStyle = player.team === 'red' ? '#ff4444' : '#4488ff';
-            ctx.beginPath();
-            ctx.arc(px, py, 3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 1;
-            ctx.stroke();
+        // Game Over
+        if (rules.isGameOver) {
+            this.dom.gameOverOverlay.classList.remove('hidden');
+            const winnerIsRed = rules.winner.includes('Red');
+            this.dom.victoryTitle.innerText = `${rules.winner} VICTORY!`;
+            this.dom.victoryTitle.style.color = winnerIsRed ? 'var(--red)' : 'var(--blue)';
+            this.dom.finalScore.innerText = `Final Score: Red ${rules.scoreRed} — ${rules.scoreBlue} Blue`;
+        } else {
+            this.dom.gameOverOverlay.classList.add('hidden');
         }
+
+        // Minimap logic (Canvas Embedded)
+        this._drawMinimap(ctx, player);
     }
 
-    _drawPortraitAndStats(ctx, x, startY, player) {
-        // Portrait box
-        const portW = 60;
-        const portH = 80;
-        ctx.fillStyle = '#111';
-        ctx.fillRect(x, startY + 15, portW, portH);
-        ctx.strokeStyle = '#c4a44a';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(x, startY + 15, portW, portH);
+    updatePortraitAndStats(player) {
+        this.dom.playerName.innerText = `Pudge (${player.team.toUpperCase()})`;
+        this.dom.playerLevel.innerText = `Lv ${player.level}`;
+        this.dom.playerGold.innerText = player.gold;
 
-        // Team-colored Pudge head
-        ctx.fillStyle = player.team === 'red' ? '#660000' : '#000066';
-        ctx.beginPath();
-        ctx.ellipse(x + portW / 2, startY + 60, 22, 28, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#664444';
-        ctx.beginPath();
-        ctx.arc(x + portW / 2, startY + 38, 14, 0, Math.PI * 2);
-        ctx.fill();
+        // HP
+        const hpRatio = Math.max(0, Math.min(1, player.hp / player.maxHp));
+        this.dom.hpBar.style.width = `${hpRatio * 100}%`;
+        this.dom.hpText.innerText = `${Math.ceil(player.hp)} / ${player.maxHp}`;
 
-        // Level indicator under portrait
-        ctx.fillStyle = '#ffd700';
-        ctx.font = 'bold 12px Georgia, serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(`Lv ${player.level}`, x + portW / 2, startY + 110);
+        // XP
+        const xpRatio = Math.max(0, Math.min(1, player.xp / player.xpToLevel));
+        this.dom.xpBar.style.width = `${xpRatio * 100}%`;
+        this.dom.xpText.innerText = `XP ${Math.floor(player.xp)}/${player.xpToLevel}`;
 
-        // Stats area to the right of portrait
-        const sX = x + portW + 10;
-        ctx.textAlign = 'left';
-
-        // Name
-        ctx.fillStyle = '#f0d78c';
-        ctx.font = 'bold 14px Georgia, serif';
-        ctx.fillText(`Pudge (${player.team.toUpperCase()})`, sX, startY + 28);
-
-        // Gold
-        ctx.fillStyle = '#ffd700';
-        ctx.font = 'bold 13px Arial';
-        ctx.fillText(`💰 ${player.gold}`, sX + 140, startY + 28);
-
-        // HP Bar
-        const hpBarW = 200;
-        const hpBarH = 16;
-        const hpY = startY + 38;
-        ctx.fillStyle = '#220000';
-        ctx.fillRect(sX, hpY, hpBarW, hpBarH);
-        const hpRatio = player.hp / player.maxHp;
-        const hpGrad = ctx.createLinearGradient(sX, hpY, sX + hpBarW * hpRatio, hpY);
-        hpGrad.addColorStop(0, '#00aa00');
-        hpGrad.addColorStop(1, '#007700');
-        ctx.fillStyle = hpGrad;
-        ctx.fillRect(sX, hpY, hpBarW * hpRatio, hpBarH);
-        ctx.strokeStyle = '#555';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(sX, hpY, hpBarW, hpBarH);
-
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 11px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(`${Math.ceil(player.hp)} / ${player.maxHp}`, sX + hpBarW / 2, hpY + hpBarH / 2 + 4);
-
-        // XP Bar
-        const xpY = hpY + hpBarH + 4;
-        const xpBarH = 8;
-        ctx.fillStyle = '#111';
-        ctx.fillRect(sX, xpY, hpBarW, xpBarH);
-        const xpRatio = player.xp / player.xpToLevel;
-        ctx.fillStyle = '#6644cc';
-        ctx.fillRect(sX, xpY, hpBarW * xpRatio, xpBarH);
-        ctx.strokeStyle = '#333';
-        ctx.strokeRect(sX, xpY, hpBarW, xpBarH);
-        ctx.fillStyle = '#ccc';
-        ctx.font = '8px Arial';
-        ctx.fillText(`XP ${player.xp}/${player.xpToLevel}`, sX + hpBarW / 2, xpY + xpBarH / 2 + 3);
-
-        // Stats
-        ctx.textAlign = 'left';
-        ctx.font = '11px Arial';
-        ctx.fillStyle = '#bbb';
-        const statY = xpY + xpBarH + 10;
-        ctx.fillText(`⚔ Dmg: ${player.hookDamage}`, sX, statY);
-        ctx.fillText(`🏹 Range: ${player.hookMaxDist}`, sX, statY + 14);
-        ctx.fillText(`💨 Spd: ${player.hookSpeed}`, sX + 110, statY);
-        ctx.fillText(`🎯 Rad: ${player.hookRadius}`, sX + 110, statY + 14);
+        // Combat Stats
+        this.dom.statDmg.innerText = player.hookDamage;
+        this.dom.statSpd.innerText = player.hookSpeed;
+        this.dom.statRng.innerText = player.hookMaxDist;
+        this.dom.statRad.innerText = player.hookRadius;
     }
 
-    _drawSkills(ctx, x, startY, player) {
-        ctx.fillStyle = '#c4a44a';
-        ctx.font = 'bold 10px Georgia, serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('SKILLS', x + 55, startY + 12);
-
+    updateSkills(player) {
         // Hook (Q)
-        this._drawSkillIcon(ctx, x, startY + 18, 50, 'Q', 'Hook', player.hookCooldown, player.maxHookCooldown);
+        this._updateSkillSlot(
+            this.dom.cdQ, this.dom.cdTextQ, this.dom.activeQ,
+            player.hookCooldown, player.maxHookCooldown, false
+        );
 
         // Rot (W)
-        this._drawSkillIcon(ctx, x + 60, startY + 18, 50, 'W', 'Rot', 0, 0, player.rotActive);
+        this._updateSkillSlot(
+            this.dom.cdW, this.dom.cdTextW, this.dom.activeW,
+            0, 0, player.rotActive
+        );
     }
 
-    _drawInventory(ctx, x, startY, barHeight, player) {
-        ctx.fillStyle = '#c4a44a';
-        ctx.font = 'bold 10px Georgia, serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('INVENTORY', x + 100, startY + 12);
-
-        // 6 inventory slots (2 rows x 3 cols)
-        const slotSize = 40;
-        const gap = 4;
-        for (let i = 0; i < 6; i++) {
-            const col = i % 3;
-            const row = Math.floor(i / 3);
-            const sx = x + col * (slotSize + gap);
-            const sy = startY + 18 + row * (slotSize + gap);
-
-            // Slot background
-            ctx.fillStyle = '#1a1a1a';
-            ctx.fillRect(sx, sy, slotSize, slotSize);
-            ctx.strokeStyle = player.items && player.items[i] ? '#c4a44a' : '#444';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(sx, sy, slotSize, slotSize);
-
-            if (player.items && player.items[i]) {
-                const item = player.items[i];
-                // Item icon (text-based)
-                const icons = {
-                    'burn': '🔥',
-                    'bounce': '🔄',
-                    'rupture': '🩸',
-                    'grapple': '🪢',
-                    'lifesteal': '🦇',
-                    'blink': '⚡',
-                    'speed': '🐾'
-                };
-                ctx.font = '18px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText(icons[item.effect] || '📦', sx + slotSize / 2, sy + slotSize / 2 + 6);
-
-                // Cooldown overlay
-                if (item.active && item.cooldown > 0) {
-                    const ratio = item.cooldown / item.maxCooldown;
-                    ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
-                    ctx.fillRect(sx, sy + slotSize * (1 - ratio), slotSize, slotSize * ratio);
-
-                    ctx.fillStyle = '#ffff00';
-                    ctx.font = 'bold 12px Arial';
-                    ctx.fillText(item.cooldown.toFixed(1), sx + slotSize / 2, sy + slotSize / 2 + 4);
-                }
-            } else {
-                // Empty slot number
-                ctx.fillStyle = '#333';
-                ctx.font = '10px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText(`slot ${i + 1}`, sx + slotSize / 2, sy + slotSize / 2 + 4);
-            }
-
-            // Draw hotkey hint
-            const hotkeys = ['Z', 'X', 'C', 'V', 'D', 'F'];
-            ctx.fillStyle = '#888';
-            ctx.font = 'bold 10px Arial';
-            ctx.textAlign = 'left';
-            ctx.fillText(hotkeys[i], sx + 2, sy + 10);
-        }
-    }
-
-    _drawShopOverlay(ctx, width, height, player) {
-        // Dim background
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-        ctx.fillRect(0, 0, width, height);
-
-        // Shop panel (centered)
-        const panelW = 450;
-        const panelH = 380;
-        const px = (width - panelW) / 2;
-        const py = (height - panelH) / 2;
-
-        // Panel background
-        const grad = ctx.createLinearGradient(px, py, px, py + panelH);
-        grad.addColorStop(0, '#1a150e');
-        grad.addColorStop(1, '#0d0a06');
-        ctx.fillStyle = grad;
-        ctx.fillRect(px, py, panelW, panelH);
-
-        // Gold fancy border
-        ctx.strokeStyle = '#c4a44a';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(px, py, panelW, panelH);
-        ctx.strokeStyle = '#8a6a2a';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(px + 4, py + 4, panelW - 8, panelH - 8);
-
-        // Title
-        ctx.fillStyle = '#f0d78c';
-        ctx.font = 'bold 22px Georgia, serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('🏪 ITEM SHOP', px + panelW / 2, py + 30);
-
-        // Gold display
-        ctx.fillStyle = '#ffd700';
-        ctx.font = 'bold 16px Arial';
-        ctx.fillText(`💰 Gold: ${player.gold}`, px + panelW / 2, py + 55);
-
-        // Close hint
-        ctx.fillStyle = '#888';
-        ctx.font = 'italic 12px Arial';
-        ctx.fillText('Press [B] to close — Click item to buy', px + panelW / 2, py + panelH - 15);
-
-        // Item grid (2 rows x 3 cols)
-
-        const itemW = 130;
-        const itemH = 100;
-        const gap = 10;
-        const gridStartX = px + (panelW - 3 * itemW - 2 * gap) / 2;
-        const gridStartY = py + 75;
-
-        this.shopItemRects = []; // Reset for click detection
-
-        for (let i = 0; i < SHOP_ITEMS.length; i++) {
-            const col = i % 3;
-            const row = Math.floor(i / 3);
-            const ix = gridStartX + col * (itemW + gap);
-            const iy = gridStartY + row * (itemH + gap);
-
-            const item = SHOP_ITEMS[i];
-            const canAfford = player.gold >= item.cost;
-
-            // Save rect for click detection
-            this.shopItemRects.push({ x: ix, y: iy, w: itemW, h: itemH, itemId: item.id });
-
-            // Item background
-            ctx.fillStyle = canAfford ? '#2a2510' : '#151515';
-            ctx.fillRect(ix, iy, itemW, itemH);
-
-            // Border
-            ctx.strokeStyle = canAfford ? '#c4a44a' : '#444';
-            ctx.lineWidth = canAfford ? 2 : 1;
-            ctx.strokeRect(ix, iy, itemW, itemH);
-
-            // Icon
-            ctx.font = '28px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText(item.icon, ix + itemW / 2, iy + 30);
-
-            // Name
-            ctx.font = 'bold 11px Arial';
-            ctx.fillStyle = canAfford ? '#fff' : '#666';
-            ctx.fillText(item.label, ix + itemW / 2, iy + 52);
-
-            // Description
-            ctx.font = '9px Arial';
-            ctx.fillStyle = canAfford ? '#aaa' : '#555';
-            ctx.fillText(item.desc, ix + itemW / 2, iy + 68);
-
-            // Cost
-            ctx.font = 'bold 14px Arial';
-            ctx.fillStyle = canAfford ? '#ffd700' : '#554400';
-            ctx.fillText(`${item.cost}g`, ix + itemW / 2, iy + 88);
-
-            if (!canAfford) {
-                ctx.fillStyle = 'rgba(0,0,0,0.4)';
-                ctx.fillRect(ix, iy, itemW, itemH);
-            }
-        }
-
-        // Upgrades section at bottom of shop
-        const upY = gridStartY + 2 * (itemH + gap) + 15;
-        ctx.fillStyle = '#c4a44a';
-        ctx.font = 'bold 13px Georgia, serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('Stat Upgrades (50g each) — use keys [1] [2] [3] [4]', px + panelW / 2, upY);
-
-        ctx.fillStyle = '#ccc';
-        ctx.font = '12px Arial';
-        ctx.fillText('[1] +10 Damage   [2] +50 Speed   [3] +100 Range   [4] +4 Radius', px + panelW / 2, upY + 20);
-    }
-
-    getClickedShopItem(mouseX, mouseY) {
-        if (!this.shopOpen) return null;
-        for (const rect of this.shopItemRects) {
-            if (mouseX >= rect.x && mouseX <= rect.x + rect.w &&
-                mouseY >= rect.y && mouseY <= rect.y + rect.h) {
-                return rect.itemId;
-            }
-        }
-        return null;
-    }
-
-    _drawSkillIcon(ctx, x, y, size, key, name, cd, maxCd, isActive = false) {
-        ctx.fillStyle = isActive ? '#002200' : '#1a1a1a';
-        ctx.fillRect(x, y, size, size);
-        ctx.strokeStyle = isActive ? '#00ff00' : '#c4a44a';
-        ctx.lineWidth = isActive ? 2 : 1;
-        ctx.strokeRect(x, y, size, size);
-
-        ctx.fillStyle = '#fff';
-        ctx.textAlign = 'center';
-        ctx.font = 'bold 20px Georgia, serif';
-        ctx.fillText(key, x + size / 2, y + size / 2 + 6);
-
-        ctx.font = '9px Arial';
-        ctx.fillStyle = '#aaa';
-        ctx.fillText(name, x + size / 2, y + size + 10);
-
-        if (cd > 0) {
+    _updateSkillSlot(cdOverlay, cdText, activeGlow, cd, maxCd, isActive) {
+        if (cd > 0 && maxCd > 0) {
             const ratio = cd / maxCd;
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
-            ctx.fillRect(x, y + size * (1 - ratio), size, size * ratio);
-
-            ctx.fillStyle = '#ffff00';
-            ctx.font = 'bold 12px Arial';
-            ctx.fillText(cd.toFixed(1), x + size / 2, y + size / 2 + 5);
+            cdOverlay.style.height = `${ratio * 100}%`;
+            cdText.innerText = cd.toFixed(1);
+        } else {
+            cdOverlay.style.height = '0%';
+            cdText.innerText = '';
         }
 
         if (isActive) {
-            ctx.fillStyle = '#00ff00';
-            ctx.font = 'bold 8px Arial';
-            ctx.fillText('ON', x + size / 2, y + size - 4);
+            activeGlow.classList.remove('hide');
+        } else {
+            activeGlow.classList.add('hide');
         }
     }
 
-    _drawGameOver(ctx, width, height, rules) {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
-        ctx.fillRect(0, 0, width, height);
+    updateInventory(player) {
+        const icons = {
+            'burn': '🔥', 'bounce': '🔄', 'rupture': '🩸',
+            'grapple': '🪢', 'lifesteal': '🦇', 'blink': '⚡', 'speed': '🐾'
+        };
 
-        const winnerColor = rules.winner.includes('Red') ? '#ff4444' : '#4488ff';
-        ctx.fillStyle = winnerColor;
-        ctx.font = 'bold 64px Georgia, serif';
-        ctx.textAlign = 'center';
-        ctx.shadowBlur = 30;
-        ctx.shadowColor = winnerColor;
-        ctx.fillText(`${rules.winner} VICTORY!`, width / 2, height / 2 - 50);
+        for (let i = 0; i < 6; i++) {
+            const item = player.items ? player.items[i] : null;
+            const iconEl = document.getElementById(`inv-icon-${i}`);
+            const cdOverlay = document.getElementById(`inv-cd-${i}`);
+            const cdText = document.getElementById(`inv-text-${i}`);
+            const slotEl = iconEl.parentElement;
 
-        ctx.shadowBlur = 0;
-        ctx.fillStyle = '#f0d78c';
-        ctx.font = '24px Georgia, serif';
-        ctx.fillText(`Final Score: Red ${rules.scoreRed} — ${rules.scoreBlue} Blue`, width / 2, height / 2 + 20);
-        ctx.font = 'italic 16px Georgia, serif';
-        ctx.fillStyle = '#888';
-        ctx.fillText('Press [R] to return to Tavern', width / 2, height / 2 + 70);
+            if (item) {
+                slotEl.classList.add('has-item');
+                iconEl.innerText = icons[item.effect] || '📦';
+
+                if (item.active && item.cooldown > 0) {
+                    const ratio = item.cooldown / item.maxCooldown;
+                    cdOverlay.style.height = `${ratio * 100}%`;
+                    cdText.innerText = item.cooldown.toFixed(1);
+                } else {
+                    cdOverlay.style.height = '0%';
+                    cdText.innerText = '';
+                }
+            } else {
+                slotEl.classList.remove('has-item');
+                iconEl.innerText = '';
+                cdOverlay.style.height = '0%';
+                cdText.innerText = '';
+            }
+        }
+    }
+
+    // Still draws logic into the local embedded minimap canvas ctx from MainScene
+    _drawMinimap(mainCtx, player) {
+        // The minimap has its own canvas now
+        const mmCanvas = document.getElementById('minimapCanvas');
+        if (!mmCanvas) return;
+        const mmCtx = mmCanvas.getContext('2d');
+        const size = mmCanvas.width;
+
+        // Clear
+        mmCtx.fillStyle = '#090909';
+        mmCtx.fillRect(0, 0, size, size);
+
+        // Map layout (24x24)
+        const tileSize = size / 24;
+        for (let gx = 0; gx < 24; gx++) {
+            for (let gy = 0; gy < 24; gy++) {
+                const tx = gx * tileSize;
+                const ty = gy * tileSize;
+
+                if (gx < 2 || gy < 2 || gx >= 22 || gy >= 22) {
+                    mmCtx.fillStyle = '#333';
+                    mmCtx.fillRect(tx, ty, tileSize, tileSize);
+                } else if (gx >= 10 && gx <= 13) {
+                    if ((gy >= 5 && gy <= 6) || (gy >= 11 && gy <= 12) || (gy >= 17 && gy <= 18)) {
+                        mmCtx.fillStyle = '#2a3a22';
+                        mmCtx.fillRect(tx, ty, tileSize, tileSize);
+                    } else {
+                        mmCtx.fillStyle = '#003366';
+                        mmCtx.fillRect(tx, ty, tileSize, tileSize);
+                    }
+                } else {
+                    mmCtx.fillStyle = gx < 10 ? '#1a2a16' : '#16192a';
+                    mmCtx.fillRect(tx, ty, tileSize, tileSize);
+                }
+            }
+        }
+
+        // Draw Player Location
+        if (player) {
+            const mapWorldSize = 24 * 64; // MAP_WIDTH * TILE_SIZE
+            const px = (player.x / mapWorldSize) * size;
+            const py = (player.y / mapWorldSize) * size;
+
+            mmCtx.fillStyle = player.team === 'red' ? '#ff4444' : '#4488ff';
+            mmCtx.beginPath();
+            mmCtx.arc(px, py, 3, 0, Math.PI * 2);
+            mmCtx.fill();
+            mmCtx.strokeStyle = '#fff';
+            mmCtx.lineWidth = 1;
+            mmCtx.stroke();
+        }
+    }
+
+    // Because we moved getClickedShopItem logic directly into the DOM event listeners,
+    // this old method can just return null so it doesn't break MainScene input handling
+    getClickedShopItem(mouseX, mouseY) {
+        return null;
     }
 }

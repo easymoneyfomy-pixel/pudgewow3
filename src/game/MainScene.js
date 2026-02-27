@@ -275,7 +275,7 @@ export class MainScene {
     render(renderer) {
         this.camera.apply(renderer);
 
-        this.map.render(renderer);
+        this.map.render(renderer, this.game.deltaTime);
 
         // Render entities sorted by Y
         const sorted = [...this.localEntities].sort((a, b) => a.y - b.y);

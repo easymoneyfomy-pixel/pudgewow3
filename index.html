@@ -4,16 +4,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pudge Wars (WC3 Style)</title>
+    <title>Pudge Wars AAA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
+    <!-- MAIN MENU -->
+    <div id="main-menu" class="overlay active">
+        <div class="menu-box">
+            <h1 class="wc3-title">PUDGE WARS</h1>
+            <p class="subtitle">Meat Hook Mayhem</p>
+            <button id="btn-play" class="wc3-button">Find Match</button>
+            <div class="loader hidden" id="menu-loader">Connecting...</div>
+        </div>
+    </div>
+
+    <!-- GAME UI -->
+    <div id="game-ui" class="hidden">
+        
+        <!-- TOP HUD -->
+        <div id="hud-top">
+            <div class="score-box red-team">
+                <span class="label">RED</span>
+                <span class="score" id="score-red">0</span>
+            </div>
+            <div class="timer-box">
+                ⚔ <span id="game-timer">00:00</span> ⚔
+            </div>
+            <div class="score-box blue-team">
+                <span class="score" id="score-blue">0</span>
+                <span class="label">BLUE</span>
+            </div>
+        </div>
+
+        <!-- BOTTOM HUD -->
+        <div id="hud-bottom">
+            <div class="hud-bg"></div>
+            
+            <div class="hud-content">
+                <!-- MINIMAP -->
+                <div id="minimap-container">
+                    <!-- The canvas minimap will be overlaid here by UIManager or MainScene -->
+                    <canvas id="minimapCanvas" width="120" height="120"></canvas>
+                </div>
+
+                <!-- PORTRAIT & STATS -->
+                <div class="portrait-area">
+                    <div class="portrait-box">
+                        <div id="portrait-img"></div>
+                        <div id="player-level">Lv 1</div>
+                    </div>
+                    <div class="stats-box">
+                        <div class="name-gold">
+                            <span id="player-name">Pudge</span>
+                            <span class="gold">💰 <span id="player-gold">0</span></span>
+                        </div>
+                        <div class="bars">
+                            <div class="bar-container hp-container">
+                                <div id="hp-bar" class="bar-fill hp-fill"></div>
+                                <div id="hp-text" class="bar-text">100 / 100</div>
+                            </div>
+                            <div class="bar-container xp-container">
+                                <div id="xp-bar" class="bar-fill xp-fill"></div>
+                                <div id="xp-text" class="bar-text">XP 0/100</div>
+                            </div>
+                        </div>
+                        <div class="combat-stats">
+                            <div>⚔ Dmg: <span id="stat-dmg">100</span></div>
+                            <div>💨 Spd: <span id="stat-spd">1200</span></div>
+                            <div>🏹 Rng: <span id="stat-rng">800</span></div>
+                            <div>🎯 Rad: <span id="stat-rad">24</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SKILLS -->
+                <div class="skills-area">
+                    <div class="section-title">SKILLS</div>
+                    <div class="skills-grid">
+                        <div class="skill-slot" id="skill-q">
+                            <div class="skill-icon icon-hook"></div>
+                            <div class="hotkey">Q</div>
+                            <div class="cooldown-overlay" id="cd-q"></div>
+                            <div class="cooldown-text" id="cd-text-q"></div>
+                            <div class="active-glow hide" id="active-q">ON</div>
+                        </div>
+                        <div class="skill-slot" id="skill-w">
+                            <div class="skill-icon icon-rot"></div>
+                            <div class="hotkey">W</div>
+                            <div class="cooldown-overlay" id="cd-w"></div>
+                            <div class="cooldown-text" id="cd-text-w"></div>
+                            <div class="active-glow border-glow hide" id="active-w">ON</div>
+                        </div>
+                        <div class="skill-slot" id="skill-e">
+                            <div class="skill-icon icon-barricade"></div>
+                            <div class="hotkey">E</div>
+                            <div class="cooldown-overlay" id="cd-e"></div>
+                            <div class="cooldown-text" id="cd-text-e"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- INVENTORY -->
+                <div class="inventory-area">
+                    <div class="section-title">INVENTORY</div>
+                    <div class="inventory-grid" id="inventory-grid">
+                        <!-- Slots injected by JS -->
+                    </div>
+                    <div class="shop-hint">
+                        [B] Open Shop<br>
+                        LMB=Hook &nbsp; RMB=Move
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- SHOP OVERLAY -->
+        <div id="shop-overlay" class="hidden">
+            <div class="shop-panel">
+                <div class="shop-header">
+                    <h2>🏪 ITEM SHOP</h2>
+                    <div class="shop-gold">💰 Gold: <span id="shop-gold-val">0</span></div>
+                    <button class="close-btn" id="btn-close-shop">✖</button>
+                </div>
+                <div class="shop-grid" id="shop-items-grid">
+                    <!-- Items injected by JS -->
+                </div>
+                <div class="shop-upgrades">
+                    <h3>Stat Upgrades (50g)</h3>
+                    <div class="upgrade-keys">
+                        <span>[1] +10 Dmg</span>
+                        <span>[2] +50 Spd</span>
+                        <span>[3] +100 Rng</span>
+                        <span>[4] +4 Rad</span>
+                    </div>
+                </div>
+                <div class="shop-footer">
+                    Press [B] to close — Click item to buy
+                </div>
+            </div>
+        </div>
+
+        <!-- GAME OVER -->
+        <div id="game-over" class="overlay hidden">
+            <div class="game-over-box">
+                <h1 id="victory-title" class="wc3-title">VICTORY</h1>
+                <h3 id="final-score">Final Score: Red 50 — 48 Blue</h3>
+                <button id="btn-return" class="wc3-button">Return to Tavern</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CANVAS CONTAINER -->
     <div id="game-container">
         <canvas id="gameCanvas"></canvas>
-        <div class="game-overlay"></div>
+        <div class="game-overlay-vignette"></div>
     </div>
-    <!-- Используем ES-модули, чтобы не нужен был бандлер -->
+
     <script type="module" src="src/main.js"></script>
 </body>
 

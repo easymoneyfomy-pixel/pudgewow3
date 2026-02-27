@@ -102,25 +102,95 @@ export class GameMap {
         }
     }
 
-    render(renderer) {
+    render(renderer, dt) {
+        if (!this.time) this.time = 0;
+        this.time += dt || 0.05;
+
+        const ctx = renderer.ctx;
+
         for (let x = 0; x < this.width; x++) {
             for (let y = 0; y < this.height; y++) {
                 const tile = this.grid[x][y];
-                let type = 'grass';
-                if (tile.type === TileType.WATER) type = 'water';
-                if (tile.type === TileType.WALL) type = 'stone';
-                if (tile.type === TileType.OBSTACLE) type = 'tree';
-                if (tile.type === TileType.SHOP) type = 'shop';
-                if (tile.type === TileType.RUNE) type = 'rune';
-                if (tile.type === TileType.SPAWN_RED) type = 'spawn_red';
-                if (tile.type === TileType.SPAWN_BLUE) type = 'spawn_blue';
+                const px = x * this.tileSize;
+                const py = y * this.tileSize;
+                const size = this.tileSize;
 
-                renderer.drawTile(
-                    x * this.tileSize,
-                    y * this.tileSize,
-                    this.tileSize,
-                    type
-                );
+                if (tile.type === TileType.GROUND) {
+                    ctx.fillStyle = '#22301a'; // Dark WC3 grass
+                    ctx.fillRect(px, py, size, size);
+
+                    // Simple grass speckles
+                    ctx.fillStyle = '#2a3a22';
+                    ctx.fillRect(px + 10, py + 10, 4, 4);
+                    ctx.fillRect(px + 40, py + 30, 4, 4);
+                }
+                else if (tile.type === TileType.WATER) {
+                    // Deep water gradient with simple wave animation
+                    const waveOffset = Math.sin(this.time * 2 + y * 0.5) * 5;
+                    const grad = ctx.createLinearGradient(px, py, px + size, py + size);
+                    grad.addColorStop(0, '#002244');
+                    grad.addColorStop(1, '#004488');
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(px, py, size, size);
+
+                    // Highlights moving across water
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+                    ctx.fillRect(px + size / 2 + waveOffset, py + size / 2, size / 4, size / 8);
+                }
+                else if (tile.type === TileType.WALL) {
+                    // Stone pillars/walls
+                    ctx.fillStyle = '#2a2a2a';
+                    ctx.fillRect(px, py, size, size);
+
+                    // Wall bevel
+                    ctx.fillStyle = '#444';
+                    ctx.fillRect(px, py, size, 4);
+                    ctx.fillRect(px, py, 4, size);
+                    ctx.fillStyle = '#111';
+                    ctx.fillRect(px, py + size - 4, size, 4);
+                    ctx.fillRect(px + size - 4, py, 4, size);
+                }
+                else if (tile.type === TileType.SHOP) {
+                    // Shop pad
+                    ctx.fillStyle = '#3a2a1a';
+                    ctx.fillRect(px, py, size, size);
+
+                    ctx.strokeStyle = '#c4a44a';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(px + 4, py + 4, size - 8, size - 8);
+
+                    // Gold symbol
+                    ctx.fillStyle = '#f0d78c';
+                    ctx.font = '24px Georgia';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('⚖', px + size / 2, py + size / 2 + 8);
+                }
+                else if (tile.type === TileType.RUNE) {
+                    ctx.fillStyle = '#1a221a';
+                    ctx.fillRect(px, py, size, size);
+
+                    // Glowing healing rune
+                    const glowParams = Math.abs(Math.sin(this.time * 3)) * 20;
+                    ctx.shadowBlur = 10 + glowParams;
+                    ctx.shadowColor = '#00ff00';
+                    ctx.fillStyle = '#00aa00';
+                    ctx.beginPath();
+                    ctx.arc(px + size / 2, py + size / 2, size / 4, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0; // Reset
+                }
+                else if (tile.type === TileType.SPAWN_RED) {
+                    ctx.fillStyle = '#3a1a1a';
+                    ctx.fillRect(px, py, size, size);
+                    ctx.strokeStyle = '#ff4444';
+                    ctx.strokeRect(px + 4, py + 4, size - 8, size - 8);
+                }
+                else if (tile.type === TileType.SPAWN_BLUE) {
+                    ctx.fillStyle = '#1a1a3a';
+                    ctx.fillRect(px, py, size, size);
+                    ctx.strokeStyle = '#4488ff';
+                    ctx.strokeRect(px + 4, py + 4, size - 8, size - 8);
+                }
             }
         }
     }
