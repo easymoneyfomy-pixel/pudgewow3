@@ -119,7 +119,10 @@ export class UIManager {
         ctx.fillStyle = '#c4a44a';
         ctx.font = 'bold 12px Georgia, serif';
         ctx.textAlign = 'center';
-        ctx.fillText('[B] — Open Shop', invX + 340, startY + barHeight / 2 + 4);
+        ctx.fillText('[B] — Open Shop', invX + 340, startY + barHeight / 2 - 4);
+        ctx.fillStyle = '#888';
+        ctx.font = '10px Arial';
+        ctx.fillText('LMB=Hook  RMB=Move', invX + 340, startY + barHeight / 2 + 12);
     }
 
     _drawMinimap(ctx, x, y, size, player) {

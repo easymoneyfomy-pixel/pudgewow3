@@ -195,12 +195,38 @@ export class MainScene {
         const worldX = mousePos.x - cx + this.camera.x;
         const worldY = mousePos.y - cy + this.camera.y;
 
-        // Move (right click)
+        // ============================================
+        // WC3 PUDGE WARS CONTROLS
+        // Left-click  = Hook (throw toward cursor)
+        // Right-click  = Move (walk to cursor)
+        // Q            = Hook (alternative)
+        // W            = Toggle Rot
+        // E            = Barricade
+        // B            = Toggle Shop
+        // 1-4          = Stat Upgrades
+        // Z,X,C,V,D,F  = Active Items
+        // ============================================
+
+        // Move (right-click — WC3 standard)
         if (this.game.input.isMouseButtonPressed(2)) {
             this.game.network.sendInput({ type: 'MOVE', x: worldX, y: worldY });
         }
 
-        // Hook (Q)
+        // Left-click: Hook OR shop buy
+        if (this.game.input.isMouseButtonPressed(0)) {
+            if (this.ui.shopOpen) {
+                // If shop is open, try to buy the clicked item
+                const clickedItemId = this.ui.getClickedShopItem(mousePos.x, mousePos.y);
+                if (clickedItemId) {
+                    this.game.network.sendInput({ type: 'BUY_ITEM', itemId: clickedItemId });
+                }
+            } else {
+                // Otherwise — HOOK! (WC3 Pudge Wars: left-click = hook)
+                this.game.network.sendInput({ type: 'HOOK', x: worldX, y: worldY });
+            }
+        }
+
+        // Hook alternative (Q key — for accessibility)
         if (this.game.input.isKeyPressed('KeyQ')) {
             this.game.network.sendInput({ type: 'HOOK', x: worldX, y: worldY });
         }
@@ -232,14 +258,6 @@ export class MainScene {
         // Shop toggle (B key)
         if (this.game.input.isKeyPressed('KeyB')) {
             this.ui.shopOpen = !this.ui.shopOpen;
-        }
-
-        // Left click — shop item
-        if (this.game.input.isMouseButtonPressed(0)) {
-            const clickedItemId = this.ui.getClickedShopItem(mousePos.x, mousePos.y);
-            if (clickedItemId) {
-                this.game.network.sendInput({ type: 'BUY_ITEM', itemId: clickedItemId });
-            }
         }
 
         // Camera follow
