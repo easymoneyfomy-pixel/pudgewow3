@@ -68,8 +68,7 @@ export class Character {
         this.isHealing = false;
         this.shieldRadius = 25;
 
-        // Ensure stats are correct from the start
-        this.recalculateStats();
+        this.shieldRadius = 25;
 
         // Barricade ability — REMOVED (replaced by Flesh Heap passive)
 
@@ -96,6 +95,9 @@ export class Character {
 
         // WC3 Hook Lock
         this.isPaused = false;
+
+        // Ensure stats are correct after all properties (level, items, etc.) are initialized
+        this.recalculateStats();
     }
 
     setTarget(x, y) {

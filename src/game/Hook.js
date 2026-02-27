@@ -50,15 +50,6 @@ export class Hook {
             return;
         }
 
-        if (this.owner.state === State.DEAD) {
-            this.owner.isPaused = false;
-            if (this.hookedEntity) {
-                this.hookedEntity.state = State.IDLE;
-            }
-            entityManager.remove(this);
-            return;
-        }
-
         const moveAmt = this.speed * dt;
 
         // 1. Record Pudge's path (for curved chain)
@@ -188,7 +179,7 @@ export class Hook {
         let remaining = moveAmt;
 
         while (remaining > 0) {
-            const target = this.pathNodes.length > 0 ? this.pathNodes[0] : this.owner;
+            const target = this.pathNodes.length > 0 ? this.pathNodes[this.pathNodes.length - 1] : this.owner;
             const dx = target.x - this.x;
             const dy = target.y - this.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
@@ -199,7 +190,7 @@ export class Hook {
                 remaining -= dist;
 
                 if (this.pathNodes.length > 0) {
-                    this.pathNodes.shift();
+                    this.pathNodes.pop();
                 } else {
                     // Fully returned
                     this.finalizeRetraction(entityManager);
