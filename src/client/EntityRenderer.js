@@ -44,118 +44,17 @@ export class EntityRenderer {
         ctx.arc(0, 0, 22, 0, Math.PI * 2);
         ctx.stroke();
 
-        // Shadow
-        ctx.fillStyle = 'rgba(0,0,0,0.3)';
-        ctx.beginPath();
-        ctx.arc(0, 0, 18, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Body (team color)
-        ctx.fillStyle = char.team === 'red' ? '#8B1A1A' : '#1A1A8B'; // Darker base
-        ctx.beginPath();
-        ctx.arc(0, 0, 16, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        // Stitched patterns for "Pudge" look
-        ctx.strokeStyle = 'rgba(0,0,0,0.4)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        // Belly stitches
-        ctx.moveTo(-10, 0); ctx.lineTo(10, 0);
-        for (let i = -8; i <= 8; i += 4) {
-            ctx.moveTo(i, -3); ctx.lineTo(i, 3);
-        }
-        // Shoulder stitches
-        ctx.moveTo(-14, -10); ctx.lineTo(-10, -14);
-        ctx.moveTo(14, -10); ctx.lineTo(10, -14);
-        ctx.stroke();
-
-        // Inner body detail (flesh color for Pudge)
-        ctx.fillStyle = '#9C7261'; // Slightly more vibrant flesh
-        ctx.beginPath();
-        ctx.arc(0, 0, 9, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Head
-        ctx.fillStyle = '#664444';
-        ctx.beginPath();
-        ctx.arc(0, -8, 7, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#222';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-
-        // Eyes (white dots)
-        ctx.fillStyle = '#fff';
-        ctx.beginPath();
-        ctx.arc(-2, -9, 1.5, 0, Math.PI * 2);
-        ctx.arc(2, -9, 1.5, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Arms/Shoulders
-        ctx.fillStyle = char.team === 'red' ? '#884444' : '#444488';
-        ctx.fillRect(-18, -2, 8, 8);
-        ctx.fillRect(10, -2, 8, 8);
-
-        // Cleaver (Enhanced)
-        ctx.save();
-        ctx.translate(16, 0);
-        ctx.rotate(-0.5);
-        ctx.fillStyle = '#999'; // Base metal
-        ctx.strokeStyle = '#333';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(5, -14);
-        ctx.lineTo(15, -12);
-        ctx.lineTo(12, 4);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        // Edge shine
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 0.5;
-        ctx.beginPath();
-        ctx.moveTo(15, -12); ctx.lineTo(12, 4);
-        ctx.stroke();
-
-        // Handle
-        ctx.fillStyle = '#4a2c15';
-        ctx.fillRect(-1, 0, 3, 10);
-        ctx.restore();
-
-        // Healing visual
-        if (char.isHealing) {
-            const hPulse = Math.sin(Date.now() / 150) * 0.2 + 0.5;
-            ctx.fillStyle = `rgba(0, 255, 100, ${hPulse})`;
-            ctx.font = 'bold 14px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText('+', Math.sin(Date.now() / 200) * 6, -18);
-        }
-
-        // Invulnerability Shield
-        if (char.invulnerableTimer > 0) {
-            const sp = Math.sin(Date.now() / 100) * 0.1 + 0.35;
-            ctx.strokeStyle = `rgba(100, 200, 255, ${sp + 0.3})`;
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(0, 0, 20, 0, Math.PI * 2);
-            ctx.stroke();
-        }
-
-        // Draw the Pudge Sprite if loaded, otherwise fallback to procedural
-        // Draw the Pudge Sprite if loaded, otherwise fallback to procedural
-        if (renderer.pudgeSprite && renderer.pudgeSprite.complete && renderer.pudgeSprite.naturalWidth > 0) {
+        // HP Bar and other UI handled below
+        // Pudge Sprite (original logic from Phase 12/13)
+        // Pudge Sprite (original logic from Phase 12/13)
+        if (renderer.pudgeSprite && renderer.pudgeSprite.complete) {
             ctx.save();
-            ctx.rotate(char.rot || 0); // Pudge faces movement/hook direction
-            const targetSize = char.radius * 3.5; // Scale according to hitbox but slightly larger for "meatiness"
+            ctx.rotate(char.rot || 0);
+            const targetSize = 64; // Reverting to original size
             ctx.drawImage(renderer.pudgeSprite, -targetSize / 2, -targetSize / 2, targetSize, targetSize);
             ctx.restore();
         } else {
+            // Procedural Pudge (the one they liked as fallback or primary)
             // Shadow
             ctx.fillStyle = 'rgba(0,0,0,0.3)';
             ctx.beginPath();
@@ -163,7 +62,7 @@ export class EntityRenderer {
             ctx.fill();
 
             // Body (team color)
-            ctx.fillStyle = char.team === 'red' ? '#8B1A1A' : '#1A1A8B'; // Darker base
+            ctx.fillStyle = char.team === 'red' ? '#8B1A1A' : '#1A1A8B';
             ctx.beginPath();
             ctx.arc(0, 0, 16, 0, Math.PI * 2);
             ctx.fill();
@@ -171,71 +70,22 @@ export class EntityRenderer {
             ctx.lineWidth = 2;
             ctx.stroke();
 
-            // Stitched patterns for "Pudge" look
+            // Stitched patterns
             ctx.strokeStyle = 'rgba(0,0,0,0.4)';
             ctx.lineWidth = 1;
             ctx.beginPath();
-            // Belly stitches
             ctx.moveTo(-10, 0); ctx.lineTo(10, 0);
             for (let i = -8; i <= 8; i += 4) {
                 ctx.moveTo(i, -3); ctx.lineTo(i, 3);
             }
-            // Shoulder stitches
-            ctx.moveTo(-14, -10); ctx.lineTo(-10, -14);
-            ctx.moveTo(14, -10); ctx.lineTo(10, -14);
             ctx.stroke();
 
-            // Inner body detail (flesh color for Pudge)
-            ctx.fillStyle = '#9C7261'; // Slightly more vibrant flesh
-            ctx.beginPath();
-            ctx.arc(0, 0, 9, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Head
-            ctx.fillStyle = '#664444';
-            ctx.beginPath();
-            ctx.arc(0, -8, 7, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = '#222';
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-
-            // Eyes (white dots)
-            ctx.fillStyle = '#fff';
-            ctx.beginPath();
-            ctx.arc(-2, -9, 1.5, 0, Math.PI * 2);
-            ctx.arc(2, -9, 1.5, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Arms/Shoulders
-            ctx.fillStyle = char.team === 'red' ? '#884444' : '#444488';
-            ctx.fillRect(-18, -2, 8, 8);
-            ctx.fillRect(10, -2, 8, 8);
-
-            // Cleaver (Enhanced)
+            // Cleaver
             ctx.save();
             ctx.translate(16, 0);
             ctx.rotate(-0.5);
-            ctx.fillStyle = '#999'; // Base metal
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(5, -14);
-            ctx.lineTo(15, -12);
-            ctx.lineTo(12, 4);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-
-            // Edge shine
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 0.5;
-            ctx.beginPath();
-            ctx.moveTo(15, -12); ctx.lineTo(12, 4);
-            ctx.stroke();
-
-            // Handle
+            ctx.fillStyle = '#777';
+            ctx.fillRect(0, -10, 10, 14);
             ctx.fillStyle = '#4a2c15';
             ctx.fillRect(-1, 0, 3, 10);
             ctx.restore();
@@ -370,68 +220,28 @@ export class EntityRenderer {
             }
         }
 
-        // 2. Hook blade (The Head)
-        if (renderer.hookSprite && renderer.hookSprite.complete && renderer.hookSprite.naturalWidth > 0) {
-            ctx.save();
-            ctx.translate(hx, hy);
-
-            let headAngle = Math.atan2(dirY, dirX);
-            if (isReturning && points.length > 1) {
-                const headDx = points[1].x - hx;
-                const headDy = points[1].y - hy;
-                headAngle = Math.atan2(headDy, headDx) + Math.PI; // Correct for back-facing
-            }
-            ctx.rotate(headAngle);
-
-            const headSize = hook.radius * 5;
-            ctx.drawImage(renderer.hookSprite, -headSize / 2, -headSize / 2, headSize, headSize);
-            ctx.restore();
-        } else {
-            // Head orientation:
-            // If flying forward, point in dirX/dirY.
-            // If returning, point towards the next node (points[1]).
-            let headAngle = Math.atan2(dirY, dirX);
-            if (isReturning && points.length > 1) {
-                const headDx = points[1].x - hx;
-                const headDy = points[1].y - hy;
-                headAngle = Math.atan2(headDy, headDx) + Math.PI; // Look back when retracting
-            }
-
-            ctx.save();
-            ctx.translate(hx, hy);
-            ctx.rotate(headAngle);
-
-            // Core Shank
-            ctx.fillStyle = '#777';
-            ctx.fillRect(-2, -2, 10, 4);
-
-            // Meat Hook Curve
-            ctx.beginPath();
-            ctx.strokeStyle = '#888';
-            ctx.lineWidth = 4;
-            ctx.lineJoin = 'round';
-            ctx.lineCap = 'round';
-            ctx.arc(8, 0, 10, -Math.PI / 2, Math.PI / 2, false);
-            ctx.stroke();
-
-            // Barb/Point
-            ctx.beginPath();
-            ctx.fillStyle = '#999';
-            ctx.moveTo(8, 10);
-            ctx.lineTo(2, 6);
-            ctx.lineTo(10, 4);
-            ctx.closePath();
-            ctx.fill();
-
-            // Edge Highlights
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.arc(8, 0, 10, -Math.PI / 2, 0, false);
-            ctx.stroke();
-
-            ctx.restore();
+        // 2. Hook blade (The Head) - Procedural "Meat Hook" they liked
+        let headAngle = Math.atan2(dirY, dirX);
+        if (isReturning && points.length > 1) {
+            const headDx = points[1].x - hx;
+            const headDy = points[1].y - hy;
+            headAngle = Math.atan2(headDy, headDx) + Math.PI;
         }
+
+        ctx.save();
+        ctx.translate(hx, hy);
+        ctx.rotate(headAngle);
+
+        // Simple procedural hook (Meat Hook style)
+        ctx.fillStyle = '#777';
+        ctx.fillRect(-2, -2, 10, 4);
+        ctx.beginPath();
+        ctx.strokeStyle = '#888';
+        ctx.lineWidth = 4;
+        ctx.arc(8, 0, 10, -Math.PI / 2, Math.PI / 2, false);
+        ctx.stroke();
+
+        ctx.restore();
     }
 
     // ─────────────────────── LANDMINE ────────────────────────────────────────
@@ -444,47 +254,14 @@ export class EntityRenderer {
         // Stealthy when armed
         ctx.globalAlpha = mine.isArmed ? 0.35 : 1.0;
 
-        if (renderer.landmineSprite && renderer.landmineSprite.complete && renderer.landmineSprite.naturalWidth > 0) {
-            const size = 32;
-            ctx.drawImage(renderer.landmineSprite, -size / 2, -size / 2, size, size);
-        } else {
-            // 1. Barrel Body
-            ctx.fillStyle = '#8B4513'; // SaddleBrown
-            ctx.beginPath();
-            ctx.ellipse(0, 0, 12, 14, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = '#3d2b1f';
-            ctx.lineWidth = 1;
-            ctx.stroke();
-
-            // 2. Wood Grain (Procedural vertical curves)
-            ctx.strokeStyle = '#5D2906';
-            ctx.lineWidth = 0.5;
-            for (let i = -8; i <= 8; i += 4) {
-                ctx.beginPath();
-                ctx.moveTo(i, -12);
-                ctx.quadraticCurveTo(i * 1.5, 0, i, 12);
-                ctx.stroke();
-            }
-
-            // 3. Iron Bands
-            ctx.fillStyle = '#333';
-            ctx.fillRect(-12.5, -8, 25, 3);
-            ctx.fillRect(-12.5, 5, 25, 3);
-
-            // 4. Fuse / Lid
-            ctx.fillStyle = '#222';
-            ctx.fillRect(-4, -16, 8, 4);
-
-            // Burning Fuse Spark (if not armed yet or if active)
-            if (!mine.isArmed) {
-                const sparkGlow = Math.sin(Date.now() / 50) * 2 + 3;
-                ctx.fillStyle = '#ffaa00';
-                ctx.beginPath();
-                ctx.arc(0, -18, sparkGlow, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
+        // Generic barrel (original)
+        ctx.fillStyle = '#8B4513';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 12, 14, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#3d2b1f';
+        ctx.lineWidth = 1;
+        ctx.stroke();
 
         ctx.restore();
     }

@@ -8,7 +8,7 @@ export class Renderer {
 
         // Load Sprites
         this.pudgeSprite = new Image();
-        this.pudgeSprite.src = 'assets/pudge.png';
+        this.pudgeSprite.src = 'assets/player/pudge_player.png';
 
         this.hookSprite = new Image();
         this.hookSprite.src = 'assets/hook.png';

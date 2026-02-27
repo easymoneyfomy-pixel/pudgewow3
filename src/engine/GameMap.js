@@ -91,20 +91,7 @@ export class GameMap {
                     ctx.fillStyle = '#1e2420';
                     ctx.fillRect(px, py, size, size);
 
-                    // Procedural grass blades for AAA look
-                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-                    ctx.lineWidth = 1;
-                    const seed = (x * 13 + y * 7); // deterministic pseudo-random
-                    for (let i = 0; i < 3; i++) {
-                        const gx = px + ((seed * (i + 1)) % 40) + 12;
-                        const gy = py + ((seed * (i + 2)) % 40) + 12;
-                        ctx.beginPath();
-                        ctx.moveTo(gx, gy);
-                        ctx.lineTo(gx + 2, gy - 6);
-                        ctx.stroke();
-                    }
-
-                    // Slightly lighter/bluish grass speckles
+                    // Slightly lighter/bluish grass speckles (original polish)
                     ctx.fillStyle = '#26302a';
                     ctx.fillRect(px + 10, py + 10, 4, 4);
                     ctx.fillRect(px + 40, py + 30, 4, 4);
@@ -117,15 +104,6 @@ export class GameMap {
                     grad.addColorStop(1, '#113333');
                     ctx.fillStyle = grad;
                     ctx.fillRect(px, py, size, size);
-
-                    // WATER BLOOM (Additive glow on river edges)
-                    if (x === 10 || x === 13) {
-                        ctx.save();
-                        ctx.globalCompositeOperation = 'lighter';
-                        ctx.fillStyle = 'rgba(0, 255, 255, 0.03)';
-                        ctx.fillRect(px, py, size, size);
-                        ctx.restore();
-                    }
 
                     // Subtle highlights
                     ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
