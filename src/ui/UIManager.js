@@ -9,10 +9,10 @@ export class UIManager {
 
         // Рисуем поверх мира, без трансформаций камеры
 
-        // 1. Верхняя панель (Счет и Таймер)
+        // 1. Верхняя панель (Счет и Таймер - стиль Leaderboard WC3)
         this._drawTopBar(ctx, width, rules);
 
-        // 2. Нижняя панель (Скиллы и Кулдауны игрока)
+        // 2. Нижняя панель (WC3 HUD - Minimap, Portrait, Stats, Command Card)
         this._drawBottomBar(ctx, width, height, player);
 
         // 3. Экран конца игры
@@ -22,58 +22,99 @@ export class UIManager {
     }
 
     _drawTopBar(ctx, width, rules) {
-        // Gradient background
-        const barHeight = 45;
-        const grad = ctx.createLinearGradient(0, 0, 0, barHeight);
-        grad.addColorStop(0, '#3a2b1f');
-        grad.addColorStop(1, '#1a120c');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, width, barHeight);
+        // WC3 Leaderboard style top-right
+        const boardWidth = 200;
+        const boardHeight = 80;
+        const startX = width - boardWidth - 10;
+        const startY = 10;
 
-        ctx.strokeStyle = '#5a4635';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(0, 0, width, barHeight);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(startX, startY, boardWidth, boardHeight);
+        ctx.strokeStyle = '#f0d78c';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(startX, startY, boardWidth, boardHeight);
 
-        ctx.font = 'bold 20px "Segoe UI", Arial, sans-serif';
+        ctx.font = 'bold 16px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
         // Timer
         const mins = Math.floor(rules.roundTimeLeft / 60);
         const secs = Math.floor(rules.roundTimeLeft % 60).toString().padStart(2, '0');
-        ctx.fillStyle = '#f0d78c'; // Gold color text
-        ctx.fillText(`${mins}:${secs}`, width / 2, barHeight / 2);
+        ctx.fillStyle = '#f0d78c';
+        ctx.fillText(`Round Time: ${mins}:${secs}`, startX + boardWidth / 2, startY + 20);
 
         // Scores
         ctx.textAlign = 'left';
         ctx.fillStyle = '#ff6666';
-        ctx.fillText(`RED: ${rules.scoreRed}`, 50, barHeight / 2);
+        ctx.fillText(`RED: ${rules.scoreRed}`, startX + 20, startY + 45);
 
-        ctx.textAlign = 'right';
         ctx.fillStyle = '#6666ff';
-        ctx.fillText(`BLUE: ${rules.scoreBlue}`, width - 50, barHeight / 2);
+        ctx.fillText(`BLUE: ${rules.scoreBlue}`, startX + 20, startY + 65);
     }
 
     _drawBottomBar(ctx, width, height, player) {
-        const barHeight = 100;
+        const barHeight = 160;
         const startY = height - barHeight;
 
-        // Panel Background
-        const grad = ctx.createLinearGradient(0, startY, 0, height);
-        grad.addColorStop(0, '#2b1f1a');
-        grad.addColorStop(1, '#000000');
-        ctx.fillStyle = grad;
+        // HUD Background (dark stone/wood)
+        ctx.fillStyle = '#222';
         ctx.fillRect(0, startY, width, barHeight);
 
-        ctx.strokeStyle = '#3d2b1f';
-        ctx.lineWidth = 4;
-        ctx.strokeRect(0, startY, width, barHeight);
+        ctx.strokeStyle = '#f0d78c';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, startY);
+        ctx.lineTo(width, startY);
+        ctx.stroke();
 
-        // HP Bar
-        const hpBarW = 200;
+        // 1. Minimap Area (Left 200px)
+        const mapW = 180;
+        ctx.fillStyle = '#111';
+        ctx.fillRect(10, startY + 10, mapW, barHeight - 20);
+        ctx.strokeRect(10, startY + 10, mapW, barHeight - 20);
+        ctx.fillStyle = '#444';
+        ctx.font = 'italic 12px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText("Minimap Unavailable", 10 + mapW / 2, startY + barHeight / 2);
+
+        // 2. Portrait Area
+        const portX = 200;
+        const portW = 120;
+        ctx.fillStyle = '#111';
+        ctx.fillRect(portX, startY + 10, portW, barHeight - 20);
+        ctx.strokeRect(portX, startY + 10, portW, barHeight - 20);
+
+        // Draw a fake big "Pudge" portrait icon
+        ctx.fillStyle = player.team === 'red' ? '#880000' : '#000088';
+        ctx.beginPath();
+        ctx.ellipse(portX + portW / 2, startY + barHeight / 2 + 20, 40, 50, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#664444';
+        ctx.beginPath();
+        ctx.arc(portX + portW / 2, startY + barHeight / 2 - 20, 25, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 3. Stats Area
+        const statX = 330;
+        const statW = 300;
+        ctx.fillStyle = '#1a1a1a';
+        ctx.fillRect(statX, startY + 10, statW, barHeight - 20);
+        ctx.strokeRect(statX, startY + 10, statW, barHeight - 20);
+
+        ctx.textAlign = 'left';
+        ctx.font = 'bold 16px Arial';
+        ctx.fillStyle = '#fff';
+        ctx.fillText(`Pudge (${player.team.toUpperCase()})`, statX + 15, startY + 30);
+
+        ctx.fillStyle = '#ffd700';
+        ctx.fillText(`💰 Gold: ${player.gold}`, statX + 180, startY + 30);
+
+        // HP Bar in stats area
+        const hpBarW = statW - 30;
         const hpBarH = 20;
-        const hpX = 20;
-        const hpY = startY + 20;
+        const hpX = statX + 15;
+        const hpY = startY + 45;
 
         ctx.fillStyle = '#330000';
         ctx.fillRect(hpX, hpY, hpBarW, hpBarH);
@@ -89,46 +130,42 @@ export class UIManager {
         ctx.textAlign = 'center';
         ctx.fillText(`${Math.ceil(player.hp)} / ${player.maxHp}`, hpX + hpBarW / 2, hpY + hpBarH / 2 + 1);
 
-        // Gold and info
+        // State info
         ctx.textAlign = 'left';
-        ctx.fillStyle = '#ffd700';
-        ctx.font = 'bold 16px Arial';
-        ctx.fillText(`💰 GOLD: ${player.gold}`, hpX, hpY + 45);
+        ctx.font = 'italic 12px Arial';
+        ctx.fillStyle = '#aaa';
+        ctx.fillText(`Status: ${player.state.toUpperCase()}`, statX + 15, startY + 85);
 
-        ctx.fillStyle = '#888';
-        ctx.font = 'italic 14px Arial';
-        ctx.fillText(`Pudge Status: ${player.state}`, hpX, hpY + 65);
-
-        // Skills (Hook)
-        const iconSize = 60;
-        const iconX = width / 2 - 120;
-        const iconY = startY + 20;
-
-        this._drawIcon(ctx, iconX, iconY, iconSize, "Q", player.hookCooldown, player.maxHookCooldown);
-
-        // Shop (Visualized as icons or buttons)
-        const shopX = width / 2;
-        ctx.fillStyle = '#f0d78c';
-        ctx.font = 'bold 14px Arial';
-        ctx.fillText('UPGRADES (50g):', shopX, startY + 20);
-
+        // Base stats
         ctx.font = '12px Arial';
-        ctx.fillStyle = '#ccc';
-        const labels = [
-            `[1] Dmg: ${player.hookDamage}`,
-            `[2] Spd: ${player.hookSpeed}`,
-            `[3] Dist: ${player.hookMaxDist}`,
-            `[4] Rad: ${player.hookRadius}`
-        ];
+        ctx.fillStyle = '#eee';
+        ctx.fillText(`Damage: ${player.hookDamage}`, statX + 15, startY + 105);
+        ctx.fillText(`Speed: ${player.hookSpeed}`, statX + 15, startY + 120);
+        ctx.fillText(`Target Range: ${player.hookMaxDist}`, statX + 120, startY + 105);
+        ctx.fillText(`Hit Radius: ${player.hookRadius}`, statX + 120, startY + 120);
 
-        labels.forEach((label, i) => {
-            const row = Math.floor(i / 2);
-            const col = i % 2;
-            ctx.fillText(label, shopX + col * 100, startY + 40 + row * 20);
-        });
+        // 4. Command Card Area (Skills and Shop)
+        const cmdX = width - 350;
+        const cmdW = 340;
+        ctx.fillStyle = '#111';
+        ctx.fillRect(cmdX, startY + 10, cmdW, barHeight - 20);
+        ctx.strokeRect(cmdX, startY + 10, cmdW, barHeight - 20);
+
+        // Meat Hook Skill (Slot 1: Top Left)
+        this._drawSkillIcon(ctx, cmdX + 15, startY + 25, 60, "Q", "Meat Hook", player.hookCooldown, player.maxHookCooldown);
+
+        // Upgrades (Shop grid)
+        ctx.fillStyle = '#f0d78c';
+        ctx.font = 'bold 12px Arial';
+        ctx.fillText("Shop (50g per UPGRADE):", cmdX + 90, startY + 30);
+
+        this._drawUpgradeIcon(ctx, cmdX + 90, startY + 45, 50, "1", "+10 Dmg");
+        this._drawUpgradeIcon(ctx, cmdX + 145, startY + 45, 50, "2", "+50 Spd");
+        this._drawUpgradeIcon(ctx, cmdX + 90, startY + 100, 50, "3", "+Dist");
+        this._drawUpgradeIcon(ctx, cmdX + 145, startY + 100, 50, "4", "+Rad");
     }
 
-    _drawIcon(ctx, x, y, size, key, cd, maxCd) {
+    _drawSkillIcon(ctx, x, y, size, key, name, cd, maxCd) {
         ctx.fillStyle = '#444';
         ctx.fillRect(x, y, size, size);
         ctx.strokeStyle = '#f0d78c';
@@ -140,6 +177,9 @@ export class UIManager {
         ctx.font = 'bold 24px Arial';
         ctx.fillText(key, x + size / 2, y + size / 2 + 8);
 
+        ctx.font = '10px Arial';
+        ctx.fillText(name, x + size / 2, y + size + 12);
+
         if (cd > 0) {
             const ratio = cd / maxCd;
             ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
@@ -149,6 +189,23 @@ export class UIManager {
             ctx.font = 'bold 14px Arial';
             ctx.fillText(cd.toFixed(1), x + size / 2, y + size / 2 + 5);
         }
+    }
+
+    _drawUpgradeIcon(ctx, x, y, size, key, label) {
+        ctx.fillStyle = '#333';
+        ctx.fillRect(x, y, size, size);
+        ctx.strokeStyle = '#aaa';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x, y, size, size);
+
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 16px Arial';
+        ctx.fillText(`[${key}]`, x + size / 2, y + size / 2 - 5);
+
+        ctx.fillStyle = '#ffaa00';
+        ctx.font = '10px Arial';
+        ctx.fillText(label, x + size / 2, y + size / 2 + 15);
     }
 
     _drawGameOver(ctx, width, height, rules) {

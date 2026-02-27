@@ -3,6 +3,8 @@ import { GameMap } from '../engine/GameMap.js';
 import { UIManager } from '../ui/UIManager.js';
 import { Character } from './Character.js';
 import { Hook } from './Hook.js';
+import { ParticleSystem } from '../engine/ParticleSystem.js';
+import { FloatingTextManager } from '../engine/FloatingText.js';
 
 export class MainScene {
     constructor(game) {
@@ -19,6 +21,9 @@ export class MainScene {
         this.localEntities = [];
         this.localPlayer = null;
         this.localEnemy = null;
+
+        this.particles = new ParticleSystem();
+        this.floatingTexts = new FloatingTextManager();
     }
 
     init() {
@@ -66,31 +71,57 @@ export class MainScene {
                     hook.y = eData.y;
                     hook.radius = eData.radius; // Sync radius for drawing
 
-                    // Переопределяем render для динамического радиуса
+                    // Переопределяем render для стилизованного хука
                     hook.render = function (renderer) {
-                        const pOwner = renderer.worldToScreen(this.owner.x, this.owner.y, 10);
+                        const pOwner = renderer.worldToScreen(this.owner.x, this.owner.y, 20); // slightly higher
                         const pHook = renderer.worldToScreen(this.x, this.y, 10);
 
-                        renderer.ctx.strokeStyle = '#888';
-                        renderer.ctx.lineWidth = 2;
+                        // 1. Draw Chain (segmented line with links)
+                        renderer.ctx.strokeStyle = '#aaaaaa';
+                        renderer.ctx.lineWidth = 3;
+                        renderer.ctx.setLineDash([8, 6]); // Creates chain-link effect
                         renderer.ctx.beginPath();
-                        renderer.ctx.moveTo(pOwner.x, pOwner.y - 20);
-                        renderer.ctx.lineTo(pHook.x, pHook.y - 20);
+                        renderer.ctx.moveTo(pOwner.x, pOwner.y);
+                        renderer.ctx.lineTo(pHook.x, pHook.y);
+                        renderer.ctx.stroke();
+                        renderer.ctx.setLineDash([]); // Reset dash
+
+                        // 2. Draw Hook Blade
+                        renderer.ctx.fillStyle = '#666';
+                        renderer.ctx.strokeStyle = '#222';
+                        renderer.ctx.lineWidth = 2;
+
+                        // Calculate angle from owner to hook
+                        const angle = Math.atan2(pHook.y - pOwner.y, pHook.x - pOwner.x);
+
+                        renderer.ctx.save();
+                        renderer.ctx.translate(pHook.x, pHook.y);
+                        renderer.ctx.rotate(angle);
+
+                        // Draw a curved blade
+                        renderer.ctx.beginPath();
+                        renderer.ctx.moveTo(0, 0); // attachment point
+                        renderer.ctx.lineTo(15, -10); // curve out
+                        renderer.ctx.lineTo(25, -5); // tip
+                        renderer.ctx.lineTo(15, 0); // inner curve
+                        renderer.ctx.lineTo(25, 10); // tip 2 (double hook like pudge)
+                        renderer.ctx.lineTo(15, 5); // inner curve 2
+                        renderer.ctx.lineTo(0, 10); // back to attachment point
+                        renderer.ctx.closePath();
+
+                        renderer.ctx.fill();
                         renderer.ctx.stroke();
 
-                        renderer.ctx.fillStyle = '#ccc';
-                        renderer.ctx.beginPath();
-                        // Рисуем хук с правильным серверным радиусом
-                        renderer.ctx.arc(pHook.x, pHook.y - 20, this.radius, 0, Math.PI * 2);
-                        renderer.ctx.fill();
-                        renderer.ctx.strokeStyle = '#000';
-                        renderer.ctx.stroke();
+                        renderer.ctx.restore();
                     };
 
                     this.localEntities.push(hook);
                 }
             }
         }
+
+        // Autonomous tracking of local entities for damage/gold feedback
+        this.floatingTexts.trackEntities(this.localEntities, this.particles);
     }
 
     update(dt) {
@@ -130,6 +161,9 @@ export class MainScene {
             this.camera.x += (this.localPlayer.x - this.camera.x) * 10 * dt;
             this.camera.y += (this.localPlayer.y - this.camera.y) * 10 * dt;
         }
+
+        this.particles.update(dt);
+        this.floatingTexts.update(dt);
     }
 
     render(renderer) {
@@ -144,6 +178,9 @@ export class MainScene {
                 entity.render(renderer);
             }
         }
+
+        this.particles.render(renderer);
+        this.floatingTexts.render(renderer);
 
         this.camera.release(renderer);
 

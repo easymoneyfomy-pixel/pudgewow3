@@ -63,7 +63,8 @@ export class GameMap {
                 let type = 'ground';
                 if (tile.type === TileType.WATER) type = 'water';
                 if (tile.type === TileType.GROUND || tile.type === TileType.SPAWN_RED || tile.type === TileType.SPAWN_BLUE) type = 'grass';
-                if (tile.type === TileType.WALL || tile.type === TileType.OBSTACLE) type = 'stone';
+                if (tile.type === TileType.WALL) type = 'stone';
+                if (tile.type === TileType.OBSTACLE) type = 'tree';
 
                 renderer.drawIsoBlock(
                     x * this.tileSize,
