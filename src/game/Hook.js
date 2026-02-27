@@ -337,18 +337,24 @@ export class Hook {
                                 entityManager.remove(this);
                                 break; // Выход из while
                             }
-                        } else {
+                        } else if (rdist > 0) {
                             // Просто летим к ноде
                             this.x += (rdx / rdist) * currentMoveAmt;
                             this.y += (rdy / rdist) * currentMoveAmt;
                             currentMoveAmt = 0;
+                        } else {
+                            // rdist is 0 but currentMoveAmt is positive and targetNode is owner/node
+                            if (this.pathNodes.length > 0) {
+                                this.pathNodes.shift();
+                            } else {
+                                currentMoveAmt = 0;
+                            }
                         }
                     }
 
                     // 3. Тащим привязанного
                     if (this.hookedEntity && this.hookedEntity.state !== State.DEAD) {
                         this.hookedEntity.x = this.x;
-                        this.hookedEntity.y = this.y;
                     }
                 }
             }
