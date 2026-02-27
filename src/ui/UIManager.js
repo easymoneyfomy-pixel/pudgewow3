@@ -196,7 +196,6 @@ export class UIManager {
         this._drawMinimap(ctx, player);
 
         // Update Ping
-        const scene = this.game.sceneManager.currentScene;
         if (scene && scene.serverState && this.dom.pingDisplay) {
             const serverTime = scene.serverState.serverTime;
             const now = Date.now();
