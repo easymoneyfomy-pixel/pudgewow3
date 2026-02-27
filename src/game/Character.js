@@ -67,12 +67,15 @@ export class Character {
         this.isHealing = false;
         this.shieldRadius = 25;
 
-        // Barricade ability
-        this.barricadeCooldown = 0;
-        this.maxBarricadeCooldown = 15; // 15 seconds
+        // Barricade ability — REMOVED (replaced by Flesh Heap passive)
 
         // Passive HP regen
         this.hpRegen = 2; // HP per second
+
+        // === FLESH HEAP (WC3 Pudge Wars Passive) ===
+        // Each kill permanently increases max HP by FLESH_HEAP_HP_PER_KILL
+        this.fleshHeapStacks = 0;
+        this.fleshHeapHpPerStack = 8; // +8 max HP per kill
 
         // XP / Level system
         this.level = 1;
@@ -93,14 +96,12 @@ export class Character {
         this.rotActive = !this.rotActive;
     }
 
-    castBarricade(entityManager, BarricadeClass) {
-        if (this.state !== State.DEAD && this.barricadeCooldown <= 0) {
-            this.barricadeCooldown = this.maxBarricadeCooldown;
-            // Place barricade 40 pixels in front of the character based on current movement or just at coordinates
-            // Since we don't have mouse pos here without targetX, we just place it at (x, y)
-            const barricade = new BarricadeClass(this.x, this.y, this.team);
-            entityManager.add(barricade);
-        }
+    gainFleshHeap() {
+        // Flesh Heap: killed an enemy — permanently gain max HP
+        this.fleshHeapStacks++;
+        this.maxHp += this.fleshHeapHpPerStack;
+        // Also restore that amount immediately (generous WC3 feel)
+        this.hp = Math.min(this.hp + this.fleshHeapHpPerStack, this.maxHp);
     }
 
     castHook(targetX, targetY, entityManager) {
@@ -165,9 +166,6 @@ export class Character {
         // Обновляем кулдауны
         if (this.hookCooldown > 0) {
             this.hookCooldown -= dt;
-        }
-        if (this.barricadeCooldown > 0) {
-            this.barricadeCooldown -= dt;
         }
 
         // Tick invulnerability
@@ -317,6 +315,7 @@ export class Character {
             isHeadshot: this.headshotJustHappened,
             isDenied: this.deniedJustHappened,
             rotActive: this.rotActive,
+            fleshHeapStacks: this.fleshHeapStacks || 0,
             items: this.items || [],
             level: this.level || 1,
             xp: this.xp || 0,
