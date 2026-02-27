@@ -13,6 +13,9 @@ export class Renderer {
         this.direSprite = new Image();
         this.direSprite.src = 'assets/player/2.png';
 
+        this.direFloorSprite = new Image();
+        this.direFloorSprite.src = 'assets/graund.png';
+
         this.hookSprite = new Image();
         this.hookSprite.src = 'assets/hook.png';
 

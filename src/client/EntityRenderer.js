@@ -92,7 +92,7 @@ export class EntityRenderer {
         const hpBarW = 40;
         const hpBarH = 5;
         const hpBarX = sx - hpBarW / 2;
-        const hpBarY = sy - 28;
+        const hpBarY = sy - 42;
 
         ctx.fillStyle = '#330000';
         ctx.fillRect(hpBarX, hpBarY, hpBarW, hpBarH);
@@ -249,14 +249,20 @@ export class EntityRenderer {
         // Stealthy when armed
         ctx.globalAlpha = mine.isArmed ? 0.35 : 1.0;
 
-        // Generic barrel (original)
-        ctx.fillStyle = '#8B4513';
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 12, 14, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#3d2b1f';
-        ctx.lineWidth = 1;
-        ctx.stroke();
+        // Use the new high-quality sprite if loaded
+        if (renderer.landmineSprite && renderer.landmineSprite.complete) {
+            const size = 32; // Standard mine size for 64px grid
+            ctx.drawImage(renderer.landmineSprite, -size / 2, -size / 2, size, size);
+        } else {
+            // Fallback: Generic barrel (original)
+            ctx.fillStyle = '#8B4513';
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 12, 14, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#3d2b1f';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
 
         ctx.restore();
     }

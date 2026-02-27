@@ -28,7 +28,7 @@ export class MainScene {
         // Initialize camera to center of map
         const centerX = (GAME.MAP_WIDTH * GAME.TILE_SIZE) / 2;
         const centerY = (GAME.MAP_HEIGHT * GAME.TILE_SIZE) / 2;
-        this.camera = new Camera(centerX, centerY, 1);
+        this.camera = new Camera(centerX, centerY, 1.3);
         this.ui = new UIManager(game);
 
         /** @type {object[]} — plain eData objects from the last server tick */

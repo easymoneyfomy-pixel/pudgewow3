@@ -87,14 +87,18 @@ export class GameMap {
                 const size = this.tileSize;
 
                 if (tile.type === TileType.GROUND) {
-                    // WC3 Ashenvale/Felwood style dark bluish-green grass
-                    ctx.fillStyle = '#1e2420';
-                    ctx.fillRect(px, py, size, size);
+                    if (x >= 14 && renderer.direFloorSprite && renderer.direFloorSprite.complete) {
+                        ctx.drawImage(renderer.direFloorSprite, px, py, size, size);
+                    } else {
+                        // WC3 Ashenvale/Felwood style dark bluish-green grass
+                        ctx.fillStyle = '#1e2420';
+                        ctx.fillRect(px, py, size, size);
 
-                    // Slightly lighter/bluish grass speckles (original polish)
-                    ctx.fillStyle = '#26302a';
-                    ctx.fillRect(px + 10, py + 10, 4, 4);
-                    ctx.fillRect(px + 40, py + 30, 4, 4);
+                        // Slightly lighter/bluish grass speckles (original polish)
+                        ctx.fillStyle = '#26302a';
+                        ctx.fillRect(px + 10, py + 10, 4, 4);
+                        ctx.fillRect(px + 40, py + 30, 4, 4);
+                    }
                 }
                 else if (tile.type === TileType.WATER) {
                     // Dark swampy/felwood water
