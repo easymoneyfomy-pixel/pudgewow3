@@ -310,7 +310,7 @@ export class ServerGame {
                 isGameOver: this.rules.isGameOver,
                 winner: this.rules.winner
             },
-            serverTime: performance.now(),
+            serverTime: Date.now(),
             entities: []
         };
 

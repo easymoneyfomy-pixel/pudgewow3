@@ -309,7 +309,7 @@ export class MainScene {
                 this._cameraInitialized = true;
             } else {
                 const decay = 15;
-                const fdt = renderer.game.deltaTime;
+                const fdt = this.game.deltaTime;
                 const lerpFactor = 1 - Math.exp(-decay * fdt);
                 this.camera.x += (interpLocalPlayer.x - this.camera.x) * lerpFactor;
                 this.camera.y += (interpLocalPlayer.y - this.camera.y) * lerpFactor;

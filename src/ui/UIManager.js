@@ -81,12 +81,12 @@ export class UIManager {
                 <div class="cooldown-text" id="inv-text-${i}"></div>
             `;
 
-            // Add click listener for active items
             slot.addEventListener('click', () => {
-                if (this.game.scene && this.game.scene.localPlayer) {
-                    const item = this.game.scene.localPlayer.items[i];
+                const scene = this.game.sceneManager.currentScene;
+                if (scene && scene.localPlayer) {
+                    const item = scene.localPlayer.items[i];
                     if (item && item.active && item.cooldown <= 0) {
-                        this.game.scene.activeItemSlot = i;
+                        scene.activeItemSlot = i;
                         this.game.canvas.style.cursor = 'crosshair';
                     }
                 }
@@ -182,9 +182,10 @@ export class UIManager {
         this._drawMinimap(ctx, player);
 
         // Update Ping
-        if (this.game.scene && this.game.scene.serverState && this.dom.pingDisplay) {
-            const serverTime = this.game.scene.serverState.serverTime;
-            const now = performance.now();
+        const scene = this.game.sceneManager.currentScene;
+        if (scene && scene.serverState && this.dom.pingDisplay) {
+            const serverTime = scene.serverState.serverTime;
+            const now = Date.now();
             const latency = Math.floor(now - serverTime); // Rough estimation
             this.dom.pingDisplay.innerText = `Ping: ${latency}ms`;
             this.dom.pingDisplay.style.color = latency < 100 ? '#00ff00' : latency < 200 ? '#ffff00' : '#ff0000';

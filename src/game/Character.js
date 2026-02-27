@@ -1,4 +1,5 @@
 import { Hook } from './Hook.js';
+import { State } from '../engine/State.js';
 import { GAME } from '../shared/GameConstants.js';
 
 export class Character {
