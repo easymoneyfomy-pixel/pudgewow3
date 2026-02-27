@@ -159,10 +159,13 @@ export class MainScene {
         }
 
         const mousePos = this.game.input.getMousePosition();
-        const cx = this.game.canvas.width / 2;
-        const cy = this.game.canvas.height / 2;
 
-        // Convert screen coords to world coords
+        // Use core canvas dimensions for coordinate derivation
+        const canvas = this.game.renderer.canvas;
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
+
+        // World coordinates derived from screen position + camera
         const worldX = mousePos.x - cx + this.camera.x;
         const worldY = mousePos.y - cy + this.camera.y;
 
@@ -224,10 +227,6 @@ export class MainScene {
             this.game.network.sendInput({ type: 'ROT' });
         }
 
-        if (this.game.input.isKeyPressed('KeyE')) {
-            this.game.network.sendInput({ type: 'BARRICADE' });
-        }
-
         // Stat upgrades (1-4)
         if (this.game.input.isKeyPressed('Digit1')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'DAMAGE' });
         if (this.game.input.isKeyPressed('Digit2')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'SPEED' });
@@ -258,25 +257,12 @@ export class MainScene {
             this.ui.shopOpen = false;
         }
 
-        // Camera follow local player (Frame-independent decay)
-        if (this.localPlayer) {
-            if (!this._cameraInitialized) {
-                // Snap immediately on first spawn
-                this.camera.x = this.localPlayer.x;
-                this.camera.y = this.localPlayer.y;
-                this._cameraInitialized = true;
-            } else {
-                const decay = 10;
-                const lerpFactor = 1 - Math.exp(-decay * dt);
-                this.camera.x += (this.localPlayer.x - this.camera.x) * lerpFactor;
-                this.camera.y += (this.localPlayer.y - this.camera.y) * lerpFactor;
-            }
-        }
+        // Camera shake update
+        this.camera.update(dt);
 
         this.particles.update(dt);
         this.floatingTexts.update(dt);
         this.killFeed.update(dt);
-        this.camera.update(dt);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -284,23 +270,20 @@ export class MainScene {
     // ─────────────────────────────────────────────────────────────────────────
 
     render(renderer) {
-        this.camera.apply(renderer);
-
-        this.map.render(renderer, this.game.deltaTime);
-
         // Calculate interpolation alpha (0-1)
         const now = performance.now();
         const elapsed = now - this._lastServerTime;
-        const alpha = Math.min(1.2, elapsed / this._serverTickMs); // Allow slight overshoot for smoothness
+        const alpha = Math.min(1.0, elapsed / this._serverTickMs);
 
         // Create interpolated snapshots for rendering
         const displayEntities = [];
+        let interpLocalPlayer = null;
+
         for (const [id, target] of this._targetEntities) {
             const prev = this._prevEntities.get(id);
             const interp = { ...target };
 
             if (prev && typeof target.x === 'number' && typeof target.y === 'number') {
-                // Lerp position
                 interp.x = prev.x + (target.x - prev.x) * alpha;
                 interp.y = prev.y + (target.y - prev.y) * alpha;
             } else if (target.type === 'CHARACTER' && target.id === this.game.network.playerId) {
@@ -308,8 +291,33 @@ export class MainScene {
                 interp.x = target.x;
                 interp.y = target.y;
             }
+
+            if (id === this.game.network.playerId) {
+                interpLocalPlayer = interp;
+            }
             displayEntities.push(interp);
         }
+
+        // 1. Camera Follow (Interpolated position for buttery smoothness)
+        if (interpLocalPlayer) {
+            if (!this._cameraInitialized) {
+                this.camera.x = interpLocalPlayer.x;
+                this.camera.y = interpLocalPlayer.y;
+                this._cameraInitialized = true;
+            } else {
+                const decay = 15;
+                const fdt = renderer.game.deltaTime;
+                const lerpFactor = 1 - Math.exp(-decay * fdt);
+                this.camera.x += (interpLocalPlayer.x - this.camera.x) * lerpFactor;
+                this.camera.y += (interpLocalPlayer.y - this.camera.y) * lerpFactor;
+            }
+        }
+
+        // 2. Transfrom world
+        this.camera.apply(renderer);
+
+        // 3. Render World
+        this.map.render(renderer, this.game.deltaTime);
 
         // Build a display-only character map for hook owner lookups during render
         const displayCharacterMap = new Map();

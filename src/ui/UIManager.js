@@ -53,6 +53,7 @@ export class UIManager {
             victoryTitle: document.getElementById('victory-title'),
             finalScore: document.getElementById('final-score'),
             btnReturn: document.getElementById('btn-return'),
+            pingDisplay: document.getElementById('ping-display'), // Assumes we have this or we'll create it
         };
 
         this._initShop();
@@ -179,6 +180,15 @@ export class UIManager {
 
         // Minimap logic (Canvas Embedded)
         this._drawMinimap(ctx, player);
+
+        // Update Ping
+        if (this.game.scene && this.game.scene.serverState && this.dom.pingDisplay) {
+            const serverTime = this.game.scene.serverState.serverTime;
+            const now = performance.now();
+            const latency = Math.floor(now - serverTime); // Rough estimation
+            this.dom.pingDisplay.innerText = `Ping: ${latency}ms`;
+            this.dom.pingDisplay.style.color = latency < 100 ? '#00ff00' : latency < 200 ? '#ffff00' : '#ff0000';
+        }
     }
 
     updatePortraitAndStats(player) {
