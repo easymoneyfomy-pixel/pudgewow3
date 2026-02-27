@@ -24,10 +24,10 @@ export class Landmine {
         this.team = ownerTeam;
 
         this.radius = 16;
-        this.activationDelay = 1.5;
+        this.activationDelay = GAME.MINE_ARM_TIME;
         this.lifeTime = 120;           // 2 minutes
-        this.damage = 150;
-        this.explosionRadius = 100;
+        this.damage = GAME.MINE_DAMAGE;
+        this.explosionRadius = GAME.MINE_EXPLOSION_RADIUS;
 
         this.isArmed = false;
         this.hasExploded = false;

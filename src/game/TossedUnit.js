@@ -15,7 +15,7 @@ export class TossedUnit {
         const dy = targetY - targetUnit.y;
         this.totalDist = Math.sqrt(dx * dx + dy * dy);
 
-        this.speed = 400; // Toss speed
+        this.speed = GAME.TOSS_SPEED; // Toss speed
         this.dirX = this.totalDist > 0 ? dx / this.totalDist : 0;
         this.dirY = this.totalDist > 0 ? dy / this.totalDist : 0;
 
@@ -57,8 +57,8 @@ export class TossedUnit {
                     const edy = entity.y - this.targetY;
                     const edist = Math.sqrt(edx * edx + edy * edy);
 
-                    if (edist < 80) { // 80 Landing radius
-                        entity.takeDamage(75); // 75 Toss damage
+                    if (edist < GAME.TOSS_RADIUS) {
+                        entity.takeDamage(GAME.TOSS_DAMAGE);
                     }
                 }
             }

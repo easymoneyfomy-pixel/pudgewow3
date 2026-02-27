@@ -144,7 +144,19 @@ export class UIManager {
         // Bottom HUD
         this.updatePortraitAndStats(player);
         this.updateSkills(player);
-        this.updateInventory(player);
+        // Update Inventory
+        this.renderInventory(scene, player);
+
+        // Phase 18 targeting feedback
+        if (scene && scene.activeItemSlot !== null && scene.activeItemSlot !== undefined) {
+            const slotEl = document.getElementById(`inv-slot-${scene.activeItemSlot}`);
+            if (slotEl) {
+                slotEl.classList.add('targeting-active');
+            }
+        } else {
+            // Remove from all slots if none active
+            document.querySelectorAll('.inv-slot').forEach(el => el.classList.remove('targeting-active'));
+        }
 
         // Shop Mode
         if (this.shopOpen && player) {
