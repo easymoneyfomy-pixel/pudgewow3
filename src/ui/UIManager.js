@@ -299,13 +299,9 @@ export class UIManager {
                     mmCtx.fillStyle = '#333';
                     mmCtx.fillRect(tx, ty, tileSize, tileSize);
                 } else if (gx >= 10 && gx <= 13) {
-                    if ((gy >= 5 && gy <= 6) || (gy >= 11 && gy <= 12) || (gy >= 17 && gy <= 18)) {
-                        mmCtx.fillStyle = '#2a3a22';
-                        mmCtx.fillRect(tx, ty, tileSize, tileSize);
-                    } else {
-                        mmCtx.fillStyle = '#003366';
-                        mmCtx.fillRect(tx, ty, tileSize, tileSize);
-                    }
+                    // Central River
+                    mmCtx.fillStyle = '#003366';
+                    mmCtx.fillRect(tx, ty, tileSize, tileSize);
                 } else {
                     mmCtx.fillStyle = gx < 10 ? '#1a2a16' : '#16192a';
                     mmCtx.fillRect(tx, ty, tileSize, tileSize);

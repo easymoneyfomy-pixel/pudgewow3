@@ -19,7 +19,8 @@ export class EntityRenderer {
         const sy = char.y;
 
         ctx.save();
-        ctx.translate(sx, sy);
+        const z = char.z || 0;
+        ctx.translate(sx, sy - z);
 
         // Rot AOE visual (green toxic cloud)
         if (char.rotActive) {
@@ -319,6 +320,7 @@ export class EntityRenderer {
                         ownerX: owner.x,
                         ownerY: owner.y,
                         radius: eData.radius,
+                        pathNodes: eData.pathNodes, // Pass pathNodes
                     });
                 }
                 break;

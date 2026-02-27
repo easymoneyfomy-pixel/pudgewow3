@@ -74,6 +74,8 @@ export class ServerGame {
             this.handleUseItem(character, input.slot, input.x, input.y);
         } else if (input.type === 'PICKUP') {
             this.handleRunePickup(character, input.runeId);
+        } else if (input.type === 'BARRICADE') {
+            // No-op: Barricades were removed in Phase 10
         }
     }
 

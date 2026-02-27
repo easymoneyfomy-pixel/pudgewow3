@@ -46,6 +46,8 @@ export class Hook {
             this.owner.isPaused = false;
             entityManager.remove(this);
             if (this.hookedEntity) {
+                this.hookedEntity.x = this.x;
+                this.hookedEntity.y = this.y;
                 if (this.hookedEntity.onDropped) {
                     this.hookedEntity.onDropped();
                 } else {
@@ -355,6 +357,7 @@ export class Hook {
                     // 3. Тащим привязанного
                     if (this.hookedEntity && this.hookedEntity.state !== State.DEAD) {
                         this.hookedEntity.x = this.x;
+                        this.hookedEntity.y = this.y;
                     }
                 }
             }

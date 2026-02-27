@@ -143,6 +143,7 @@ export class Character {
         }
     }
 
+
     gainXp(amount) {
         this.xp += amount;
         while (this.xp >= this.xpToLevel) {
