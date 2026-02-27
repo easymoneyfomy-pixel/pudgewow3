@@ -60,9 +60,11 @@ export class GameRules {
             this.scoreRed++;
         }
 
-        // FLESH HEAP: If there's an attacker (killer), give them a stack
-        if (entity.lastAttacker && entity.lastAttacker.gainFleshHeap) {
-            entity.lastAttacker.gainFleshHeap();
+        // FLESH HEAP & Rewards: If there's an attacker (killer), give them rewards
+        if (entity.lastAttacker) {
+            if (entity.lastAttacker.gainFleshHeap) entity.lastAttacker.gainFleshHeap();
+            if (entity.lastAttacker.gainXp) entity.lastAttacker.gainXp(50); // XP for kill
+            entity.lastAttacker.gold += 100; // Gold for kill
         }
 
         this.checkWinCondition();

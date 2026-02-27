@@ -38,6 +38,7 @@ export class Hook {
         this.ownerPrevX = owner.x;
         this.ownerPrevY = owner.y;
         this.pathNodes = []; // List of breadcrumbs {x, y} for polyline chain
+        this.hitPauseTimer = 0; // Micro-freeze logic
     }
 
     update(dt, map, entityManager) {
@@ -47,6 +48,14 @@ export class Hook {
                 this.hookedEntity.state = State.IDLE;
             }
             entityManager.remove(this);
+            return;
+        }
+
+        if (this.hitPauseTimer > 0) {
+            this.hitPauseTimer -= dt;
+            if (this.hitPauseTimer <= 0) {
+                this.owner.isPaused = false;
+            }
             return;
         }
 
@@ -103,13 +112,15 @@ export class Hook {
 
     startReturning() {
         this.isReturning = true;
-        this.owner.isPaused = false;
+        // Introduce a small 0.15s freeze on hit/max range for satisfaction
+        this.hitPauseTimer = 0.15;
+        // We UNPAUSE the owner only after the brief micro-freeze in the update loop
     }
 
     bounce(map) {
         this.bouncesLeft--;
         // Reflect off nearest wall
-        const checkDist = 20;
+        const checkDist = 32; // Professional Polish: half-tile detection for consistency
         const left = map.getTileAt(this.x - checkDist, this.y);
         const right = map.getTileAt(this.x + checkDist, this.y);
         const up = map.getTileAt(this.x, this.y - checkDist);
@@ -171,7 +182,7 @@ export class Hook {
 
         if (!isAlly) {
             this.owner.gold += GAME.GOLD_ON_HIT;
-            if (this.owner.gainXp) this.owner.gainXp(GAME.XP_ON_HIT);
+            // Removed XP on hit: Only on kill now
         }
     }
 

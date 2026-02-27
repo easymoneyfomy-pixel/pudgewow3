@@ -157,8 +157,9 @@ export class Character {
         this.level++;
         this.xpToLevel = Math.floor(this.xpToLevel * 1.5);
         this.maxHp += 15;
-        this.hp = this.maxHp; // Full heal on level up
+        this.hp = this.maxHp;
         this.hookDamage += 3;
+        this.hookSpeed += 25; // Professional Polish: Speed scaling
     }
 
     die() {
@@ -349,11 +350,13 @@ export class Character {
                 const nx = dx / dist;
                 const ny = dy / dist;
 
-                // Push both away gently
-                this.x -= nx * overlap;
-                this.y -= ny * overlap;
-                entity.x += nx * overlap;
-                entity.y += ny * overlap;
+                // Push both away (Firmer resolution)
+                const pushX = nx * overlap * 1.1; // 10% extra to prevent jitter
+                const pushY = ny * overlap * 1.1;
+                this.x -= pushX;
+                this.y -= pushY;
+                entity.x += pushX;
+                entity.y += pushY;
             }
         }
     }
@@ -421,6 +424,8 @@ export class Character {
             ruptureTimer: this.ruptureTimer || 0,
             invulnerableTimer: this.invulnerableTimer || 0,
             isHealing: this.isHealing || false,
+            hasteTimer: this.hasteTimer || 0,
+            ddTimer: this.ddTimer || 0,
         };
     }
 }

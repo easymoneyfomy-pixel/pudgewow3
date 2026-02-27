@@ -178,6 +178,26 @@ export class EntityRenderer {
             ctx.font = '9px Arial';
             ctx.fillText('🩸', sx - 24, hpBarY + 4);
         }
+
+        // Active Runes (All players see them)
+        let runeX = sx - 10;
+        if (char.hasteTimer > 0) {
+            ctx.fillStyle = 'rgba(255, 50, 50, 0.8)'; // Red for Haste
+            ctx.fillRect(runeX, hpBarY - 14, 20, 3);
+            ctx.fillStyle = '#f00';
+            ctx.fillRect(runeX, hpBarY - 14, 20 * (char.hasteTimer / 30), 3); // Assume 30s max duration for bar scaling
+            ctx.font = 'bold 10px Arial';
+            ctx.fillText('⚡', sx, hpBarY - 16);
+            runeX += 22;
+        }
+        if (char.ddTimer > 0) {
+            ctx.fillStyle = 'rgba(50, 50, 255, 0.8)'; // Blue for DD
+            ctx.fillRect(runeX, hpBarY - 14, 20, 3);
+            ctx.fillStyle = '#00f';
+            ctx.fillRect(runeX, hpBarY - 14, 20 * (char.ddTimer / 30), 3);
+            ctx.font = 'bold 10px Arial';
+            ctx.fillText('⚔️', sx, hpBarY - 16);
+        }
     }
 
     // ─────────────────────── HOOK ─────────────────────────────────────────────
