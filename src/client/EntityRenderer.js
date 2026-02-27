@@ -158,15 +158,35 @@ export class EntityRenderer {
         const ctx = renderer.ctx;
         const { x: hx, y: hy, ownerX: ox, ownerY: oy } = hook;
 
-        // Chain
-        ctx.strokeStyle = '#aaaaaa';
-        ctx.lineWidth = 3;
-        ctx.setLineDash([8, 6]);
-        ctx.beginPath();
-        ctx.moveTo(ox, oy);
-        ctx.lineTo(hx, hy);
-        ctx.stroke();
-        ctx.setLineDash([]);
+        // Draw Chain Segments (WC3 style)
+        const dx = hx - ox;
+        const dy = hy - oy;
+        const totalDist = Math.sqrt(dx * dx + dy * dy);
+        const segmentDist = 15; // Distance between links
+        const linkCount = Math.floor(totalDist / segmentDist);
+        const linkAngle = Math.atan2(dy, dx);
+
+        ctx.fillStyle = '#999';
+        ctx.strokeStyle = '#222';
+        ctx.lineWidth = 1;
+
+        for (let i = 0; i <= linkCount; i++) {
+            const t = i / linkCount;
+            const lx = ox + dx * t;
+            const ly = oy + dy * t;
+
+            ctx.save();
+            ctx.translate(lx, ly);
+            ctx.rotate(linkAngle);
+
+            // Draw a small chain "link" or bone
+            ctx.beginPath();
+            ctx.roundRect(-4, -2, 8, 4, 2);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.restore();
+        }
 
         // Hook blade
         ctx.fillStyle = '#666';

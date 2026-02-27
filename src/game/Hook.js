@@ -33,11 +33,16 @@ export class Hook {
 
         // Кого зацепили
         this.hookedEntity = null;
+
+        // Position tracking for curving/delta movement
+        this.ownerPrevX = owner.x;
+        this.ownerPrevY = owner.y;
     }
 
     update(dt, map, entityManager) {
         if (this.owner.state === State.DEAD) {
             // Owner died — release any hooked entity
+            this.owner.isPaused = false;
             entityManager.remove(this);
             if (this.hookedEntity) {
                 if (this.hookedEntity.onDropped) {
@@ -51,9 +56,16 @@ export class Hook {
 
         const moveAmt = this.speed * dt;
 
+        // Delta shift: If Pudge is moved (Blinked/Hooked), the hook head moves with him
+        const pdx = this.owner.x - this.ownerPrevX;
+        const pdy = this.owner.y - this.ownerPrevY;
+        this.x += pdx;
+        this.y += pdy;
+        this.ownerPrevX = this.owner.x;
+        this.ownerPrevY = this.owner.y;
+
         if (!this.isReturning) {
-            // Искривление хука (Hook Curving)
-            // Если владелец движется, часть его вектора передается летящему хуку
+            // Искривление хука (Hook Curving) - subtle influence from click direction
             if (this.owner.state === State.MOVING) {
                 const ox = this.owner.targetX - this.owner.x;
                 const oy = this.owner.targetY - this.owner.y;
@@ -62,11 +74,9 @@ export class Hook {
                     const odx = ox / oDist;
                     const ody = oy / oDist;
 
-                    // Плавно меняем вектор направления хука
                     this.dirX += odx * this.owner.hookCurvePower * dt;
                     this.dirY += ody * this.owner.hookCurvePower * dt;
 
-                    // Нормализуем чтобы скорость не менялась
                     const nlen = Math.sqrt(this.dirX * this.dirX + this.dirY * this.dirY);
                     this.dirX /= nlen;
                     this.dirY /= nlen;
@@ -81,11 +91,14 @@ export class Hook {
             // 1. Проверка на дальность
             if (this.currentDist >= this.maxDist) {
                 this.isReturning = true;
+                this.owner.isPaused = false; // RELEASE LOCK ON RETRACTION
             }
 
             // 2. Проверка столкновения со стеной (isHookable == false)
             const tile = map.getTileAt(this.x, this.y);
             if (tile && !tile.isHookable) {
+                this.isReturning = true;
+                this.owner.isPaused = false; // RELEASE LOCK ON CLINK
                 if (this.hasGrapple) {
                     // GRAPPLING HOOK: Hook anchors to the wall and pulls the owner
                     this.isReturning = true;
@@ -133,7 +146,9 @@ export class Hook {
                             const rSum = this.radius + entity.radius + 10;
                             if (edistSq < rSum * rSum) {
                                 this.isReturning = true;
+                                this.owner.isPaused = false; // RELEASE LOCK ON CLANG
                                 entity.isReturning = true;
+                                entity.owner.isPaused = false;
                                 // Эффекты/Звуки можно было бы вызывать здесь
                                 break;
                             }
@@ -150,6 +165,7 @@ export class Hook {
 
                             if (entity.type === 'LANDMINE') {
                                 this.isReturning = true;
+                                this.owner.isPaused = false; // RELEASE LOCK ON HIT
                                 this.hookedEntity = entity;
                                 entity.state = State.HOOKED;
                                 entity.isBeingHooked = true;
@@ -160,6 +176,7 @@ export class Hook {
                             if (entity.state === State.HOOKED) {
                                 // HEADSHOT! (Instakill)
                                 this.isReturning = true;
+                                this.owner.isPaused = false; // RELEASE LOCK ON HIT
                                 entity.takeDamage(9999); // Force kill
                                 // If it wasn't an ally headshot
                                 if (entity.team !== this.owner.team) {
@@ -169,6 +186,7 @@ export class Hook {
                                 entity.headshotJustHappened = true; // Flag for client
                             } else {
                                 this.isReturning = true;
+                                this.owner.isPaused = false; // RELEASE LOCK ON HIT
                                 this.hookedEntity = entity;
                                 entity.state = State.HOOKED;
 

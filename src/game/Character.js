@@ -89,6 +89,9 @@ export class Character {
 
         // Active Items
         this.salveTimer = 0;
+
+        // WC3 Hook Lock
+        this.isPaused = false;
     }
 
     setTarget(x, y) {
@@ -114,7 +117,8 @@ export class Character {
 
     castHook(targetX, targetY, entityManager) {
         if (this.state !== State.DEAD && this.state !== State.HOOKED && this.hookCooldown <= 0) {
-            // Don't lock state to CASTING — allow movement while hook flies
+            // WC3 Pudge Wars: Lock movements during forward hook
+            this.isPaused = true;
             this.hookCooldown = this.maxHookCooldown;
 
             const hook = new Hook(this, targetX, targetY);
@@ -275,6 +279,9 @@ export class Character {
         }
 
         if (this.state === State.MOVING) {
+            if (this.isPaused) {
+                return; // Movement locked
+            }
             const dx = this.targetX - this.x;
             const dy = this.targetY - this.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
