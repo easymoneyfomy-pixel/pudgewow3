@@ -125,7 +125,7 @@ export class UIManager {
         });
     }
 
-    render(ctx, rules, player, enemy) {
+    render(ctx, rules, player, enemy, scene) {
         this._lastPlayer = player;
 
         // Show UI if not visible
@@ -134,8 +134,8 @@ export class UIManager {
         }
 
         // Top Bar
-        this.dom.scoreRed.innerText = rules.scoreRed || 0;
-        this.dom.scoreBlue.innerText = rules.scoreBlue || 0;
+        this.dom.scoreRed.innerText = rules.scoreRed !== undefined ? rules.scoreRed : 0;
+        this.dom.scoreBlue.innerText = rules.scoreBlue !== undefined ? rules.scoreBlue : 0;
 
         const mins = Math.floor(rules.roundTimeLeft / 60);
         const secs = Math.floor(rules.roundTimeLeft % 60).toString().padStart(2, '0');
@@ -145,7 +145,7 @@ export class UIManager {
         this.updatePortraitAndStats(player);
         this.updateSkills(player);
         // Update Inventory
-        this.renderInventory(scene, player);
+        this.updateInventory(player);
 
         // Phase 18 targeting feedback
         if (scene && scene.activeItemSlot !== null && scene.activeItemSlot !== undefined) {

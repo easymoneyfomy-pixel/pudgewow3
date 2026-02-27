@@ -359,7 +359,7 @@ export class MainScene {
         // UI/HUD overlay
         if (this.serverState) {
             // Passes null for player if not spawned, UIManager handles this gracefully
-            this.ui.render(renderer.ctx, this.serverState.rules, this.localPlayer || null, this.enemies[0] || null);
+            this.ui.render(renderer.ctx, this.serverState.rules, this.localPlayer || null, this.enemies[0] || null, this);
         }
 
         this.killFeed.render(renderer.ctx, this.game.canvas.width);

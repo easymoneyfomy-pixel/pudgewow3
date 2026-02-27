@@ -50,7 +50,7 @@ export class EntityRenderer {
         if (renderer.pudgeSprite && renderer.pudgeSprite.complete) {
             ctx.save();
             ctx.rotate(char.rot || 0);
-            const targetSize = 64; // Reverting to original size
+            const targetSize = char.radius * 3.5 || 84;
             ctx.drawImage(renderer.pudgeSprite, -targetSize / 2, -targetSize / 2, targetSize, targetSize);
             ctx.restore();
         } else {
