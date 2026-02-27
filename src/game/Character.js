@@ -11,18 +11,18 @@ export class Character {
         this.maxHp = 100;
         this.hp = this.maxHp;
 
-        // Размеры и скорость
-        this.radius = 16;
-        this.speed = 200;
+        // Размеры и скорость (увеличены для открытой карты)
+        this.radius = 20;
+        this.speed = 280;
 
         // WC3 Апгрейды и Экономика
         this.gold = 0;
 
         // Характеристики хука (прокачиваемые)
         this.hookDamage = 25;
-        this.hookSpeed = 800;
-        this.hookMaxDist = 600;
-        this.hookRadius = 16;
+        this.hookSpeed = 1100; // Быстрее летит
+        this.hookMaxDist = 800; // Дальше летит через широкую реку
+        this.hookRadius = 20; // Чуть шире хитбокс
         this.hookCurvePower = 0.5; // Сила закругления при движении
 
         // Состояние
@@ -244,7 +244,17 @@ export class Character {
                 const nextX = this.x + dirX * moveAmt;
                 const nextY = this.y + dirY * moveAmt;
 
-                if (map && map.isWalkable(nextX, nextY)) {
+                let canMove = false;
+                if (map) {
+                    // Check if the entire bounding box is walkable to prevent wall clipping
+                    const r = this.radius;
+                    canMove = map.isWalkable(nextX - r, nextY - r) &&
+                        map.isWalkable(nextX + r, nextY - r) &&
+                        map.isWalkable(nextX - r, nextY + r) &&
+                        map.isWalkable(nextX + r, nextY + r);
+                }
+
+                if (canMove) {
                     if (moveAmt >= dist) {
                         this.x = this.targetX;
                         this.y = this.targetY;
@@ -287,19 +297,19 @@ export class Character {
         ctx.strokeStyle = this.team === 'red' ? 'rgba(255,50,50,0.7)' : 'rgba(50,50,255,0.7)';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(0, 0, 18, 0, Math.PI * 2);
+        ctx.arc(0, 0, 22, 0, Math.PI * 2);
         ctx.stroke();
 
         // Shadow
         ctx.fillStyle = 'rgba(0,0,0,0.3)';
         ctx.beginPath();
-        ctx.arc(0, 0, 14, 0, Math.PI * 2);
+        ctx.arc(0, 0, 18, 0, Math.PI * 2);
         ctx.fill();
 
         // Body (top-down circle with team color)
         ctx.fillStyle = this.team === 'red' ? '#993333' : '#333399';
         ctx.beginPath();
-        ctx.arc(0, 0, 13, 0, Math.PI * 2);
+        ctx.arc(0, 0, 16, 0, Math.PI * 2);
         ctx.fill();
         ctx.strokeStyle = '#000';
         ctx.lineWidth = 1.5;
@@ -314,7 +324,7 @@ export class Character {
         // Head (small darker circle on top)
         ctx.fillStyle = '#664444';
         ctx.beginPath();
-        ctx.arc(0, -5, 5, 0, Math.PI * 2);
+        ctx.arc(0, -6, 6, 0, Math.PI * 2);
         ctx.fill();
         ctx.strokeStyle = '#333';
         ctx.lineWidth = 1;
@@ -322,12 +332,12 @@ export class Character {
 
         // Arms/Shoulders
         ctx.fillStyle = this.team === 'red' ? '#884444' : '#444488';
-        ctx.fillRect(-15, -3, 6, 6);
-        ctx.fillRect(9, -3, 6, 6);
+        ctx.fillRect(-18, -4, 8, 8);
+        ctx.fillRect(10, -4, 8, 8);
 
         // Cleaver in right hand
         ctx.save();
-        ctx.translate(14, -2);
+        ctx.translate(16, -3);
         ctx.rotate(-0.5);
         ctx.fillStyle = '#aaa';
         ctx.strokeStyle = '#555';
