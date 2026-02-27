@@ -5,28 +5,29 @@ import { Character } from './src/game/Character.js';
 import { Hook } from './src/game/Hook.js';
 import { Barricade } from './src/game/Barricade.js';
 import { ITEM_MAP } from './src/shared/ItemDefs.js';
+import { GAME } from './src/shared/GameConstants.js';
 
 export class ServerGame {
     constructor(roomId, roomManager) {
         this.roomId = roomId;
         this.roomManager = roomManager;
 
-        this.map = new GameMap(24, 24, 64);
+        this.map = new GameMap(GAME.MAP_WIDTH, GAME.MAP_HEIGHT, GAME.TILE_SIZE);
         this.entityManager = new EntityManager();
         this.rules = new GameRules();
 
-        this.players = new Map(); // playerId -> Character
+        this.players = new Map();
         this.running = false;
 
         this.lastTime = performance.now();
-        this.tickRate = 20;
+        this.tickRate = GAME.TICK_RATE;
         this.tickInterval = null;
     }
 
     addPlayer(playerId, team) {
         // Based on 24x24 GameMap definition (spawn at grid[4][midY] and grid[19][midY])
-        const spawnX = team === 'red' ? 4 * 64 : 19 * 64;
-        const middleY = 12 * 64;
+        const spawnX = team === 'red' ? GAME.SPAWN_RED_X * GAME.TILE_SIZE : GAME.SPAWN_BLUE_X * GAME.TILE_SIZE;
+        const middleY = GAME.SPAWN_MID_Y * GAME.TILE_SIZE;
 
         // Offset spawn slightly based on number of existing players on team
         let teamCount = 0;
@@ -35,7 +36,7 @@ export class ServerGame {
         }
 
         // Spread 5 players vertically
-        const offsetY = (teamCount - 2) * 64;
+        const offsetY = (teamCount - 2) * GAME.TILE_SIZE;
         const spawnY = middleY + offsetY;
 
         const character = new Character(spawnX, spawnY, team);

@@ -246,23 +246,22 @@ export class Hook {
     }
 
     render(renderer) {
-        const pOwner = renderer.worldToScreen(this.owner.x, this.owner.y, 10);
-        const pHook = renderer.worldToScreen(this.x, this.y, 10);
+        const ctx = renderer.ctx;
 
-        // Рисуем цепь (tether)
-        renderer.ctx.strokeStyle = '#888';
-        renderer.ctx.lineWidth = 2;
-        renderer.ctx.beginPath();
-        renderer.ctx.moveTo(pOwner.x, pOwner.y - 20); // Из центра владельца
-        renderer.ctx.lineTo(pHook.x, pHook.y - 20); // В центр хука
-        renderer.ctx.stroke();
+        // Chain
+        ctx.strokeStyle = '#888';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(this.owner.x, this.owner.y);
+        ctx.lineTo(this.x, this.y);
+        ctx.stroke();
 
-        // Рисуем сам хук (головка)
-        renderer.ctx.fillStyle = '#ccc';
-        renderer.ctx.beginPath();
-        renderer.ctx.arc(pHook.x, pHook.y - 20, 8, 0, Math.PI * 2);
-        renderer.ctx.fill();
-        renderer.ctx.strokeStyle = '#000';
-        renderer.ctx.stroke();
+        // Hook head
+        ctx.fillStyle = '#ccc';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#000';
+        ctx.stroke();
     }
 }

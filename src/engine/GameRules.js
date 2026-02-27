@@ -1,13 +1,13 @@
 import { State } from './State.js';
+import { GAME } from '../shared/GameConstants.js';
 
 export class GameRules {
     constructor() {
         this.scoreRed = 0;
         this.scoreBlue = 0;
-        this.maxScore = 50; // Classic Pudge Wars Kills Limit
+        this.maxScore = GAME.MAX_SCORE;
 
-        // Таймер раунда
-        this.roundTimeLeft = 3600; // 1 hour time limit
+        this.roundTimeLeft = GAME.ROUND_TIME;
         this.isGameOver = false;
         this.winner = null;
     }
