@@ -59,7 +59,8 @@ export class RoomManager {
         ws.send(JSON.stringify({
             type: 'ROOM_JOINED',
             roomId,
-            team
+            team,
+            playerId: ws.playerId
         }));
 
         room.game.addPlayer(ws.playerId, team);

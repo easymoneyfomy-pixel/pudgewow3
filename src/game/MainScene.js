@@ -72,18 +72,16 @@ export class MainScene {
 
                 this.localEntities.push(char);
 
-                // Match local player by ID (in 5v5, multiple chars share a team)
-                if (eData.id === this.game.network.ws?.playerId || char.team === myTeam) {
+                // Match local player by strictly checking ID
+                if (eData.id === this.game.network.playerId) {
                     // Screen shake: compare HP to previous frame
                     const prevHp = this._prevHp.get(eData.id);
-                    if (prevHp !== undefined && eData.hp < prevHp && !this.localPlayer) {
+                    if (prevHp !== undefined && eData.hp < prevHp) {
                         this.camera.shake(8);
                     }
-                    if (!this.localPlayer) {
-                        this.localPlayer = char;
-                    }
+                    this.localPlayer = char;
                     this._prevHp.set(eData.id, eData.hp);
-                } else {
+                } else if (char.team !== myTeam) {
                     this.enemies.push(char);
                 }
             } else if (eData.type === 'HOOK') {

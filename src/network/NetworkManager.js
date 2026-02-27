@@ -53,6 +53,7 @@ export class NetworkManager {
             case 'ROOM_JOINED':
                 this.roomId = data.roomId;
                 this.team = data.team;
+                this.playerId = data.playerId;
                 this.game.startGameScene();
                 break;
             case 'ERROR':
