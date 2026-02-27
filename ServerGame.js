@@ -334,10 +334,8 @@ export class ServerGame {
             if (entity.serialize) {
                 state.entities.push(entity.serialize());
             }
-        }
 
-        // Reset one-frame flags on Characters and Hooks after serializing them
-        for (const entity of this.entityManager.entities) {
+            // Reset one-frame flags after serialization
             if (entity.type === 'CHARACTER') {
                 entity.headshotJustHappened = false;
                 entity.deniedJustHappened = false;

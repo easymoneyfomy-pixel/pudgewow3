@@ -59,7 +59,7 @@ export class Hook {
         const ly = lastNode ? lastNode.y : this.owner.y;
         const distToLastSq = (this.owner.x - lx) ** 2 + (this.owner.y - ly) ** 2;
 
-        if (distToLastSq >= 144) { // 12px threshold
+        if (distToLastSq >= GAME.HOOK_PATH_THRESHOLD_SQ) {
             this.pathNodes.push({ x: this.owner.x, y: this.owner.y });
         }
 
@@ -286,8 +286,6 @@ export class Hook {
             dirY: this.dirY,
             isReturning: this.isReturning,
             ownerId: this.owner.id,
-            ownerX: this.owner.x,
-            ownerY: this.owner.y,
             radius: this.radius,
             pathNodes: this.pathNodes.map(p => ({ x: p.x, y: p.y })),
             clashJustHappened: this.clashJustHappened || false,

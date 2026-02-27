@@ -6,6 +6,7 @@ export class UIManager {
         this.game = game;
         this.shopOpen = false;
         this._lastPlayer = null;
+        this.mmCache = null;
 
         // Cache DOM elements for fast access
         this.dom = {
@@ -326,32 +327,43 @@ export class UIManager {
         const mmCtx = mmCanvas.getContext('2d');
         const size = mmCanvas.width;
 
-        // Clear
-        mmCtx.fillStyle = '#090909';
-        mmCtx.fillRect(0, 0, size, size);
+        // Draw static background from cache
+        if (!this.mmCache) {
+            this.mmCache = document.createElement('canvas');
+            this.mmCache.width = size;
+            this.mmCache.height = size;
+            const cCtx = this.mmCache.getContext('2d');
 
-        // Map layout
-        const tileSize = size / GAME.MAP_WIDTH;
-        for (let gx = 0; gx < GAME.MAP_WIDTH; gx++) {
-            for (let gy = 0; gy < GAME.MAP_HEIGHT; gy++) {
-                const tx = gx * tileSize;
-                const ty = gy * tileSize;
+            // Clear
+            cCtx.fillStyle = '#090909';
+            cCtx.fillRect(0, 0, size, size);
 
-                if (gx < 2 || gy < 2 || gx >= GAME.MAP_WIDTH - 2 || gy >= GAME.MAP_HEIGHT - 2) {
-                    mmCtx.fillStyle = '#333';
-                    mmCtx.fillRect(tx, ty, tileSize, tileSize);
-                } else if (gx >= 10 && gx <= 13) {
-                    // Central River
-                    mmCtx.fillStyle = '#003366';
-                    mmCtx.fillRect(tx, ty, tileSize, tileSize);
-                } else {
-                    mmCtx.fillStyle = gx < 10 ? '#1a2a16' : '#16192a';
-                    mmCtx.fillRect(tx, ty, tileSize, tileSize);
+            // Map layout
+            const tileSize = size / GAME.MAP_WIDTH;
+            for (let gx = 0; gx < GAME.MAP_WIDTH; gx++) {
+                for (let gy = 0; gy < GAME.MAP_HEIGHT; gy++) {
+                    const tx = gx * tileSize;
+                    const ty = gy * tileSize;
+
+                    if (gx < 2 || gy < 2 || gx >= GAME.MAP_WIDTH - 2 || gy >= GAME.MAP_HEIGHT - 2) {
+                        cCtx.fillStyle = '#333';
+                        cCtx.fillRect(tx, ty, tileSize, tileSize);
+                    } else if (gx >= 10 && gx <= 13) {
+                        // Central River
+                        cCtx.fillStyle = '#003366';
+                        cCtx.fillRect(tx, ty, tileSize, tileSize);
+                    } else {
+                        cCtx.fillStyle = gx < 10 ? '#1a2a16' : '#16192a';
+                        cCtx.fillRect(tx, ty, tileSize, tileSize);
+                    }
                 }
             }
         }
 
-        // Draw Player Location
+        // Copy cache to minimap canvas
+        mmCtx.drawImage(this.mmCache, 0, 0);
+
+        // Draw Player Location (Dynamic)
         if (player) {
             const mapWorldSize = GAME.MAP_WIDTH * GAME.TILE_SIZE;
             const px = (player.x / mapWorldSize) * size;

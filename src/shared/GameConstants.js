@@ -44,6 +44,7 @@ export const GAME = {
     HOOK_COOLDOWN: 3,
     HOOK_CURVE_POWER: 0.5,
     HOOK_DAMAGE: 40,
+    HOOK_PATH_THRESHOLD_SQ: 144, // 12px threshold for chain segments
 
     // Balance: Item Abilities
     TOSS_SPEED: 600,
