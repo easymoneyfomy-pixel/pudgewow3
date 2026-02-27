@@ -26,6 +26,7 @@ export class NetworkManager {
         this.ws.onmessage = (event) => {
             try {
                 const data = JSON.parse(event.data);
+                console.log('Client received:', data.type);
                 this.handleMessage(data);
             } catch (e) {
                 console.error('Failed to parse WebSocket message', e);
@@ -40,6 +41,7 @@ export class NetworkManager {
 
     send(type, payload) {
         if (!this.connected) return;
+        console.log('Client sending:', type);
         this.ws.send(JSON.stringify({ type, ...payload }));
     }
 

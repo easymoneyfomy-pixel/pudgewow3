@@ -43,6 +43,7 @@ wss.on('connection', (ws) => {
 });
 
 function handleMessage(ws, data) {
+    console.log(`[ws:${ws.playerId}] Received: ${data.type}`);
     switch (data.type) {
         case 'GET_ROOMS':
             ws.send(JSON.stringify({

@@ -6,40 +6,64 @@ export class LobbyUI {
 
         // DOM Elements
         this.menuContainer = document.getElementById('main-menu');
-        this.btnPlay = document.getElementById('btn-play');
+        this.roomSelection = document.getElementById('room-selection');
+        this.roomListUl = document.getElementById('room-list-ul');
+        this.btnCreate = document.getElementById('btn-create');
+        this.btnRefresh = document.getElementById('btn-refresh');
         this.loader = document.getElementById('menu-loader');
 
         this.initEventListeners();
     }
 
     initEventListeners() {
-        this.btnPlay.addEventListener('click', () => {
+        this.btnCreate.addEventListener('click', () => {
             if (!this.game.network.connected) return;
-
-            // WC3 Pudge Wars style: Quick Play (Find Match)
-            // For simplicity, connect to the first available room or create one
-            this.btnPlay.classList.add('hidden');
+            this.roomSelection.classList.add('hidden');
             this.loader.classList.remove('hidden');
-            this.loader.innerText = 'Searching for Tavern...';
+            this.loader.innerText = 'Creating Tavern...';
+            this.game.network.createRoom('Axe Tavern Duels ' + Math.floor(Math.random() * 1000));
+        });
 
-            if (this.rooms.length > 0) {
-                // Join first available room
-                const room = this.rooms.find(r => r.players < 10);
-                if (room) {
-                    this.game.network.joinRoom(room.id);
-                } else {
-                    // All full, create a new one
-                    this.game.network.createRoom('Axe Tavern Duels ' + Math.floor(Math.random() * 1000));
-                }
-            } else {
-                // No rooms, create
-                this.game.network.createRoom('Axe Tavern Duels ' + Math.floor(Math.random() * 1000));
-            }
+        this.btnRefresh.addEventListener('click', () => {
+            if (!this.game.network.connected) return;
+            this.game.network.send('GET_ROOMS', {});
         });
     }
 
     updateRoomList(rooms) {
         this.rooms = rooms;
+        if (!this.visible) return;
+
+        this.roomListUl.innerHTML = '';
+        if (rooms.length === 0) {
+            this.roomListUl.innerHTML = '<li class="empty-rooms">No Taverns found. Create one!</li>';
+            return;
+        }
+
+        rooms.forEach(room => {
+            const li = document.createElement('li');
+            li.className = 'room-item';
+            li.innerHTML = `
+                <span class="room-name">${room.name}</span>
+                <span class="room-players">${room.players}/10</span>
+                <button class="wc3-button join-btn">Join</button>
+            `;
+            const joinBtn = li.querySelector('.join-btn');
+            joinBtn.addEventListener('click', () => {
+                if (!this.game.network.connected) return;
+                this.roomSelection.classList.add('hidden');
+                this.loader.classList.remove('hidden');
+                this.loader.innerText = 'Entering Tavern...';
+                this.game.network.joinRoom(room.id);
+            });
+            this.roomListUl.appendChild(li);
+        });
+    }
+
+    hide() {
+        this.visible = false;
+        this.menuContainer.classList.remove('active');
+        this.menuContainer.classList.add('hidden');
     }
 
     render(ctx) {
@@ -49,18 +73,15 @@ export class LobbyUI {
             this.menuContainer.classList.remove('hidden');
 
             if (this.game.network.connected) {
-                if (this.loader.innerText === 'Connecting to Battle.net...') {
+                if (this.loader.innerText === 'Connecting...') {
                     this.loader.classList.add('hidden');
-                    this.btnPlay.classList.remove('hidden');
+                    this.roomSelection.classList.remove('hidden');
                 }
             } else {
-                this.btnPlay.classList.add('hidden');
+                this.roomSelection.classList.add('hidden');
                 this.loader.classList.remove('hidden');
-                this.loader.innerText = 'Connecting to Battle.net...';
+                this.loader.innerText = 'Connecting...';
             }
-        } else {
-            this.menuContainer.classList.remove('active');
-            this.menuContainer.classList.add('hidden');
         }
     }
 }

@@ -55,7 +55,7 @@ export class Game {
     }
 
     startGameScene() {
-        this.lobbyUI.visible = false;
+        this.lobbyUI.hide();
         const mainScene = new MainScene(this);
         this.sceneManager.loadScene(mainScene);
     }
