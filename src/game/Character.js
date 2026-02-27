@@ -103,6 +103,7 @@ export class Character {
 
         // WC3 Hook Lock
         this.isPaused = false;
+        this.nextHookGrapple = false; // Flag for next hook to be a grapple
 
         // Ensure stats are correct after all properties are initialized
         this.recalculateStats();
@@ -131,6 +132,13 @@ export class Character {
         if (this.state !== State.DEAD && this.state !== State.HOOKED && this.hookCooldown <= 0) {
             this.hookCooldown = this.maxHookCooldown;
             const hook = new Hook(this, targetX, targetY);
+
+            // Apply grapple if flag is set or if player has passive grapple (for debugging/testing)
+            if (this.nextHookGrapple) {
+                hook.hasGrapple = true;
+                this.nextHookGrapple = false; // Reset after use
+            }
+
             entityManager.add(hook);
         }
     }

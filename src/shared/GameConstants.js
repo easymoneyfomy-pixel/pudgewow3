@@ -44,4 +44,12 @@ export const GAME = {
     HOOK_COOLDOWN: 3,
     HOOK_CURVE_POWER: 0.5,
     HOOK_DAMAGE: 40,
+
+    // Balance: Item Abilities
+    TOSS_SPEED: 600,
+    TOSS_DAMAGE: 100,
+    TOSS_RADIUS: 100,
+    MINE_DAMAGE: 200,
+    MINE_EXPLOSION_RADIUS: 120,
+    MINE_ARM_TIME: 1.5,
 };

@@ -3,7 +3,7 @@ export const SHOP_ITEMS = [
     { id: 'flaming_hook', label: 'Flaming Hook', cost: 150, icon: '🔥', desc: 'Burn 8 DPS / 3s', effect: 'burn' },
     { id: 'ricochet_turbine', label: 'Ricochet Turbine', cost: 125, icon: '🔄', desc: 'Hook bounces walls', effect: 'bounce' },
     { id: 'strygwyr_claws', label: "Strygwyr's Claws", cost: 175, icon: '🩸', desc: 'Rupture on move', effect: 'rupture' },
-    { id: 'grappling_hook', label: 'Grappling Hook', cost: 200, icon: '🪢', desc: 'Hook pulls you to walls', effect: 'grapple' },
+    { id: 'grappling_hook', label: 'Grappling Hook', cost: 200, icon: '🪢', desc: 'Active: Next hook pulls you to walls', effect: 'grapple', active: true, cooldown: 5 },
     { id: 'naix_jaws', label: "Naix's Jaws", cost: 150, icon: '🦇', desc: 'Heal 20 HP on hook hit', effect: 'lifesteal' },
     { id: 'healing_salve', label: 'Healing Salve', cost: 50, icon: '💊', desc: 'Regen 100 HP over 10s', effect: 'heal', active: true, cooldown: 10 },
     { id: 'blink_dagger', label: 'Blink Dagger', cost: 250, icon: '⚡', desc: 'Teleport to cursor', effect: 'blink', active: true, cooldown: 8 },

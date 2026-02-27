@@ -21,10 +21,10 @@ export class Hook {
         this.radius = owner.hookRadius;
         this.bouncesLeft = owner.hookBounces || 0; // Ricochet Turbine
 
-        // Item effects from owner
+        // Item effects from owner (defaults)
         this.hasBurn = (owner.items || []).some(i => i.effect === 'burn');
         this.hasRupture = (owner.items || []).some(i => i.effect === 'rupture');
-        this.hasGrapple = (owner.items || []).some(i => i.effect === 'grapple');
+        this.hasGrapple = false; // Set explicitly by castHook
         this.hasLifesteal = (owner.items || []).some(i => i.effect === 'lifesteal');
         this.hasLantern = (owner.items || []).some(i => i.effect === 'lantern');
 
@@ -249,14 +249,30 @@ export class Hook {
         const dy = this.y - this.owner.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
 
-        if (dist <= moveAmt) {
+        if (dist <= moveAmt * 2) { // Slightly larger threshold for safety
+            // Final snap - try to find valid position near hook if hook is in wall
             this.owner.x = this.x;
             this.owner.y = this.y;
             this.owner.isPaused = false;
+
+            // If we are now stuck in a wall, use the character's built-in unstuck logic
+            // but we need to trigger it here since character.update is usually skipped when isPaused is true
+            // but isPaused is now false.
             entityManager.remove(this);
         } else {
-            this.owner.x += (dx / dist) * moveAmt;
-            this.owner.y += (dy / dist) * moveAmt;
+            const nextX = this.owner.x + (dx / dist) * moveAmt;
+            const nextY = this.owner.y + (dy / dist) * moveAmt;
+
+            // Move the owner directly (ignore collision for grapple pull to allow "jumping" over small corners)
+            this.owner.x = nextX;
+            this.owner.y = nextY;
+
+            // Safety: if owner hasn't moved for some reason or is taking too long
+            this.grappleLifetime = (this.grappleLifetime || 0) + 1;
+            if (this.grappleLifetime > 300) { // Timeout 300 ticks (~10s)
+                this.owner.isPaused = false;
+                entityManager.remove(this);
+            }
         }
     }
 

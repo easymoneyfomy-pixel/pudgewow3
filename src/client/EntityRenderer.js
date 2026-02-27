@@ -148,13 +148,12 @@ export class EntityRenderer {
         }
 
         // Draw the Pudge Sprite if loaded, otherwise fallback to procedural
-        if (renderer.pudgeSprite && renderer.pudgeSprite.complete) {
+        // Draw the Pudge Sprite if loaded, otherwise fallback to procedural
+        if (renderer.pudgeSprite && renderer.pudgeSprite.complete && renderer.pudgeSprite.naturalWidth > 0) {
             ctx.save();
-            // Scale and center the sprite accurately
-            const targetSize = 85; // Increased size relative to map
-            const s = targetSize / renderer.pudgeSprite.width;
-            ctx.scale(s, s);
-            ctx.drawImage(renderer.pudgeSprite, -renderer.pudgeSprite.width / 2, -renderer.pudgeSprite.height / 2);
+            ctx.rotate(char.rot || 0); // Pudge faces movement/hook direction
+            const targetSize = char.radius * 3.5; // Scale according to hitbox but slightly larger for "meatiness"
+            ctx.drawImage(renderer.pudgeSprite, -targetSize / 2, -targetSize / 2, targetSize, targetSize);
             ctx.restore();
         } else {
             // Shadow
@@ -372,54 +371,67 @@ export class EntityRenderer {
         }
 
         // 2. Hook blade (The Head)
-        ctx.fillStyle = '#666';
-        ctx.strokeStyle = '#111';
-        ctx.lineWidth = 2;
+        if (renderer.hookSprite && renderer.hookSprite.complete && renderer.hookSprite.naturalWidth > 0) {
+            ctx.save();
+            ctx.translate(hx, hy);
 
-        // Head orientation:
-        // If flying forward, point in dirX/dirY.
-        // If returning, point towards the next node (points[1]).
-        let headAngle = Math.atan2(dirY, dirX);
-        if (isReturning && points.length > 1) {
-            const headDx = points[1].x - hx;
-            const headDy = points[1].y - hy;
-            headAngle = Math.atan2(headDy, headDx) + Math.PI; // Look back when retracting
+            let headAngle = Math.atan2(dirY, dirX);
+            if (isReturning && points.length > 1) {
+                const headDx = points[1].x - hx;
+                const headDy = points[1].y - hy;
+                headAngle = Math.atan2(headDy, headDx) + Math.PI; // Correct for back-facing
+            }
+            ctx.rotate(headAngle);
+
+            const headSize = hook.radius * 5;
+            ctx.drawImage(renderer.hookSprite, -headSize / 2, -headSize / 2, headSize, headSize);
+            ctx.restore();
+        } else {
+            // Head orientation:
+            // If flying forward, point in dirX/dirY.
+            // If returning, point towards the next node (points[1]).
+            let headAngle = Math.atan2(dirY, dirX);
+            if (isReturning && points.length > 1) {
+                const headDx = points[1].x - hx;
+                const headDy = points[1].y - hy;
+                headAngle = Math.atan2(headDy, headDx) + Math.PI; // Look back when retracting
+            }
+
+            ctx.save();
+            ctx.translate(hx, hy);
+            ctx.rotate(headAngle);
+
+            // Core Shank
+            ctx.fillStyle = '#777';
+            ctx.fillRect(-2, -2, 10, 4);
+
+            // Meat Hook Curve
+            ctx.beginPath();
+            ctx.strokeStyle = '#888';
+            ctx.lineWidth = 4;
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            ctx.arc(8, 0, 10, -Math.PI / 2, Math.PI / 2, false);
+            ctx.stroke();
+
+            // Barb/Point
+            ctx.beginPath();
+            ctx.fillStyle = '#999';
+            ctx.moveTo(8, 10);
+            ctx.lineTo(2, 6);
+            ctx.lineTo(10, 4);
+            ctx.closePath();
+            ctx.fill();
+
+            // Edge Highlights
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(8, 0, 10, -Math.PI / 2, 0, false);
+            ctx.stroke();
+
+            ctx.restore();
         }
-
-        ctx.save();
-        ctx.translate(hx, hy);
-        ctx.rotate(headAngle);
-
-        // Core Shank
-        ctx.fillStyle = '#777';
-        ctx.fillRect(-2, -2, 10, 4);
-
-        // Meat Hook Curve
-        ctx.beginPath();
-        ctx.strokeStyle = '#888';
-        ctx.lineWidth = 4;
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
-        ctx.arc(8, 0, 10, -Math.PI / 2, Math.PI / 2, false);
-        ctx.stroke();
-
-        // Barb/Point
-        ctx.beginPath();
-        ctx.fillStyle = '#999';
-        ctx.moveTo(8, 10);
-        ctx.lineTo(2, 6);
-        ctx.lineTo(10, 4);
-        ctx.closePath();
-        ctx.fill();
-
-        // Edge Highlights
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.arc(8, 0, 10, -Math.PI / 2, 0, false);
-        ctx.stroke();
-
-        ctx.restore();
     }
 
     // ─────────────────────── LANDMINE ────────────────────────────────────────
@@ -432,41 +444,46 @@ export class EntityRenderer {
         // Stealthy when armed
         ctx.globalAlpha = mine.isArmed ? 0.35 : 1.0;
 
-        // 1. Barrel Body
-        ctx.fillStyle = '#8B4513'; // SaddleBrown
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 12, 14, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#3d2b1f';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        // 2. Wood Grain (Procedural vertical curves)
-        ctx.strokeStyle = '#5D2906';
-        ctx.lineWidth = 0.5;
-        for (let i = -8; i <= 8; i += 4) {
+        if (renderer.landmineSprite && renderer.landmineSprite.complete && renderer.landmineSprite.naturalWidth > 0) {
+            const size = 32;
+            ctx.drawImage(renderer.landmineSprite, -size / 2, -size / 2, size, size);
+        } else {
+            // 1. Barrel Body
+            ctx.fillStyle = '#8B4513'; // SaddleBrown
             ctx.beginPath();
-            ctx.moveTo(i, -12);
-            ctx.quadraticCurveTo(i * 1.5, 0, i, 12);
-            ctx.stroke();
-        }
-
-        // 3. Iron Bands
-        ctx.fillStyle = '#333';
-        ctx.fillRect(-12.5, -8, 25, 3);
-        ctx.fillRect(-12.5, 5, 25, 3);
-
-        // 4. Fuse / Lid
-        ctx.fillStyle = '#222';
-        ctx.fillRect(-4, -16, 8, 4);
-
-        // Burning Fuse Spark (if not armed yet or if active)
-        if (!mine.isArmed) {
-            const sparkGlow = Math.sin(Date.now() / 50) * 2 + 3;
-            ctx.fillStyle = '#ffaa00';
-            ctx.beginPath();
-            ctx.arc(0, -18, sparkGlow, 0, Math.PI * 2);
+            ctx.ellipse(0, 0, 12, 14, 0, 0, Math.PI * 2);
             ctx.fill();
+            ctx.strokeStyle = '#3d2b1f';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // 2. Wood Grain (Procedural vertical curves)
+            ctx.strokeStyle = '#5D2906';
+            ctx.lineWidth = 0.5;
+            for (let i = -8; i <= 8; i += 4) {
+                ctx.beginPath();
+                ctx.moveTo(i, -12);
+                ctx.quadraticCurveTo(i * 1.5, 0, i, 12);
+                ctx.stroke();
+            }
+
+            // 3. Iron Bands
+            ctx.fillStyle = '#333';
+            ctx.fillRect(-12.5, -8, 25, 3);
+            ctx.fillRect(-12.5, 5, 25, 3);
+
+            // 4. Fuse / Lid
+            ctx.fillStyle = '#222';
+            ctx.fillRect(-4, -16, 8, 4);
+
+            // Burning Fuse Spark (if not armed yet or if active)
+            if (!mine.isArmed) {
+                const sparkGlow = Math.sin(Date.now() / 50) * 2 + 3;
+                ctx.fillStyle = '#ffaa00';
+                ctx.beginPath();
+                ctx.arc(0, -18, sparkGlow, 0, Math.PI * 2);
+                ctx.fill();
+            }
         }
 
         ctx.restore();

@@ -5,6 +5,16 @@ export class Renderer {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         this.tileSize = GAME.TILE_SIZE; // WC3-style tile size (64)
+
+        // Load Sprites
+        this.pudgeSprite = new Image();
+        this.pudgeSprite.src = 'assets/pudge.png';
+
+        this.hookSprite = new Image();
+        this.hookSprite.src = 'assets/hook.png';
+
+        this.landmineSprite = new Image();
+        this.landmineSprite.src = 'assets/mine.png'; // Handled by generic assets
     }
 
     clear() {

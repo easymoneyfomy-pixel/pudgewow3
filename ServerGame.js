@@ -236,6 +236,10 @@ export class ServerGame {
             // Healing Salve: 10s duration
             character.salveTimer = 10;
             item.cooldown = item.maxCooldown;
+        } else if (item.effect === 'grapple') {
+            // Active Grapple: Next hook will be a grapple
+            character.nextHookGrapple = true;
+            item.cooldown = item.maxCooldown;
         }
     }
 
