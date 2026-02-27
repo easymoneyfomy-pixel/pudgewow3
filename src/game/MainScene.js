@@ -50,6 +50,12 @@ export class MainScene {
         this._prevAliveStates = new Map();
         this._firstBloodDone = false;
         this._cameraInitialized = false;
+
+        // Interpolation
+        this._serverTickMs = 1000 / GAME.TICK_RATE;
+        this._lastServerTime = 0;
+        this._prevEntities = new Map(); // id -> eData
+        this._targetEntities = new Map(); // id -> eData
     }
 
     init() { }
@@ -70,9 +76,15 @@ export class MainScene {
         const myId = this.game.network.playerId;
         const myTeam = this.game.network.team;
 
+        // ── 0. State Interpolation Prep ──
+        this._lastServerTime = performance.now();
+        this._prevEntities = new Map(this._targetEntities);
+        this._targetEntities = new Map();
+
         // ── First pass: collect all eData objects ──
         for (const eData of data.entities) {
             this.entities.push(eData);
+            this._targetEntities.set(eData.id, eData);
 
             if (eData.type === 'CHARACTER') {
                 this.characterMap.set(eData.id, eData);
@@ -252,15 +264,44 @@ export class MainScene {
 
         this.map.render(renderer, this.game.deltaTime);
 
-        // Sort entities by Y for painter's-algorithm depth ordering
-        const sorted = [...this.entities].sort((a, b) => a.y - b.y);
+        // Calculate interpolation alpha (0-1)
+        const now = performance.now();
+        const elapsed = now - this._lastServerTime;
+        const alpha = Math.min(1.2, elapsed / this._serverTickMs); // Allow slight overshoot for smoothness
+
+        // Create interpolated snapshots for rendering
+        const displayEntities = [];
+        for (const [id, target] of this._targetEntities) {
+            const prev = this._prevEntities.get(id);
+            const interp = { ...target };
+
+            if (prev && typeof target.x === 'number' && typeof target.y === 'number') {
+                // Lerp position
+                interp.x = prev.x + (target.x - prev.x) * alpha;
+                interp.y = prev.y + (target.y - prev.y) * alpha;
+            } else if (target.type === 'CHARACTER' && target.id === this.game.network.playerId) {
+                // If it's a new spawn, snap immediately
+                interp.x = target.x;
+                interp.y = target.y;
+            }
+            displayEntities.push(interp);
+        }
+
+        // Build a display-only character map for hook owner lookups during render
+        const displayCharacterMap = new Map();
+        for (const e of displayEntities) {
+            if (e.type === 'CHARACTER') displayCharacterMap.set(e.id, e);
+        }
+
+        // Sort interpolated entities by Y
+        const sorted = displayEntities.sort((a, b) => a.y - b.y);
 
         // Only allies (and self) see their mines — filter here client-side
         const myTeam = this.game.network.team;
 
         for (const eData of sorted) {
-            if (eData.type === 'LANDMINE' && eData.team !== myTeam) continue; // WC3: stealth mines
-            EntityRenderer.draw(renderer, eData, this.characterMap);
+            if (eData.type === 'LANDMINE' && eData.team !== myTeam) continue;
+            EntityRenderer.draw(renderer, eData, displayCharacterMap);
         }
 
         this.particles.render(renderer);

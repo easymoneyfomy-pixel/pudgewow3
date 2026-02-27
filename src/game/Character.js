@@ -248,6 +248,14 @@ export class Character {
             this.ddTimer -= dt;
         }
 
+        // CHARACTER COLLISION & UNSTUCK
+        if (entityManager) {
+            this.handleCharacterCollisions(entityManager);
+        }
+        if (map) {
+            this.checkUnstuck(map);
+        }
+
         if (this.state === State.HOOKED) {
             this.targetX = this.x;
             this.targetY = this.y;
@@ -299,6 +307,65 @@ export class Character {
                 }
             } else {
                 this.state = State.IDLE;
+            }
+        }
+    }
+
+    handleCharacterCollisions(entityManager) {
+        if (this.state === State.DEAD) return;
+
+        for (const entity of entityManager.entities) {
+            if (entity === this || entity.type !== 'CHARACTER' || entity.state === State.DEAD) continue;
+
+            const dx = entity.x - this.x;
+            const dy = entity.y - this.y;
+            const distSq = dx * dx + dy * dy;
+            const minDist = this.radius + entity.radius;
+
+            if (distSq < minDist * minDist) {
+                const dist = Math.sqrt(distSq) || 1;
+                const overlap = (minDist - dist) / 2;
+                const nx = dx / dist;
+                const ny = dy / dist;
+
+                // Push both away gently
+                this.x -= nx * overlap;
+                this.y -= ny * overlap;
+                entity.x += nx * overlap;
+                entity.y += ny * overlap;
+            }
+        }
+    }
+
+    checkUnstuck(map) {
+        if (this.state === State.DEAD || this.state === State.HOOKED) return;
+
+        const r = this.radius;
+        const isStuck = !map.isWalkable(this.x - r, this.y - r) ||
+            !map.isWalkable(this.x + r, this.y - r) ||
+            !map.isWalkable(this.x - r, this.y + r) ||
+            !map.isWalkable(this.x + r, this.y + r);
+
+        if (isStuck) {
+            // Find nearest walkable direction
+            const directions = [
+                { x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 },
+                { x: 1, y: 1 }, { x: -1, y: -1 }, { x: 1, y: -1 }, { x: -1, y: 1 }
+            ];
+
+            for (let step = 4; step <= 200; step += 16) {
+                for (const d of directions) {
+                    const tx = this.x + d.x * step;
+                    const ty = this.y + d.y * step;
+                    if (map.isWalkable(tx - r, ty - r) &&
+                        map.isWalkable(tx + r, ty - r) &&
+                        map.isWalkable(tx - r, ty + r) &&
+                        map.isWalkable(tx + r, ty + r)) {
+                        this.x = tx;
+                        this.y = ty;
+                        return;
+                    }
+                }
             }
         }
     }
