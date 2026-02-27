@@ -44,6 +44,7 @@ export class Hook {
         if (this.owner.state === State.DEAD) {
             this.owner.isPaused = false;
             if (this.hookedEntity) {
+                if (this.hookedEntity.onDropped) this.hookedEntity.onDropped();
                 this.hookedEntity.state = State.IDLE;
             }
             entityManager.remove(this);
@@ -167,7 +168,12 @@ export class Hook {
         if (this.hasLantern) damage += this.speed * 0.1;
         if (this.owner.ddTimer > 0) damage *= 2;
 
-        entity.takeDamage(damage, this.owner);
+        if (entity.type === 'LANDMINE') {
+            entity.isBeingHooked = true;
+            entity._hookOwner = this.owner;
+        }
+
+        entity.takeDamage(damage, this);
 
         if (!isAlly) {
             this.owner.gold += GAME.GOLD_ON_HIT;
@@ -213,7 +219,9 @@ export class Hook {
         if (this.hookedEntity) {
             // Drop target near owner
             this.hookedEntity.x = this.owner.x + this.dirX * 40;
-            this.hookedEntity.y = this.owner.y + this.dirY * 40;
+            if (this.hookedEntity.onDropped) {
+                this.hookedEntity.onDropped();
+            }
             this.hookedEntity.state = State.IDLE;
         }
         this.owner.isPaused = false;

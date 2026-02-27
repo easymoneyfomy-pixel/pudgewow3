@@ -47,7 +47,11 @@ export class Landmine {
     // ── External triggers ──────────────────────────────────────────────────
 
     /** Any incoming damage causes immediate detonation. */
-    takeDamage(_amount) {
+    takeDamage(_amount, attacker = null) {
+        // WC3 Pudge Wars: Hooking a mine should NOT detonate it immediately.
+        // If the attacker is a Hook head or the damage is labeled as hook, we skip.
+        if (attacker && (attacker.type === 'HOOK' || attacker.owner)) return;
+
         if (!this.hasExploded && this._entityManagerRef) {
             this.explode(this._entityManagerRef);
         }
