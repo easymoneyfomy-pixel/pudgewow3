@@ -27,7 +27,7 @@ export class Tile {
                 break;
             case TileType.OBSTACLE:
                 this.isWalkable = false;
-                this.isHookable = false;
+                this.isHookable = true; // Hooks fly over trees
                 break;
             case TileType.SHOP:
                 this.isWalkable = false;

@@ -4,6 +4,8 @@ import { GameRules } from './src/engine/GameRules.js';
 import { Character } from './src/game/Character.js';
 import { Hook } from './src/game/Hook.js';
 import { Barricade } from './src/game/Barricade.js';
+import { TossedUnit } from './src/game/TossedUnit.js';
+import { Landmine } from './src/game/Landmine.js';
 import { ITEM_MAP } from './src/shared/ItemDefs.js';
 import { GAME } from './src/shared/GameConstants.js';
 
@@ -161,6 +163,32 @@ export class ServerGame {
                 character.x = targetX;
                 character.y = targetY;
                 character.setTarget(targetX, targetY); // Stop moving immediately to new pos
+                item.cooldown = item.maxCooldown;
+            }
+        } else if (item.effect === 'mine') {
+            const mine = new Landmine(character.x, character.y, character.team);
+            this.entityManager.add(mine);
+            item.cooldown = item.maxCooldown;
+        } else if (item.effect === 'toss') {
+            // Find closest entity to toss that isn't the caster
+            let closest = null;
+            let closestDist = Infinity;
+            for (const entity of this.entityManager.entities) {
+                if (entity !== character && entity.takeDamage && entity.state !== 'DEAD') {
+                    const dx = entity.x - character.x;
+                    const dy = entity.y - character.y;
+                    const dist = dx * dx + dy * dy;
+                    if (dist < closestDist && dist < 10000) { // 100 grab radius
+                        closestDist = dist;
+                        closest = entity;
+                    }
+                }
+            }
+
+            if (closest) {
+                // Toss the unit to the target location
+                const tossed = new TossedUnit(character, closest, x, y);
+                this.entityManager.add(tossed);
                 item.cooldown = item.maxCooldown;
             }
         }

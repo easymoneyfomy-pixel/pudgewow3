@@ -25,6 +25,7 @@ export class Hook {
         this.hasRupture = (owner.items || []).some(i => i.effect === 'rupture');
         this.hasGrapple = (owner.items || []).some(i => i.effect === 'grapple');
         this.hasLifesteal = (owner.items || []).some(i => i.effect === 'lifesteal');
+        this.hasLantern = (owner.items || []).some(i => i.effect === 'lantern');
 
         this.currentDist = 0;
         this.isReturning = false;
@@ -175,7 +176,15 @@ export class Hook {
                                 entity.state = State.HOOKED;
 
                                 const isAlly = entity.team === this.owner.team;
-                                entity.takeDamage(this.owner.hookDamage);
+
+                                // Calculate total damage (including Barathrum's Lantern)
+                                let totalHitDamage = this.owner.hookDamage;
+                                if (this.hasLantern) {
+                                    // Lantern adds 10% of hook speed as bonus damage
+                                    totalHitDamage += Math.floor(this.speed * 0.1);
+                                }
+
+                                entity.takeDamage(totalHitDamage);
 
                                 if (!isAlly) {
                                     // Flaming Hook: Apply burn DOT

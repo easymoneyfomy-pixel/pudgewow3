@@ -87,8 +87,24 @@ export class GameMap {
             this.grid[this.width - 5][y] = new Tile(TileType.SPAWN_BLUE);
         }
 
-        // 8. TREES REMOVED (User requested an open arena map without trees)
-        // DENSE TREE LINES — removed to create a clean geometric arena.
+        // 8. TREES / OBSTACLES (Classic WC3 Forest Borders)
+        // Add thick tree lines along the top and bottom edges (just inside the border walls)
+        for (let x = 2; x < this.width - 2; x++) {
+            // Top trees
+            this.grid[x][2] = new Tile(TileType.OBSTACLE);
+            this.grid[x][3] = new Tile(TileType.OBSTACLE);
+            // Bottom trees
+            this.grid[x][this.height - 3] = new Tile(TileType.OBSTACLE);
+            this.grid[x][this.height - 4] = new Tile(TileType.OBSTACLE);
+        }
+
+        // Clear paths down the center for the river and bridges
+        for (let x = riverLeft - 1; x <= riverRight + 1; x++) {
+            this.grid[x][2] = new Tile(TileType.GROUND);
+            this.grid[x][3] = new Tile(TileType.GROUND);
+            this.grid[x][this.height - 3] = new Tile(TileType.GROUND);
+            this.grid[x][this.height - 4] = new Tile(TileType.GROUND);
+        }
 
         // ---- WALL PILLARS along river banks (stone pillars like WC3) ----
         const riverPillars = [
@@ -149,6 +165,29 @@ export class GameMap {
                     ctx.fillStyle = '#111';
                     ctx.fillRect(px, py + size - 4, size, 4);
                     ctx.fillRect(px + size - 4, py, 4, size);
+                }
+                else if (tile.type === TileType.OBSTACLE) {
+                    // Trees (WC3 style pines/forest)
+                    ctx.fillStyle = '#1b3a1a'; // Darker forest green floor
+                    ctx.fillRect(px, py, size, size);
+
+                    // Draw a simple tree shape (triangle/cone)
+                    ctx.fillStyle = '#115511';
+                    ctx.beginPath();
+                    ctx.moveTo(px + size / 2, py + 5); // Peak
+                    ctx.lineTo(px + size - 5, py + size - 10);
+                    ctx.lineTo(px + 5, py + size - 10);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Tree shadow/depth
+                    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                    ctx.beginPath();
+                    ctx.moveTo(px + size / 2, py + 5);
+                    ctx.lineTo(px + size - 5, py + size - 10);
+                    ctx.lineTo(px + size / 2, py + size - 10);
+                    ctx.closePath();
+                    ctx.fill();
                 }
                 else if (tile.type === TileType.SHOP) {
                     // Shop pad
