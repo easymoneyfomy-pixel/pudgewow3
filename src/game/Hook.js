@@ -222,7 +222,10 @@ export class Hook {
             if (this.hookedEntity.onDropped) {
                 this.hookedEntity.onDropped();
             }
-            this.hookedEntity.state = State.IDLE;
+            // Phase 15: Protect DEAD state. Only reset to IDLE if the unit actually survived.
+            if (this.hookedEntity.state !== State.DEAD) {
+                this.hookedEntity.state = State.IDLE;
+            }
         }
         this.owner.isPaused = false;
         entityManager.remove(this);

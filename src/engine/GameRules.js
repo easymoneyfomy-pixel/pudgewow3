@@ -32,11 +32,11 @@ export class GameRules {
             this.endRoundByTime();
         }
 
-        // Проверяем смерти (для простоты - перебираем энтити)
-        // В реальном движке лучше отправлять события "onDeath"
+        // Провeряем смерти (для простоты - перебираем энтити)
+        // Robust Phase 15 fix: Use flag to ensure death is processed exactly once
         for (const entity of entityManager.entities) {
-            if (entity.state === State.DEAD && entity.respawnTimer === entity.respawnDelay) {
-                // Только что умер
+            if (entity.state === State.DEAD && !entity.isDeathProcessed) {
+                entity.isDeathProcessed = true;
                 this.handleDeath(entity);
             }
         }

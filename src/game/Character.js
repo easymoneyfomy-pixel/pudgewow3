@@ -63,6 +63,9 @@ export class Character {
         // Deny flag
         this.deniedJustHappened = false;
 
+        // Robust death processing flag (Phase 15 fix)
+        this.isDeathProcessed = false;
+
         // WC3 Status effects
         this.invulnerableTimer = 0;
         this.isHealing = false;
@@ -181,6 +184,7 @@ export class Character {
         this.y = this.spawnY;
         this.targetX = this.spawnX;
         this.targetY = this.spawnY;
+        this.isDeathProcessed = false; // Phase 15 reset
 
         // Reset per-life flags
         this.killedByMine = false;
