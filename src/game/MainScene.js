@@ -161,7 +161,26 @@ export class MainScene {
         // ============================================================
 
         if (this.game.input.isMouseButtonPressed(2)) {
-            this.game.network.sendInput({ type: 'MOVE', x: worldX, y: worldY });
+            // Check if clicking a rune for explicit pickup (WC3 Pudge Wars style)
+            let clickedRuneId = null;
+            for (const eData of this.entities) {
+                if (eData.type === 'RUNE') {
+                    const dx = eData.x - worldX;
+                    const dy = eData.y - worldY;
+                    const distSq = dx * dx + dy * dy;
+                    // Click radius of 25px
+                    if (distSq < 25 * 25) {
+                        clickedRuneId = eData.id;
+                        break;
+                    }
+                }
+            }
+
+            if (clickedRuneId) {
+                this.game.network.sendInput({ type: 'PICKUP', runeId: clickedRuneId });
+            } else {
+                this.game.network.sendInput({ type: 'MOVE', x: worldX, y: worldY });
+            }
         }
 
         if (this.game.input.isMouseButtonPressed(0) && !this.ui.shopOpen) {

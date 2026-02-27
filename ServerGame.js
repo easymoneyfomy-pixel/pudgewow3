@@ -72,6 +72,26 @@ export class ServerGame {
             this.handleBuyItem(character, input.itemId);
         } else if (input.type === 'USE_ITEM') {
             this.handleUseItem(character, input.slot, input.x, input.y);
+        } else if (input.type === 'PICKUP') {
+            this.handleRunePickup(character, input.runeId);
+        }
+    }
+
+    handleRunePickup(character, runeId) {
+        const rune = this.entityManager.entities.find(e => e.id === runeId);
+        if (!rune || rune.type !== 'RUNE') return;
+
+        const dx = rune.x - character.x;
+        const dy = rune.y - character.y;
+        const distSq = dx * dx + dy * dy;
+        const pickupRange = 60;
+
+        if (distSq < pickupRange * pickupRange) {
+            rune.applyEffect(character);
+            this.entityManager.remove(rune);
+        } else {
+            // Move to rune if too far
+            character.setTarget(rune.x, rune.y);
         }
     }
 

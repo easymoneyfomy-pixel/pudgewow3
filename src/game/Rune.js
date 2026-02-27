@@ -35,7 +35,8 @@ export class Rune {
             return;
         }
 
-        // Check for player pickup
+        // Check for player pickup — DISABLED (WC3 Pudge Wars style: pickup on RMB)
+        /*
         for (const entity of entityManager.entities) {
             if (entity.type === 'CHARACTER' && entity.state !== State.DEAD) {
                 const edx = entity.x - this.x;
@@ -49,6 +50,7 @@ export class Rune {
                 }
             }
         }
+        */
     }
 
     applyEffect(character) {

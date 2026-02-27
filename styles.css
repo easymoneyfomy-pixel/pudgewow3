@@ -349,11 +349,12 @@ canvas#gameCanvas {
 }
 
 #portrait-img {
-    width: 44px;
-    height: 56px;
-    background-color: #660000;
-    border-radius: 50%;
-    /* In a real project you'd put an image url here */
+    width: 68px;
+    height: 88px;
+    background-image: url('assets/pudge.png');
+    background-size: cover;
+    background-position: center;
+    border-radius: 12px;
 }
 
 #player-level {
