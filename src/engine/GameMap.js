@@ -104,9 +104,11 @@ export class GameMap {
             }
         }
 
-        // Spawn zones
-        this.grid[4][midY] = new Tile(TileType.SPAWN_RED);
-        this.grid[this.width - 5][midY] = new Tile(TileType.SPAWN_BLUE);
+        // Spawn zones (5 tiles vertically for 5v5)
+        for (let y = midY - 2; y <= midY + 2; y++) {
+            this.grid[4][y] = new Tile(TileType.SPAWN_RED);
+            this.grid[this.width - 5][y] = new Tile(TileType.SPAWN_BLUE);
+        }
     }
 
     render(renderer) {

@@ -25,7 +25,17 @@ export class ServerGame {
     addPlayer(playerId, team) {
         // Based on 24x24 GameMap definition (spawn at grid[4][midY] and grid[19][midY])
         const spawnX = team === 'red' ? 4 * 64 : 19 * 64;
-        const spawnY = 12 * 64;
+        const middleY = 12 * 64;
+
+        // Offset spawn slightly based on number of existing players on team
+        let teamCount = 0;
+        for (const p of this.players.values()) {
+            if (p.team === team) teamCount++;
+        }
+
+        // Spread 5 players vertically
+        const offsetY = (teamCount - 2) * 64;
+        const spawnY = middleY + offsetY;
 
         const character = new Character(spawnX, spawnY, team);
         character.id = playerId;

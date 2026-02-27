@@ -10,7 +10,7 @@ export class RoomManager {
             id: r.id,
             name: r.name,
             players: r.players.size,
-            maxPlayers: 2,
+            maxPlayers: 10,
             isPlaying: r.game && r.game.isPlaying()
         }));
     }
@@ -39,15 +39,21 @@ export class RoomManager {
             return;
         }
 
-        if (room.players.size >= 2) {
+        if (room.players.size >= 10) {
             ws.send(JSON.stringify({ type: 'ERROR', message: 'Room is full' }));
             return;
         }
 
+        let redCount = 0;
+        let blueCount = 0;
+        for (const p of room.players) {
+            if (p.team === 'red') redCount++;
+            else if (p.team === 'blue') blueCount++;
+        }
+        const team = redCount <= blueCount ? 'red' : 'blue';
+
         room.players.add(ws);
         ws.roomId = roomId;
-
-        const team = room.players.size === 1 ? 'red' : 'blue';
         ws.team = team;
 
         ws.send(JSON.stringify({
@@ -58,7 +64,7 @@ export class RoomManager {
 
         room.game.addPlayer(ws.playerId, team);
 
-        if (room.players.size === 2) {
+        if (room.players.size >= 1 && !room.game.isPlaying()) {
             room.game.start();
         }
     }
