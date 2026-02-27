@@ -37,6 +37,12 @@ export class GameRules {
             return;
         }
 
+        // WC3 Pudge Wars: Mine kills do NOT award score points
+        if (entity.killedByMine) {
+            entity.killedByMine = false; // Reset for next life
+            return;
+        }
+
         if (entity.team === 'red') {
             this.scoreBlue++;
         } else if (entity.team === 'blue') {

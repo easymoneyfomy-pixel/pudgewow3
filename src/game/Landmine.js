@@ -83,7 +83,8 @@ export class Landmine {
                 const edist = Math.sqrt(edx * edx + edy * edy);
 
                 if (edist < this.explosionRadius) {
-                    // Massive AOE damage to all nearby units (friend or foe)
+                    // WC3: Mine kills do NOT award score points
+                    entity.killedByMine = true;
                     entity.takeDamage(this.damage);
                 }
             }

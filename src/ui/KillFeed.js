@@ -1,6 +1,7 @@
 export class KillFeed {
     constructor() {
         this.entries = [];
+        this.announcements = []; // For huge center-screen text
         this.maxEntries = 5;
         this.entryLife = 5; // seconds
     }
@@ -17,6 +18,14 @@ export class KillFeed {
             killerTeam
         });
 
+        if (isHeadshot) {
+            this.announcements.push({
+                text: "HEADSHOT!",
+                life: 3,
+                color: '#ffcc00'
+            });
+        }
+
         if (this.entries.length > this.maxEntries) {
             this.entries.shift();
         }
@@ -29,6 +38,12 @@ export class KillFeed {
             isHeadshot: false,
             isFirstBlood: true,
             killerTeam
+        });
+
+        this.announcements.push({
+            text: "FIRST BLOOD",
+            life: 4,
+            color: '#ff0000'
         });
     }
 
@@ -50,7 +65,11 @@ export class KillFeed {
         for (const e of this.entries) {
             e.life -= dt;
         }
+        for (const a of this.announcements) {
+            a.life -= dt;
+        }
         this.entries = this.entries.filter(e => e.life > 0);
+        this.announcements = this.announcements.filter(a => a.life > 0);
     }
 
     render(ctx, width) {
@@ -81,6 +100,30 @@ export class KillFeed {
                     e.isDenied ? '#bbbbbb' :
                         e.killerTeam === 'red' ? '#ff8888' : '#8888ff';
             ctx.fillText(e.text, startX - 10, y + 6);
+        }
+
+        // Render huge center-screen announcements
+        for (let i = 0; i < this.announcements.length; i++) {
+            const a = this.announcements[i];
+            const alpha = Math.min(1, a.life / 1.0); // Fade out over last 1 second
+
+            ctx.globalAlpha = alpha;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // Scaled text effect (starts big, gets smaller)
+            const scale = 1.0 + (a.life * 0.2);
+            ctx.font = `bold ${Math.floor(60 * scale)}px "Cinzel", serif`;
+
+            // Drop shadow / glow
+            ctx.shadowColor = a.color;
+            ctx.shadowBlur = 20;
+            ctx.fillStyle = '#fff';
+
+            // Draw slightly higher than center
+            ctx.fillText(a.text, width / 2, ctx.canvas.height / 3 + (i * 80));
+
+            ctx.shadowBlur = 0; // reset
         }
 
         ctx.globalAlpha = 1;
