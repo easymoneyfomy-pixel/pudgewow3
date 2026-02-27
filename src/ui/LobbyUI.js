@@ -15,45 +15,77 @@ export class LobbyUI {
         const width = this.game.canvas.width;
         const height = this.game.canvas.height;
 
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+        // Background with vignette
+        const grad = ctx.createRadialGradient(width / 2, height / 2, 50, width / 2, height / 2, width);
+        grad.addColorStop(0, '#1a120c');
+        grad.addColorStop(1, '#000000');
+        ctx.fillStyle = grad;
         ctx.fillRect(0, 0, width, height);
 
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold 48px Arial';
+        // Header
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#f0d78c';
+        ctx.fillStyle = '#f0d78c';
+        ctx.font = 'bold 54px "Segoe UI", Arial, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText("Pudge Wars Online", width / 2, 100);
+        ctx.fillText("PUDGE WARS ONLINE", width / 2, 100);
+        ctx.shadowBlur = 0;
+
+        ctx.font = 'italic 18px Arial';
+        ctx.fillStyle = '#888';
+        ctx.fillText("A Warcraft III Inspired Tribute", width / 2, 130);
 
         if (!this.game.network.connected) {
-            ctx.font = '24px Arial';
-            ctx.fillStyle = 'yellow';
-            ctx.fillText("Connecting to server...", width / 2, height / 2);
+            ctx.font = 'bold 24px Arial';
+            ctx.fillStyle = '#ccaa44';
+            ctx.fillText("Connecting to Battle.net...", width / 2, height / 2);
             return;
         }
 
-        ctx.font = '24px Arial';
-        ctx.fillStyle = 'white';
-        ctx.fillText("Available Lobbies:", width / 2, 200);
+        // Lobbies List Container
+        const listWidth = 500;
+        const listX = (width - listWidth) / 2;
+        ctx.fillStyle = 'rgba(61, 43, 31, 0.4)';
+        ctx.fillRect(listX, 180, listWidth, 250);
+        ctx.strokeStyle = '#3d2b1f';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(listX, 180, listWidth, 250);
+
+        ctx.font = 'bold 20px Arial';
+        ctx.fillStyle = '#f0d78c';
+        ctx.textAlign = 'left';
+        ctx.fillText("AVAILABLE TAVERNS:", listX + 20, 210);
 
         let y = 250;
         if (this.rooms.length === 0) {
-            ctx.fillStyle = '#ccc';
-            ctx.font = '20px Arial';
-            ctx.fillText("No active lobbies. Create one!", width / 2, y);
-            y += 40;
+            ctx.fillStyle = '#666';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText("The tavern is empty. Be the first host!", width / 2, 300);
         } else {
+            ctx.font = '18px Arial';
             for (let i = 0; i < this.rooms.length; i++) {
                 const r = this.rooms[i];
-                ctx.fillStyle = r.players >= 2 ? '#ff4444' : '#44ff44';
-                ctx.fillText(`[${i + 1}] ${r.name} - ${r.players}/2 players ${r.isPlaying ? '(Playing)' : '(Waiting)'}`, width / 2, y);
+                const isFull = r.players >= 2;
+                ctx.fillStyle = isFull ? '#666' : '#fff';
+                ctx.textAlign = 'left';
+                ctx.fillText(`[${i + 1}] ${r.name.toUpperCase()}`, listX + 40, y);
+
+                ctx.textAlign = 'right';
+                ctx.fillStyle = isFull ? '#844' : '#4a4';
+                ctx.fillText(`${r.players}/2 Souls ${r.isPlaying ? '(BATTLE)' : '(WAITING)'}`, listX + listWidth - 40, y);
                 y += 40;
             }
         }
 
-        y += 40;
-        ctx.fillStyle = 'yellow';
-        ctx.font = '16px Arial';
-        ctx.fillText("Press 'C' to Create a new Room.", width / 2, y);
-        ctx.fillText("Press '1'-'9' to Join a Room.", width / 2, y + 30);
+        // Instructions
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#f0d78c';
+        ctx.font = 'bold 18px Arial';
+        ctx.fillText("Press [C] to Host a Tavern Match", width / 2, height - 100);
+        ctx.fillStyle = '#888';
+        ctx.font = '14px Arial';
+        ctx.fillText("Press [1]-[9] to Join an Existing Duel", width / 2, height - 70);
     }
 
     handleInput(input) {

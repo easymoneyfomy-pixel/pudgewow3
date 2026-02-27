@@ -22,106 +22,153 @@ export class UIManager {
     }
 
     _drawTopBar(ctx, width, rules) {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(0, 0, width, 50);
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(0, 50);
-        ctx.lineTo(width, 50);
-        ctx.stroke();
+        // Gradient background
+        const barHeight = 45;
+        const grad = ctx.createLinearGradient(0, 0, 0, barHeight);
+        grad.addColorStop(0, '#3a2b1f');
+        grad.addColorStop(1, '#1a120c');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, width, barHeight);
 
-        ctx.font = 'bold 24px Arial';
+        ctx.strokeStyle = '#5a4635';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(0, 0, width, barHeight);
+
+        ctx.font = 'bold 20px "Segoe UI", Arial, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
         // Timer
         const mins = Math.floor(rules.roundTimeLeft / 60);
         const secs = Math.floor(rules.roundTimeLeft % 60).toString().padStart(2, '0');
-        ctx.fillStyle = '#fff';
-        ctx.fillText(`${mins}:${secs}`, width / 2, 25);
+        ctx.fillStyle = '#f0d78c'; // Gold color text
+        ctx.fillText(`${mins}:${secs}`, width / 2, barHeight / 2);
 
         // Scores
-        ctx.fillStyle = '#ff4444';
-        ctx.fillText(`Red: ${rules.scoreRed}`, width / 2 - 150, 25);
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#ff6666';
+        ctx.fillText(`RED: ${rules.scoreRed}`, 50, barHeight / 2);
 
-        ctx.fillStyle = '#4444ff';
-        ctx.fillText(`Blue: ${rules.scoreBlue}`, width / 2 + 150, 25);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#6666ff';
+        ctx.fillText(`BLUE: ${rules.scoreBlue}`, width - 50, barHeight / 2);
     }
 
     _drawBottomBar(ctx, width, height, player) {
-        const barHeight = 80;
+        const barHeight = 100;
         const startY = height - barHeight;
 
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        // Panel Background
+        const grad = ctx.createLinearGradient(0, startY, 0, height);
+        grad.addColorStop(0, '#2b1f1a');
+        grad.addColorStop(1, '#000000');
+        ctx.fillStyle = grad;
         ctx.fillRect(0, startY, width, barHeight);
+
+        ctx.strokeStyle = '#3d2b1f';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(0, startY, width, barHeight);
+
+        // HP Bar
+        const hpBarW = 200;
+        const hpBarH = 20;
+        const hpX = 20;
+        const hpY = startY + 20;
+
+        ctx.fillStyle = '#330000';
+        ctx.fillRect(hpX, hpY, hpBarW, hpBarH);
+        const hpRatio = player.hp / player.maxHp;
+        ctx.fillStyle = '#cc0000';
+        ctx.fillRect(hpX, hpY, hpBarW * hpRatio, hpBarH);
         ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(0, startY);
-        ctx.lineTo(width, startY);
-        ctx.stroke();
+        ctx.lineWidth = 1;
+        ctx.strokeRect(hpX, hpY, hpBarW, hpBarH);
 
-        // Портрет / Инфо
-        ctx.fillStyle = 'white';
-        ctx.font = '16px Arial';
-        ctx.textAlign = 'left';
-        ctx.fillText(`Player HP: ${player.hp} / ${player.maxHp}`, 20, startY + 25);
-        ctx.fillStyle = 'gold';
-        ctx.fillText(`Gold: ${player.gold}g`, 20, startY + 45);
-        ctx.fillStyle = 'white';
-        ctx.fillText(`Status: ${player.state.toUpperCase()}`, 20, startY + 65);
-
-        // Иконка Хука (Квадрат)
-        const iconSize = 50;
-        const iconX = 200;
-        const iconY = startY + 15;
-
-        ctx.fillStyle = '#333';
-        ctx.fillRect(iconX, iconY, iconSize, iconSize);
-        ctx.strokeStyle = '#fff';
-        ctx.strokeRect(iconX, iconY, iconSize, iconSize);
-
-        ctx.fillStyle = 'white';
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 12px Arial';
         ctx.textAlign = 'center';
-        ctx.font = 'bold 20px Arial';
-        ctx.fillText("Q", iconX + iconSize / 2, iconY + iconSize / 2);
+        ctx.fillText(`${Math.ceil(player.hp)} / ${player.maxHp}`, hpX + hpBarW / 2, hpY + hpBarH / 2 + 1);
 
-        if (player.hookCooldown > 0) {
-            const ratio = player.hookCooldown / player.maxHookCooldown;
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-            ctx.fillRect(iconX, iconY + iconSize * (1 - ratio), iconSize, iconSize * ratio);
-
-            ctx.fillStyle = 'yellow';
-            ctx.fillText(player.hookCooldown.toFixed(1), iconX + iconSize / 2, iconY + iconSize / 2 + 5);
-        }
-
-        // Shop Upgrades (Cost: 50g)
+        // Gold and info
         ctx.textAlign = 'left';
-        ctx.font = '14px Arial';
-        ctx.fillStyle = '#ffaa00';
-        ctx.fillText('Shop (Cost: 50g per upgrade):', iconX + 80, startY + 20);
+        ctx.fillStyle = '#ffd700';
+        ctx.font = 'bold 16px Arial';
+        ctx.fillText(`💰 GOLD: ${player.gold}`, hpX, hpY + 45);
 
-        ctx.fillStyle = 'white';
+        ctx.fillStyle = '#888';
+        ctx.font = 'italic 14px Arial';
+        ctx.fillText(`Pudge Status: ${player.state}`, hpX, hpY + 65);
+
+        // Skills (Hook)
+        const iconSize = 60;
+        const iconX = width / 2 - 120;
+        const iconY = startY + 20;
+
+        this._drawIcon(ctx, iconX, iconY, iconSize, "Q", player.hookCooldown, player.maxHookCooldown);
+
+        // Shop (Visualized as icons or buttons)
+        const shopX = width / 2;
+        ctx.fillStyle = '#f0d78c';
+        ctx.font = 'bold 14px Arial';
+        ctx.fillText('UPGRADES (50g):', shopX, startY + 20);
+
         ctx.font = '12px Arial';
-        ctx.fillText(`[1] Dmg: ${player.hookDamage}`, iconX + 80, startY + 40);
-        ctx.fillText(`[2] Spd: ${player.hookSpeed}`, iconX + 160, startY + 40);
-        ctx.fillText(`[3] Dist: ${player.hookMaxDist}`, iconX + 80, startY + 60);
-        ctx.fillText(`[4] Rad: ${player.hookRadius}`, iconX + 160, startY + 60);
+        ctx.fillStyle = '#ccc';
+        const labels = [
+            `[1] Dmg: ${player.hookDamage}`,
+            `[2] Spd: ${player.hookSpeed}`,
+            `[3] Dist: ${player.hookMaxDist}`,
+            `[4] Rad: ${player.hookRadius}`
+        ];
+
+        labels.forEach((label, i) => {
+            const row = Math.floor(i / 2);
+            const col = i % 2;
+            ctx.fillText(label, shopX + col * 100, startY + 40 + row * 20);
+        });
+    }
+
+    _drawIcon(ctx, x, y, size, key, cd, maxCd) {
+        ctx.fillStyle = '#444';
+        ctx.fillRect(x, y, size, size);
+        ctx.strokeStyle = '#f0d78c';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x, y, size, size);
+
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 24px Arial';
+        ctx.fillText(key, x + size / 2, y + size / 2 + 8);
+
+        if (cd > 0) {
+            const ratio = cd / maxCd;
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(x, y + size * (1 - ratio), size, size * ratio);
+
+            ctx.fillStyle = '#ffff00';
+            ctx.font = 'bold 14px Arial';
+            ctx.fillText(cd.toFixed(1), x + size / 2, y + size / 2 + 5);
+        }
     }
 
     _drawGameOver(ctx, width, height, rules) {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
         ctx.fillRect(0, 0, width, height);
 
-        ctx.fillStyle = rules.winner === 'Red Team' ? '#ff4444' : rules.winner === 'Blue Team' ? '#4444ff' : '#ffffff';
-        ctx.font = 'bold 48px Arial';
+        const winnerColor = rules.winner.includes('Red') ? '#ff4444' : '#4444ff';
+        ctx.fillStyle = winnerColor;
+        ctx.font = 'bold 64px "Segoe UI", Arial, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(`${rules.winner} Wins!`, width / 2, height / 2 - 50);
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = winnerColor;
+        ctx.fillText(`${rules.winner} VICTORY!`, width / 2, height / 2 - 50);
 
-        ctx.fillStyle = 'white';
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#ffffff';
         ctx.font = '24px Arial';
-        ctx.fillText(`Final Score: Red ${rules.scoreRed} - ${rules.scoreBlue} Blue`, width / 2, height / 2 + 20);
-        ctx.fillText(`Refresh page to restart`, width / 2, height / 2 + 70);
+        ctx.fillText(`Final Battle Score: Red ${rules.scoreRed} - ${rules.scoreBlue} Blue`, width / 2, height / 2 + 20);
+        ctx.font = 'italic 18px Arial';
+        ctx.fillStyle = '#888';
+        ctx.fillText(`Press [R] or Refresh to return to Tavern`, width / 2, height / 2 + 80);
     }
 }
