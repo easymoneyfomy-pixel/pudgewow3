@@ -59,10 +59,18 @@ export class Character {
 
         // Headshot flag
         this.headshotJustHappened = false;
+
+        // Passive HP regen
+        this.hpRegen = 2; // HP per second
+
+        // XP / Level system
+        this.level = 1;
+        this.xp = 0;
+        this.xpToLevel = 100;
     }
 
     setTarget(x, y) {
-        if (this.state === State.IDLE || this.state === State.MOVING) {
+        if (this.state === State.IDLE || this.state === State.MOVING || this.state === State.CASTING) {
             this.targetX = x;
             this.targetY = y;
             this.state = State.MOVING;
@@ -75,11 +83,10 @@ export class Character {
     }
 
     castHook(targetX, targetY, entityManager) {
-        if (this.state !== State.DEAD && this.state !== State.HOOKED && this.state !== State.CASTING && this.hookCooldown <= 0) {
-            this.state = State.CASTING;
+        if (this.state !== State.DEAD && this.state !== State.HOOKED && this.hookCooldown <= 0) {
+            // Don't lock state to CASTING — allow movement while hook flies
             this.hookCooldown = this.maxHookCooldown;
 
-            // Спавним хук
             const hook = new Hook(this, targetX, targetY);
             entityManager.add(hook);
         }
@@ -93,6 +100,22 @@ export class Character {
             this.hp = 0;
             this.die();
         }
+    }
+
+    gainXp(amount) {
+        this.xp += amount;
+        while (this.xp >= this.xpToLevel) {
+            this.xp -= this.xpToLevel;
+            this.levelUp();
+        }
+    }
+
+    levelUp() {
+        this.level++;
+        this.xpToLevel = Math.floor(this.xpToLevel * 1.5);
+        this.maxHp += 15;
+        this.hp = this.maxHp; // Full heal on level up
+        this.hookDamage += 3;
     }
 
     die() {
@@ -122,6 +145,11 @@ export class Character {
                 this.respawn();
             }
             return;
+        }
+
+        // Passive HP regen
+        if (this.hp < this.maxHp) {
+            this.hp = Math.min(this.maxHp, this.hp + this.hpRegen * dt);
         }
 
         // ROT AOE damage
@@ -159,7 +187,7 @@ export class Character {
             }
         }
 
-        if (this.state === State.HOOKED || this.state === State.CASTING) {
+        if (this.state === State.HOOKED) {
             this.targetX = this.x;
             this.targetY = this.y;
             return;
@@ -261,5 +289,46 @@ export class Character {
         renderer.ctx.stroke();
 
         renderer.ctx.restore();
+
+        // === HP Bar above character (visible for ALL players) ===
+        const hpBarW = 50;
+        const hpBarH = 6;
+        const hpBarX = screenPos.x - hpBarW / 2;
+        const hpBarY = screenPos.y - 55;
+
+        // Background
+        renderer.ctx.fillStyle = '#330000';
+        renderer.ctx.fillRect(hpBarX, hpBarY, hpBarW, hpBarH);
+
+        // Fill
+        const hpRatio = Math.max(0, this.hp / this.maxHp);
+        const hpColor = hpRatio > 0.5 ? '#00cc00' : hpRatio > 0.25 ? '#cccc00' : '#cc0000';
+        renderer.ctx.fillStyle = hpColor;
+        renderer.ctx.fillRect(hpBarX, hpBarY, hpBarW * hpRatio, hpBarH);
+
+        // Border
+        renderer.ctx.strokeStyle = '#000';
+        renderer.ctx.lineWidth = 1;
+        renderer.ctx.strokeRect(hpBarX, hpBarY, hpBarW, hpBarH);
+
+        // Level badge
+        renderer.ctx.fillStyle = '#ffd700';
+        renderer.ctx.font = 'bold 10px Arial';
+        renderer.ctx.textAlign = 'center';
+        renderer.ctx.fillText(`Lv.${this.level}`, screenPos.x, hpBarY - 3);
+
+        // Burn indicator
+        if (this.burnTimer && this.burnTimer > 0) {
+            renderer.ctx.fillStyle = '#ff4400';
+            renderer.ctx.font = 'bold 9px Arial';
+            renderer.ctx.fillText('🔥', screenPos.x + 30, hpBarY + 5);
+        }
+
+        // Rupture indicator
+        if (this.ruptureTimer && this.ruptureTimer > 0) {
+            renderer.ctx.fillStyle = '#cc0000';
+            renderer.ctx.font = 'bold 9px Arial';
+            renderer.ctx.fillText('🩸', screenPos.x - 30, hpBarY + 5);
+        }
     }
 }

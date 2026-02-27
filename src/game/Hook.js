@@ -136,7 +136,8 @@ export class Hook {
                                 // HEADSHOT! (Instakill)
                                 this.isReturning = true;
                                 entity.takeDamage(9999);
-                                this.owner.gold += 50; // Bonus gold
+                                this.owner.gold += 50;
+                                if (this.owner.gainXp) this.owner.gainXp(80); // Big XP for headshot
                                 entity.headshotJustHappened = true; // Flag for client
                             } else {
                                 this.isReturning = true;
@@ -158,10 +159,12 @@ export class Hook {
 
                                 // Начисляем золото за точный хук
                                 this.owner.gold += 10;
+                                if (this.owner.gainXp) this.owner.gainXp(25); // XP for hit
 
                                 // Если убил хуком
                                 if (entity.state === State.DEAD) {
                                     this.owner.gold += 50;
+                                    if (this.owner.gainXp) this.owner.gainXp(50); // Bonus XP for kill
                                 }
                             }
 

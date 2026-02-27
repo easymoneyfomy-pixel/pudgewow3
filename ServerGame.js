@@ -185,7 +185,12 @@ export class ServerGame {
                     hookRadius: entity.hookRadius,
                     isHeadshot: entity.headshotJustHappened,
                     rotActive: entity.rotActive,
-                    items: entity.items || []
+                    items: entity.items || [],
+                    level: entity.level || 1,
+                    xp: entity.xp || 0,
+                    xpToLevel: entity.xpToLevel || 100,
+                    burnTimer: entity.burnTimer || 0,
+                    ruptureTimer: entity.ruptureTimer || 0
                 });
                 entity.headshotJustHappened = false; // Reset after sending
             } else if (entity instanceof Hook) {

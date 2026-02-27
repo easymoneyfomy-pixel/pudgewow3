@@ -28,6 +28,13 @@ export class Game {
         this._loop = this._loop.bind(this);
     }
 
+    resize(width, height) {
+        this.width = width;
+        this.height = height;
+        this.canvas.width = width;
+        this.canvas.height = height;
+    }
+
     start() {
         if (this.isRunning) return;
         this.isRunning = true;

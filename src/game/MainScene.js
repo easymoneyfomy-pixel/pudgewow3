@@ -58,6 +58,11 @@ export class MainScene {
                 char.isHeadshot = eData.isHeadshot;
                 char.rotActive = eData.rotActive;
                 char.items = eData.items || [];
+                char.level = eData.level || 1;
+                char.xp = eData.xp || 0;
+                char.xpToLevel = eData.xpToLevel || 100;
+                char.burnTimer = eData.burnTimer || 0;
+                char.ruptureTimer = eData.ruptureTimer || 0;
 
                 this.localEntities.push(char);
 
