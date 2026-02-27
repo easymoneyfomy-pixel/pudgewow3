@@ -30,7 +30,7 @@ export class Character {
 
         // Спавн и команды
         this.team = team;
-        this.color = team === 'red' ? '#ff3333' : '#3333ff';
+        this.color = team === 'red' ? '#880000' : '#000088';
         this.spawnX = x;
         this.spawnY = y;
 
@@ -151,19 +151,51 @@ export class Character {
 
         // Тень
         const groundPos = renderer.worldToScreen(this.x, this.y, 0);
-        renderer.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        renderer.ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
         renderer.ctx.beginPath();
-        renderer.ctx.ellipse(groundPos.x, groundPos.y, 20, 10, 0, 0, Math.PI * 2);
+        renderer.ctx.ellipse(groundPos.x, groundPos.y, 22, 11, 0, 0, Math.PI * 2);
         renderer.ctx.fill();
 
-        // Тело (просто круг или цилиндр в проекции)
-        // Имитируем "рост" кубика или цилиндра в изометрии
+        // Тело (WC3 Pudge Style)
+        renderer.ctx.save();
+        renderer.ctx.translate(screenPos.x, screenPos.y - 15);
+
+        // Подсветка команды (аура под ногами)
+        renderer.ctx.strokeStyle = this.team === 'red' ? 'rgba(255,0,0,0.3)' : 'rgba(0,0,255,0.3)';
+        renderer.ctx.lineWidth = 3;
+        renderer.ctx.beginPath();
+        renderer.ctx.ellipse(0, 15, 20, 10, 0, 0, Math.PI * 2);
+        renderer.ctx.stroke();
+
+        // Туловище (массивное)
         renderer.ctx.fillStyle = this.color;
         renderer.ctx.beginPath();
-        // Смещаем тело вверх на 20px (чтобы казался объёмным)
-        renderer.ctx.arc(screenPos.x, screenPos.y - 20, 20, 0, Math.PI * 2);
+        renderer.ctx.ellipse(0, 0, 20, 25, 0, 0, Math.PI * 2);
         renderer.ctx.fill();
         renderer.ctx.strokeStyle = '#000';
+        renderer.ctx.lineWidth = 1.5;
         renderer.ctx.stroke();
+
+        // Голова
+        renderer.ctx.fillStyle = '#664444';
+        renderer.ctx.beginPath();
+        renderer.ctx.arc(0, -20, 10, 0, Math.PI * 2);
+        renderer.ctx.fill();
+        renderer.ctx.stroke();
+
+        // Руки
+        renderer.ctx.fillStyle = this.color;
+        // Левая рука
+        renderer.ctx.beginPath();
+        renderer.ctx.ellipse(-20, 0, 8, 12, Math.PI / 4, 0, Math.PI * 2);
+        renderer.ctx.fill();
+        renderer.ctx.stroke();
+        // Правая рука
+        renderer.ctx.beginPath();
+        renderer.ctx.ellipse(20, 0, 8, 12, -Math.PI / 4, 0, Math.PI * 2);
+        renderer.ctx.fill();
+        renderer.ctx.stroke();
+
+        renderer.ctx.restore();
     }
 }

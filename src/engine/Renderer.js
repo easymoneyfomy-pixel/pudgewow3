@@ -15,20 +15,17 @@ export class Renderer {
     }
 
     // Перевод мировых координат (X, Y 2D сетка) в экранные изметрические координаты
+    // Используем классическую пропорцию 2:1 для WC3 стиля
     worldToScreen(worldX, worldY, worldZ = 0) {
-        const screenX = (worldX - worldY) * (this.tileWidth / 2);
-        const screenY = (worldX + worldY) * (this.tileHeight / 2) - worldZ;
+        const screenX = (worldX - worldY);
+        const screenY = (worldX + worldY) / 2 - worldZ;
         return { x: screenX, y: screenY };
     }
 
-    // Обратный перевод экранных (изометрических) координат в мировые (предполагаем base Z = 0)
+    // Обратный перевод экранных (изометрических) координат в мировые
     screenToWorld(screenX, screenY) {
-        const x_prime = screenX / (this.tileWidth / 2);
-        const y_prime = screenY / (this.tileHeight / 2);
-
-        const worldX = (y_prime + x_prime) / 2;
-        const worldY = (y_prime - x_prime) / 2;
-
+        const worldX = (screenY + screenX / 2);
+        const worldY = (screenY - screenX / 2);
         return { x: worldX, y: worldY };
     }
 
@@ -44,16 +41,31 @@ export class Renderer {
         this.ctx.translate(x, y);
     }
 
-    // Вспомогательная функция рисования изометрического тайла (например, для сетки земли)
-    drawIsoBlock(worldX, worldY, sizeX, sizeY, color) {
-        // Вычисляем углы
+    // Рисование текстурированного или градиентного блока (земля, вода и т.д.)
+    drawIsoBlock(worldX, worldY, sizeX, sizeY, color, type = 'ground') {
         const p1 = this.worldToScreen(worldX, worldY);
         const p2 = this.worldToScreen(worldX + sizeX, worldY);
         const p3 = this.worldToScreen(worldX + sizeX, worldY + sizeY);
         const p4 = this.worldToScreen(worldX, worldY + sizeY);
 
-        this.ctx.fillStyle = color;
-        this.ctx.strokeStyle = '#333';
+        this.ctx.save();
+
+        // Создаем градиент для объема или текстуры
+        let fill = color;
+        if (type === 'water') {
+            const grad = this.ctx.createLinearGradient(p1.x, p1.y, p3.x, p3.y);
+            grad.addColorStop(0, '#004488');
+            grad.addColorStop(1, '#002244');
+            fill = grad;
+        } else if (type === 'grass') {
+            const grad = this.ctx.createRadialGradient(p1.x, p3.y, 10, p1.x, p3.y, 100);
+            grad.addColorStop(0, '#225522');
+            grad.addColorStop(1, '#113311');
+            fill = grad;
+        }
+
+        this.ctx.fillStyle = fill;
+        this.ctx.strokeStyle = 'rgba(0,0,0,0.2)';
         this.ctx.lineWidth = 1;
 
         this.ctx.beginPath();
@@ -65,5 +77,15 @@ export class Renderer {
 
         this.ctx.fill();
         this.ctx.stroke();
+
+        // Добавляем "шум" или детализацию для стиля WC3
+        if (type === 'ground' || type === 'grass') {
+            this.ctx.fillStyle = 'rgba(255,255,255,0.05)';
+            for (let i = 0; i < 3; i++) {
+                this.ctx.fillRect(p1.x + Math.random() * 20 - 10, p1.y + Math.random() * 20, 2, 2);
+            }
+        }
+
+        this.ctx.restore();
     }
 }
