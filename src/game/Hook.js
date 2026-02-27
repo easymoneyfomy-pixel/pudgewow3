@@ -59,7 +59,19 @@ export class Hook {
 
         const moveAmt = this.speed * dt;
 
-        // Delta shift prep
+        // 1. Breadcrumb recording (Drop breadcrumbs as Pudge moves, even during forward flight)
+        // This ensures the chain follows Pudge's path exactly like in WC3.
+        const lastNode = this.pathNodes[this.pathNodes.length - 1];
+        let lx = lastNode ? lastNode.x : this.owner.x;
+        let ly = lastNode ? lastNode.y : this.owner.y;
+
+        const dxToLast = this.owner.x - lx;
+        const dyToLast = this.owner.y - ly;
+        if (dxToLast * dxToLast + dyToLast * dyToLast >= 144) { // 12px threshold for smooth polyline
+            this.pathNodes.push({ x: this.owner.x, y: this.owner.y });
+        }
+
+        // Delta shift prep for hook head (delta movement support)
         const pdx = this.owner.x - this.ownerPrevX;
         const pdy = this.owner.y - this.ownerPrevY;
         this.ownerPrevX = this.owner.x;
@@ -261,8 +273,8 @@ export class Hook {
             } // End of !this.isReturning
 
             if (!wasReturning && this.isReturning) {
-                // Hook JUST started returning! Initialize breadcrumb path
-                this.pathNodes = [{ x: this.owner.x, y: this.owner.y }];
+                // Hook JUST started returning! 
+                // (Already recording pathNodes since start of flight)
             }
 
             if (this.isReturning) {
@@ -272,34 +284,6 @@ export class Hook {
                 }
 
                 if (this.isGrappling) {
-                    // Прямой пулл владельца к хуку (без хлебных крошек)
-                    const rdx = this.x - this.owner.x;
-                    const rdy = this.y - this.owner.y;
-                    const rdist = Math.sqrt(rdx * rdx + rdy * rdy);
-
-                    if (rdist <= moveAmt) {
-                        this.owner.state = State.IDLE;
-                        this.owner.isPaused = false;
-                        this.owner.x = this.x;
-                        this.owner.y = this.y;
-                        this.owner.setTarget(this.x, this.y);
-                        entityManager.remove(this);
-                    } else {
-                        this.owner.x += (rdx / rdist) * moveAmt;
-                        this.owner.y += (rdy / rdist) * moveAmt;
-                        this.owner.setTarget(this.owner.x, this.owner.y);
-                    }
-                } else {
-                    // 1. Drop breadcrumbs as Pudge moves
-                    const lastNode = this.pathNodes[this.pathNodes.length - 1];
-                    let lx = lastNode ? lastNode.x : this.owner.x;
-                    let ly = lastNode ? lastNode.y : this.owner.y;
-
-                    const dxToLast = this.owner.x - lx;
-                    const dyToLast = this.owner.y - ly;
-                    if (dxToLast * dxToLast + dyToLast * dyToLast >= 144) { // 12px threshold for smooth polyline
-                        this.pathNodes.push({ x: this.owner.x, y: this.owner.y });
-                    }
 
                     // 2. Retract hook head along pathNodes
                     let currentMoveAmt = moveAmt;
@@ -370,6 +354,9 @@ export class Hook {
             type: 'HOOK',
             x: this.x,
             y: this.y,
+            dirX: this.dirX,
+            dirY: this.dirY,
+            isReturning: this.isReturning,
             ownerId: this.owner.id,
             ownerX: this.owner.x,
             ownerY: this.owner.y,

@@ -157,7 +157,10 @@ export class EntityRenderer {
      */
     static drawHook(renderer, hook) {
         const ctx = renderer.ctx;
-        let { x: hx, y: hy, ownerX: ox, ownerY: oy, pathNodes } = hook;
+        let { x: hx, y: hy, ownerX: ox, ownerY: oy, pathNodes, dirX, dirY, isReturning } = hook;
+
+        // Reset line dash to prevent dashed line inheritance bugs
+        ctx.setLineDash([]);
 
         // Fallback if owner position is missing
         if (ox === undefined || oy === undefined) {
@@ -166,17 +169,22 @@ export class EntityRenderer {
         }
 
         // 1. Draw Chain Segments (WC3 style polyline)
-        ctx.fillStyle = '#999';
-        ctx.strokeStyle = '#333';
+        ctx.fillStyle = '#444'; // More "iron-like" chain color
+        ctx.strokeStyle = '#222';
         ctx.lineWidth = 1;
 
-        const segmentDist = 12; // Tighter spacing for better chain feel
+        const segmentDist = 12;
 
-        // Construct the full polyline of points.
-        // It starts at HookHead, goes through pathNodes (which represent path from start of retract to Pudge), and ends at Pudge.
+        // Path logic: 
+        // Forward: [HookHead, Owner]
+        // Retracting: [HookHead, ...pathNodes backwards, Owner]
         let points = [{ x: hx, y: hy }];
         if (pathNodes && pathNodes.length > 0) {
-            points = points.concat(pathNodes);
+            // During retraction/flight we want the path nodes to represent the "history"
+            // If returning, we follow nodes. If flying forward, we just go to owner.
+            if (isReturning) {
+                points = points.concat(pathNodes);
+            }
         }
         points.push({ x: ox, y: oy });
 
@@ -189,12 +197,9 @@ export class EntityRenderer {
             const dy = p2.y - p1.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
 
-            if (dist > 5) {
+            if (dist > 2) {
                 const linkCount = Math.floor(dist / segmentDist);
                 const linkAngle = Math.atan2(dy, dx);
-
-                // If the segment is shorter than segmentDist, compute t properly to just draw what fits,
-                // or ensure we draw at least one link if dist > 5.
                 const actualCount = Math.max(1, linkCount);
 
                 for (let j = 0; j <= actualCount; j++) {
@@ -206,38 +211,41 @@ export class EntityRenderer {
                     ctx.translate(lx, ly);
                     ctx.rotate(linkAngle);
 
-                    // Draw a more "meaty" bone-like link
                     ctx.beginPath();
                     ctx.roundRect(-6, -3, 12, 6, 3);
                     ctx.fill();
                     ctx.stroke();
-
                     ctx.restore();
                 }
             }
         }
 
-        // 2. Hook blade (The Head) starts from points[0] and points to points[1]
-        ctx.fillStyle = '#777';
-        ctx.strokeStyle = '#222';
+        // 2. Hook blade (The Head)
+        ctx.fillStyle = '#666';
+        ctx.strokeStyle = '#111';
         ctx.lineWidth = 2;
 
-        const headDx = points[1].x - hx;
-        const headDy = points[1].y - hy;
-        const angle = Math.atan2(headDy, headDx);
+        // Head orientation:
+        // If flying forward, point in dirX/dirY.
+        // If returning, point towards the next node (points[1]).
+        let headAngle = Math.atan2(dirY, dirX);
+        if (isReturning && points.length > 1) {
+            const headDx = points[1].x - hx;
+            const headDy = points[1].y - hy;
+            headAngle = Math.atan2(headDy, headDx) + Math.PI; // Look back when retracting
+        }
 
         ctx.save();
         ctx.translate(hx, hy);
-        ctx.rotate(angle);
+        ctx.rotate(headAngle);
 
         ctx.beginPath();
         ctx.moveTo(0, 0);
-        ctx.lineTo(15, -12);
-        ctx.lineTo(28, -6);
-        ctx.lineTo(18, 0);
-        ctx.lineTo(28, 6);
-        ctx.lineTo(15, 12);
-        ctx.lineTo(0, 5);
+        ctx.lineTo(-12, -10);
+        ctx.lineTo(-24, -5);
+        ctx.lineTo(-18, 0);
+        ctx.lineTo(-24, 5);
+        ctx.lineTo(-12, 10);
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
@@ -320,7 +328,10 @@ export class EntityRenderer {
                         ownerX: owner.x,
                         ownerY: owner.y,
                         radius: eData.radius,
-                        pathNodes: eData.pathNodes, // Pass pathNodes
+                        pathNodes: eData.pathNodes,
+                        dirX: eData.dirX,
+                        dirY: eData.dirY,
+                        isReturning: eData.isReturning
                     });
                 }
                 break;
