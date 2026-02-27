@@ -19,29 +19,29 @@ export class MainScene {
         this.serverState = null;
         this.localEntities = [];
         this.localPlayer = null;
-        this.localEnemy = null;
+        this.enemies = []; // All enemy characters (for 5v5)
 
         this.particles = new ParticleSystem();
         this.floatingTexts = new FloatingTextManager();
         this.killFeed = new KillFeed();
 
-        // Track previous HP states for kill detection
+        // Track previous states
         this._prevAliveStates = new Map();
+        this._prevHp = new Map();
         this._firstBloodDone = false;
     }
 
-    init() {
-    }
-
-    destroy() {
-    }
+    init() { }
+    destroy() { }
 
     onServerState(data) {
         this.serverState = data;
 
         this.localEntities = [];
         this.localPlayer = null;
-        this.localEnemy = null;
+        this.enemies = [];
+
+        const myTeam = this.game.network.team;
 
         for (const eData of data.entities) {
             if (eData.type === 'CHARACTER') {
@@ -52,8 +52,6 @@ export class MainScene {
                 char.state = eData.state;
                 char.hookCooldown = eData.hookCooldown;
                 char.maxHookCooldown = eData.maxHookCooldown;
-
-                // Economics
                 char.gold = eData.gold;
                 char.hookDamage = eData.hookDamage;
                 char.hookSpeed = eData.hookSpeed;
@@ -70,19 +68,21 @@ export class MainScene {
                 char.invulnerableTimer = eData.invulnerableTimer || 0;
                 char.isHealing = eData.isHealing || false;
 
-                // Screen shake on hit (if local player takes damage)
-                if (char.team === this.game.network.team && this.localPlayer) {
-                    if (eData.hp < this.localPlayer.hp) {
-                        this.camera.shake(8);
-                    }
-                }
-
                 this.localEntities.push(char);
 
-                if (char.team === this.game.network.team) {
-                    this.localPlayer = char;
+                // Match local player by ID (in 5v5, multiple chars share a team)
+                if (eData.id === this.game.network.ws?.playerId || char.team === myTeam) {
+                    // Screen shake: compare HP to previous frame
+                    const prevHp = this._prevHp.get(eData.id);
+                    if (prevHp !== undefined && eData.hp < prevHp && !this.localPlayer) {
+                        this.camera.shake(8);
+                    }
+                    if (!this.localPlayer) {
+                        this.localPlayer = char;
+                    }
+                    this._prevHp.set(eData.id, eData.hp);
                 } else {
-                    this.localEnemy = char;
+                    this.enemies.push(char);
                 }
             } else if (eData.type === 'HOOK') {
                 const owner = this.localEntities.find(c => c.id === eData.ownerId);
@@ -90,50 +90,50 @@ export class MainScene {
                     const hook = new Hook(owner, eData.x, eData.y);
                     hook.x = eData.x;
                     hook.y = eData.y;
-                    hook.radius = eData.radius; // Sync radius for drawing
+                    hook.radius = eData.radius;
 
-                    // Переопределяем render для стилизованного хука
+                    // Top-down hook rendering
                     hook.render = function (renderer) {
-                        const pOwner = renderer.worldToScreen(this.owner.x, this.owner.y, 20); // slightly higher
-                        const pHook = renderer.worldToScreen(this.x, this.y, 10);
+                        const ctx = renderer.ctx;
+                        const ox = this.owner.x;
+                        const oy = this.owner.y;
+                        const hx = this.x;
+                        const hy = this.y;
 
-                        // 1. Draw Chain (segmented line with links)
-                        renderer.ctx.strokeStyle = '#aaaaaa';
-                        renderer.ctx.lineWidth = 3;
-                        renderer.ctx.setLineDash([8, 6]); // Creates chain-link effect
-                        renderer.ctx.beginPath();
-                        renderer.ctx.moveTo(pOwner.x, pOwner.y);
-                        renderer.ctx.lineTo(pHook.x, pHook.y);
-                        renderer.ctx.stroke();
-                        renderer.ctx.setLineDash([]); // Reset dash
+                        // Chain
+                        ctx.strokeStyle = '#aaaaaa';
+                        ctx.lineWidth = 3;
+                        ctx.setLineDash([8, 6]);
+                        ctx.beginPath();
+                        ctx.moveTo(ox, oy);
+                        ctx.lineTo(hx, hy);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
 
-                        // 2. Draw Hook Blade
-                        renderer.ctx.fillStyle = '#666';
-                        renderer.ctx.strokeStyle = '#222';
-                        renderer.ctx.lineWidth = 2;
+                        // Hook blade
+                        ctx.fillStyle = '#666';
+                        ctx.strokeStyle = '#222';
+                        ctx.lineWidth = 2;
 
-                        // Calculate angle from owner to hook
-                        const angle = Math.atan2(pHook.y - pOwner.y, pHook.x - pOwner.x);
+                        const angle = Math.atan2(hy - oy, hx - ox);
 
-                        renderer.ctx.save();
-                        renderer.ctx.translate(pHook.x, pHook.y);
-                        renderer.ctx.rotate(angle);
+                        ctx.save();
+                        ctx.translate(hx, hy);
+                        ctx.rotate(angle);
 
-                        // Draw a curved blade
-                        renderer.ctx.beginPath();
-                        renderer.ctx.moveTo(0, 0); // attachment point
-                        renderer.ctx.lineTo(15, -10); // curve out
-                        renderer.ctx.lineTo(25, -5); // tip
-                        renderer.ctx.lineTo(15, 0); // inner curve
-                        renderer.ctx.lineTo(25, 10); // tip 2 (double hook like pudge)
-                        renderer.ctx.lineTo(15, 5); // inner curve 2
-                        renderer.ctx.lineTo(0, 10); // back to attachment point
-                        renderer.ctx.closePath();
+                        ctx.beginPath();
+                        ctx.moveTo(0, 0);
+                        ctx.lineTo(15, -10);
+                        ctx.lineTo(25, -5);
+                        ctx.lineTo(15, 0);
+                        ctx.lineTo(25, 10);
+                        ctx.lineTo(15, 5);
+                        ctx.lineTo(0, 10);
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.stroke();
 
-                        renderer.ctx.fill();
-                        renderer.ctx.stroke();
-
-                        renderer.ctx.restore();
+                        ctx.restore();
                     };
 
                     this.localEntities.push(hook);
@@ -148,17 +148,16 @@ export class MainScene {
             }
         }
 
-        // Autonomous tracking of local entities for damage/gold feedback
+        // Floating text tracking
         this.floatingTexts.trackEntities(this.localEntities, this.particles);
 
-        // Track kills for kill feed
+        // Kill feed tracking
         for (const eData of data.entities) {
             if (eData.type === 'CHARACTER') {
                 const wasAlive = this._prevAliveStates.get(eData.id);
                 const isDead = eData.state === 'dead';
 
                 if (wasAlive && isDead) {
-                    // Someone died - figure out teams
                     const victimTeam = eData.team;
                     const killerTeam = victimTeam === 'red' ? 'blue' : 'red';
 
@@ -191,19 +190,18 @@ export class MainScene {
         const cx = this.game.canvas.width / 2;
         const cy = this.game.canvas.height / 2;
 
-        // Top-down: mouse position relative to camera center
+        // Top-down mouse-to-world
         const worldX = mousePos.x - cx + this.camera.x;
         const worldY = mousePos.y - cy + this.camera.y;
-        const worldTarget = { x: worldX, y: worldY };
 
         // Move (right click)
         if (this.game.input.isMouseButtonPressed(2)) {
-            this.game.network.sendInput({ type: 'MOVE', x: worldTarget.x, y: worldTarget.y });
+            this.game.network.sendInput({ type: 'MOVE', x: worldX, y: worldY });
         }
 
-        // Hook
+        // Hook (Q)
         if (this.game.input.isKeyPressed('KeyQ')) {
-            this.game.network.sendInput({ type: 'HOOK', x: worldTarget.x, y: worldTarget.y });
+            this.game.network.sendInput({ type: 'HOOK', x: worldX, y: worldY });
         }
 
         // Rot Toggle (W)
@@ -222,12 +220,12 @@ export class MainScene {
         if (this.game.input.isKeyPressed('Digit3')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'DISTANCE' });
         if (this.game.input.isKeyPressed('Digit4')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'RADIUS' });
 
-        // Shop toggle (B key — like WC3)
+        // Shop toggle (B key)
         if (this.game.input.isKeyPressed('KeyB')) {
             this.ui.shopOpen = !this.ui.shopOpen;
         }
 
-        // Left click — check if clicking on a shop item in the UI
+        // Left click — shop item
         if (this.game.input.isMouseButtonPressed(0)) {
             const clickedItemId = this.ui.getClickedShopItem(mousePos.x, mousePos.y);
             if (clickedItemId) {
@@ -235,6 +233,7 @@ export class MainScene {
             }
         }
 
+        // Camera follow
         if (this.localPlayer) {
             this.camera.x += (this.localPlayer.x - this.camera.x) * 10 * dt;
             this.camera.y += (this.localPlayer.y - this.camera.y) * 10 * dt;
@@ -251,7 +250,7 @@ export class MainScene {
 
         this.map.render(renderer);
 
-        // Render entities from server state
+        // Render entities sorted by Y
         const sorted = [...this.localEntities].sort((a, b) => a.y - b.y);
         for (const entity of sorted) {
             if (entity.render) {
@@ -262,19 +261,19 @@ export class MainScene {
         this.particles.render(renderer);
         this.floatingTexts.render(renderer);
 
-        // Fog of War (darken edges of vision around player)
+        // Release camera BEFORE fog of war (fog must be in screen coords)
+        this.camera.release(renderer);
+
+        // Fog of War — drawn in screen space after camera release
         if (this.localPlayer) {
-            const playerScreen = renderer.worldToScreen(this.localPlayer.x, this.localPlayer.y, 0);
             const cx = this.game.canvas.width / 2;
             const cy = this.game.canvas.height / 2;
             renderer.drawFogOfWar(cx, cy, 450);
         }
 
-        this.camera.release(renderer);
-
-        // Render UI
+        // UI (screen space)
         if (this.serverState && this.localPlayer) {
-            this.ui.render(renderer.ctx, this.serverState.rules, this.localPlayer, this.localEnemy);
+            this.ui.render(renderer.ctx, this.serverState.rules, this.localPlayer, this.enemies[0]);
         }
 
         // Kill Feed (always on top)
