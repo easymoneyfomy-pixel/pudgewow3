@@ -5,25 +5,28 @@ import { Character } from './Character.js';
 import { Hook } from './Hook.js';
 import { ParticleSystem } from '../engine/ParticleSystem.js';
 import { FloatingTextManager } from '../engine/FloatingText.js';
+import { KillFeed } from '../ui/KillFeed.js';
 
 export class MainScene {
     constructor(game) {
         this.game = game;
 
-        this.map = new GameMap(20, 20, 64);
+        this.map = new GameMap(24, 24, 64);
         this.camera = new Camera(0, 0, 1);
         this.ui = new UIManager(game);
 
-        // State received from server
         this.serverState = null;
-
-        // Dummy local representations for rendering
         this.localEntities = [];
         this.localPlayer = null;
         this.localEnemy = null;
 
         this.particles = new ParticleSystem();
         this.floatingTexts = new FloatingTextManager();
+        this.killFeed = new KillFeed();
+
+        // Track previous HP states for kill detection
+        this._prevAliveStates = new Map();
+        this._firstBloodDone = false;
     }
 
     init() {
@@ -63,6 +66,15 @@ export class MainScene {
                 char.xpToLevel = eData.xpToLevel || 100;
                 char.burnTimer = eData.burnTimer || 0;
                 char.ruptureTimer = eData.ruptureTimer || 0;
+                char.invulnerableTimer = eData.invulnerableTimer || 0;
+                char.isHealing = eData.isHealing || false;
+
+                // Screen shake on hit (if local player takes damage)
+                if (char.team === this.game.network.team && this.localPlayer) {
+                    if (eData.hp < this.localPlayer.hp) {
+                        this.camera.shake(8);
+                    }
+                }
 
                 this.localEntities.push(char);
 
@@ -130,6 +142,31 @@ export class MainScene {
 
         // Autonomous tracking of local entities for damage/gold feedback
         this.floatingTexts.trackEntities(this.localEntities, this.particles);
+
+        // Track kills for kill feed
+        for (const eData of data.entities) {
+            if (eData.type === 'CHARACTER') {
+                const wasAlive = this._prevAliveStates.get(eData.id);
+                const isDead = eData.state === 'dead';
+
+                if (wasAlive && isDead) {
+                    // Someone died - figure out teams
+                    const victimTeam = eData.team;
+                    const killerTeam = victimTeam === 'red' ? 'blue' : 'red';
+
+                    if (!this._firstBloodDone) {
+                        this.killFeed.addFirstBlood(killerTeam);
+                        this._firstBloodDone = true;
+                    } else if (eData.isHeadshot) {
+                        this.killFeed.addKill(killerTeam, victimTeam, true);
+                    } else {
+                        this.killFeed.addKill(killerTeam, victimTeam);
+                    }
+                }
+
+                this._prevAliveStates.set(eData.id, !isDead);
+            }
+        }
     }
 
     update(dt) {
@@ -190,6 +227,8 @@ export class MainScene {
 
         this.particles.update(dt);
         this.floatingTexts.update(dt);
+        this.killFeed.update(dt);
+        this.camera.update(dt);
     }
 
     render(renderer) {
@@ -208,12 +247,22 @@ export class MainScene {
         this.particles.render(renderer);
         this.floatingTexts.render(renderer);
 
+        // Fog of War (darken edges of vision around player)
+        if (this.localPlayer) {
+            const playerScreen = renderer.worldToScreen(this.localPlayer.x, this.localPlayer.y, 0);
+            const cx = this.game.canvas.width / 2;
+            const cy = this.game.canvas.height / 2;
+            renderer.drawFogOfWar(cx, cy, 450);
+        }
+
         this.camera.release(renderer);
 
-        // Render UI if state is available
+        // Render UI
         if (this.serverState && this.localPlayer) {
-            // Construct a fake rules object if needed, it matches ServerGame's output
             this.ui.render(renderer.ctx, this.serverState.rules, this.localPlayer, this.localEnemy);
         }
+
+        // Kill Feed (always on top)
+        this.killFeed.render(renderer.ctx, this.game.canvas.width);
     }
 }

@@ -60,6 +60,11 @@ export class Character {
         // Headshot flag
         this.headshotJustHappened = false;
 
+        // WC3 Status effects
+        this.invulnerableTimer = 0;
+        this.isHealing = false;
+        this.shieldRadius = 25;
+
         // Passive HP regen
         this.hpRegen = 2; // HP per second
 
@@ -93,7 +98,7 @@ export class Character {
     }
 
     takeDamage(amount) {
-        if (this.state === State.DEAD) return;
+        if (this.state === State.DEAD || this.invulnerableTimer > 0) return;
 
         this.hp -= amount;
         if (this.hp <= 0) {
@@ -130,12 +135,20 @@ export class Character {
         this.y = this.spawnY;
         this.targetX = this.spawnX;
         this.targetY = this.spawnY;
+
+        // 3 sec of invulnerability after respawn
+        this.invulnerableTimer = 3;
     }
 
     update(dt, map, entityManager) {
         // Обновляем кулдаун
         if (this.hookCooldown > 0) {
             this.hookCooldown -= dt;
+        }
+
+        // Tick invulnerability
+        if (this.invulnerableTimer > 0) {
+            this.invulnerableTimer -= dt;
         }
 
         if (this.state === State.DEAD) {
@@ -148,8 +161,13 @@ export class Character {
         }
 
         // Passive HP regen
+        let currentRegen = this.hpRegen;
+        if (this.isHealing) {
+            currentRegen += 10; // Healing fountain bonus
+        }
+
         if (this.hp < this.maxHp) {
-            this.hp = Math.min(this.maxHp, this.hp + this.hpRegen * dt);
+            this.hp = Math.min(this.maxHp, this.hp + currentRegen * dt);
         }
 
         // ROT AOE damage
@@ -252,6 +270,32 @@ export class Character {
             renderer.ctx.fill();
         }
 
+        // Healing Fountain visual (green crosses / glow)
+        if (this.isHealing) {
+            const healPulse = Math.sin(Date.now() / 150) * 0.2 + 0.4;
+            renderer.ctx.fillStyle = `rgba(0, 255, 100, ${healPulse})`;
+            renderer.ctx.font = '20px Arial';
+            renderer.ctx.fillText('+', Math.sin(Date.now() / 200) * 10, -30 + Math.cos(Date.now() / 200) * 5);
+            renderer.ctx.fillText('+', Math.cos(Date.now() / 300) * 12, -45 + Math.sin(Date.now() / 300) * 8);
+        }
+
+        // Invulnerability Shield (blue bubble)
+        if (this.invulnerableTimer > 0) {
+            const shieldPulse = Math.sin(Date.now() / 100) * 0.1 + 0.4;
+            const grad = renderer.ctx.createRadialGradient(0, 0, 5, 0, 0, this.shieldRadius);
+            grad.addColorStop(0, 'rgba(100, 200, 255, 0)');
+            grad.addColorStop(1, `rgba(100, 200, 255, ${shieldPulse})`);
+
+            renderer.ctx.fillStyle = grad;
+            renderer.ctx.beginPath();
+            renderer.ctx.arc(0, 0, this.shieldRadius, 0, Math.PI * 2);
+            renderer.ctx.fill();
+
+            renderer.ctx.strokeStyle = `rgba(150, 220, 255, ${shieldPulse + 0.2})`;
+            renderer.ctx.lineWidth = 2;
+            renderer.ctx.stroke();
+        }
+
         // Подсветка команды (аура под ногами)
         renderer.ctx.strokeStyle = this.team === 'red' ? 'rgba(255,0,0,0.3)' : 'rgba(0,0,255,0.3)';
         renderer.ctx.lineWidth = 3;
@@ -282,11 +326,34 @@ export class Character {
         renderer.ctx.ellipse(-20, 0, 8, 12, Math.PI / 4, 0, Math.PI * 2);
         renderer.ctx.fill();
         renderer.ctx.stroke();
-        // Правая рука
+        // Right arm
         renderer.ctx.beginPath();
         renderer.ctx.ellipse(20, 0, 8, 12, -Math.PI / 4, 0, Math.PI * 2);
         renderer.ctx.fill();
         renderer.ctx.stroke();
+
+        // Butcher Cleaver (Right hand)
+        renderer.ctx.save();
+        renderer.ctx.translate(25, 0);
+        renderer.ctx.rotate(-Math.PI / 6);
+        renderer.ctx.fillStyle = '#999';
+        renderer.ctx.strokeStyle = '#444';
+        renderer.ctx.lineWidth = 1;
+
+        // Blade
+        renderer.ctx.beginPath();
+        renderer.ctx.moveTo(0, 0);
+        renderer.ctx.lineTo(8, -25);
+        renderer.ctx.lineTo(25, -22);
+        renderer.ctx.lineTo(22, 5);
+        renderer.ctx.closePath();
+        renderer.ctx.fill();
+        renderer.ctx.stroke();
+
+        // Handle
+        renderer.ctx.fillStyle = '#4a2c15';
+        renderer.ctx.fillRect(-2, 0, 4, 15);
+        renderer.ctx.restore();
 
         renderer.ctx.restore();
 

@@ -9,7 +9,7 @@ export class ServerGame {
         this.roomId = roomId;
         this.roomManager = roomManager;
 
-        this.map = new GameMap(20, 20, 64);
+        this.map = new GameMap(24, 24, 64);
         this.entityManager = new EntityManager();
         this.rules = new GameRules();
 
@@ -22,9 +22,9 @@ export class ServerGame {
     }
 
     addPlayer(playerId, team) {
-        // Based on 20x20 GameMap definition (grid[3][midY] and grid[16][midY])
-        const spawnX = team === 'red' ? 3 * 64 : 16 * 64;
-        const spawnY = 10 * 64;
+        // Based on 24x24 GameMap definition (spawn at grid[4][midY] and grid[19][midY])
+        const spawnX = team === 'red' ? 4 * 64 : 19 * 64;
+        const spawnY = 12 * 64;
 
         const character = new Character(spawnX, spawnY, team);
         character.id = playerId;
@@ -145,6 +145,12 @@ export class ServerGame {
         this.lastTime = currentTime;
 
         if (!this.rules.isGameOver) {
+            for (const entity of this.entityManager.entities) {
+                if (entity instanceof Character) {
+                    const tile = this.map.getTileAt(entity.x, entity.y);
+                    entity.isHealing = (tile && tile.type === 'rune');
+                }
+            }
             this.entityManager.update(dt, this.map);
             this.rules.update(dt, this.entityManager);
         }
@@ -190,7 +196,9 @@ export class ServerGame {
                     xp: entity.xp || 0,
                     xpToLevel: entity.xpToLevel || 100,
                     burnTimer: entity.burnTimer || 0,
-                    ruptureTimer: entity.ruptureTimer || 0
+                    ruptureTimer: entity.ruptureTimer || 0,
+                    invulnerableTimer: entity.invulnerableTimer || 0,
+                    isHealing: entity.isHealing || false
                 });
                 entity.headshotJustHappened = false; // Reset after sending
             } else if (entity instanceof Hook) {
