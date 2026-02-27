@@ -152,6 +152,11 @@ export class Character {
         this.targetX = this.spawnX;
         this.targetY = this.spawnY;
 
+        // Reset per-life flags
+        this.killedByMine = false;
+        this.burnTimer = 0;
+        this.ruptureTimer = 0;
+
         // 3 sec of invulnerability after respawn
         this.invulnerableTimer = 3;
     }

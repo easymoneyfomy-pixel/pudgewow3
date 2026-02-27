@@ -166,6 +166,7 @@ export class Hook {
                                 this.hookedEntity = entity;
                                 entity.state = State.HOOKED;
                                 entity.isBeingHooked = true;
+                                entity._hookOwner = this.owner; // exclude owner from detonation while towing
                                 break;
                             }
 

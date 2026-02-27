@@ -52,47 +52,55 @@ export class Landmine {
         if (this.isArmed || this.isBeingHooked) {
             // Check for entities to explode on
             for (const entity of entityManager.entities) {
-                // Ignore self, dead entities, and ensure it can take damage
-                if (entity !== this && entity.state !== State.DEAD && entity.takeDamage) {
-                    // Normal behavior: explode on enemies.
-                    // Hook behavior: explode on ANYONE (friend or foe) if being hooked.
-                    if (this.isBeingHooked || entity.team !== this.team) {
-                        const edx = entity.x - this.x;
-                        const edy = entity.y - this.y;
-                        const edist = Math.sqrt(edx * edx + edy * edy);
+                if (entity === this) continue;
+                if (entity.state !== undefined && entity.state === State.DEAD) continue;
+                if (!entity.takeDamage) continue;
 
-                        // If it collides with a character radius
-                        if (edist < this.radius + (entity.radius || 16)) {
-                            this.explode(entityManager);
-                            break;
-                        }
+                // When being hooked: explode on enemies only.
+                // The hook owner is excluded so the mine doesn't
+                // instantly detonate as the hook chain retracts.
+                const isHookOwner = entity === this._hookOwner;
+                if (isHookOwner) continue;
+
+                // Normal: explode on enemies. Hooked: explode on all except hook owner.
+                if (this.isBeingHooked || entity.team !== this.team) {
+                    const edx = entity.x - this.x;
+                    const edy = entity.y - this.y;
+                    const edist = Math.sqrt(edx * edx + edy * edy);
+
+                    if (edist < this.radius + (entity.radius || 16)) {
+                        this.explode(entityManager);
+                        break;
                     }
                 }
             }
         }
     }
 
-    explode(entityManager) {
+    explode(entityManager, hookOwner) {
         this.hasExploded = true;
 
-        // AOE Damage
+        // AOE Damage to all entities in explosion radius
         for (const entity of entityManager.entities) {
-            if (entity.state !== State.DEAD && entity.takeDamage) {
-                const edx = entity.x - this.x;
-                const edy = entity.y - this.y;
-                const edist = Math.sqrt(edx * edx + edy * edy);
+            if (entity === this) continue;
+            if (entity.state !== undefined && entity.state === State.DEAD) continue;
+            if (!entity.takeDamage) continue;
 
-                if (edist < this.explosionRadius) {
-                    // WC3: Mine kills do NOT award score points
+            const edx = entity.x - this.x;
+            const edy = entity.y - this.y;
+            const edist = Math.sqrt(edx * edx + edy * edy);
+
+            if (edist < this.explosionRadius) {
+                // WC3: Mine kills do NOT award score points.
+                // Only mark killedByMine if the explosion actually kills them.
+                if (entity.hp !== undefined && entity.hp - this.damage <= 0) {
                     entity.killedByMine = true;
-                    entity.takeDamage(this.damage);
                 }
+                entity.takeDamage(this.damage);
             }
         }
 
         entityManager.remove(this);
-
-        // Visual hook for the client-side particle system later
         this.state = State.DEAD;
     }
 
