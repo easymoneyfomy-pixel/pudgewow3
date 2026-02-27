@@ -103,19 +103,19 @@ export class ServerGame {
         if (character.gold >= cost) {
             switch (type) {
                 case 'DAMAGE':
-                    character.hookDamage += 10;
+                    character.dmgUpgrades = (character.dmgUpgrades || 0) + 1;
                     character.gold -= cost;
                     break;
                 case 'SPEED':
-                    character.hookSpeed += 50;
+                    character.spdUpgrades = (character.spdUpgrades || 0) + 1;
                     character.gold -= cost;
                     break;
                 case 'DISTANCE':
-                    character.hookMaxDist += 100;
+                    character.distUpgrades = (character.distUpgrades || 0) + 1;
                     character.gold -= cost;
                     break;
                 case 'RADIUS':
-                    character.hookRadius += 4;
+                    character.radUpgrades = (character.radUpgrades || 0) + 1;
                     character.gold -= cost;
                     break;
             }

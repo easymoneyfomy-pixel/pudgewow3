@@ -58,6 +58,12 @@ export class Character {
         this.items = [];
         this.maxItems = 6;
 
+        // Shop Upgrades (tracked separately for recalculateStats)
+        this.dmgUpgrades = 0;
+        this.spdUpgrades = 0;
+        this.distUpgrades = 0;
+        this.radUpgrades = 0;
+
         // Headshot flag
         this.headshotJustHappened = false;
         // Deny flag
@@ -140,7 +146,8 @@ export class Character {
         this.salveTimer = 0;
 
         if (attacker && attacker !== this) {
-            this.lastAttacker = attacker;
+            // attribution fix: if attacker is a hook, credit the owner
+            this.lastAttacker = attacker.owner || attacker;
         }
 
         this.hp -= amount;
@@ -443,23 +450,27 @@ export class Character {
 
     recalculateStats() {
         // 1. Reset base values and apply scaling
-        // Base stats from constants
         this.speed = GAME.CHAR_SPEED;
-        this.hookRadius = GAME.HOOK_RADIUS;
-        this.hookMaxDist = GAME.HOOK_MAX_DIST;
 
         // Core scaling (Level based)
         this.maxHp = 100 + (this.level - 1) * 15;
         this.hookDamage = GAME.HOOK_DAMAGE + (this.level - 1) * 3;
         this.hookSpeed = GAME.HOOK_SPEED + (this.level - 1) * 25;
+        this.hookMaxDist = GAME.HOOK_MAX_DIST + (this.level - 1) * 100;
+        this.hookRadius = GAME.HOOK_RADIUS + (this.level - 1) * 2;
 
-        // 2. Apply Flesh Heap stacks
+        // 2. Apply Shop Upgrades
+        this.hookDamage += (this.dmgUpgrades || 0) * 10;
+        this.hookSpeed += (this.spdUpgrades || 0) * 50;
+        this.hookMaxDist += (this.distUpgrades || 0) * 100;
+        this.hookRadius += (this.radUpgrades || 0) * 4;
+
+        // 3. Apply Flesh Heap stacks
         this.maxHp += (this.fleshHeapStacks || 0) * (this.fleshHeapHpPerStack || 8);
 
-        // 3. Apply items bonuses
+        // 4. Apply items bonuses
         for (const item of this.items || []) {
             if (item.effect === 'speed') this.speed += 40;
-            // Expansion point: add more item effects here
         }
     }
 }
