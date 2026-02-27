@@ -76,6 +76,47 @@ export class Renderer {
             return;
         }
 
+        if (type === 'shop') {
+            // Draw stone foundation
+            this.ctx.fillStyle = '#444';
+            this._fillPath(p1, p2, p3, p4);
+
+            const cx = p1.x;
+            const cy = p1.y + (p3.y - p1.y) / 2;
+
+            // Simple building block
+            this.ctx.fillStyle = '#8b5a2b'; // Wood color
+            this.ctx.beginPath();
+            this.ctx.moveTo(p1.x, p1.y - 20);
+            this.ctx.lineTo(p2.x, p2.y - 20);
+            this.ctx.lineTo(p3.x, p3.y - 20);
+            this.ctx.lineTo(p4.x, p4.y - 20);
+            this.ctx.closePath();
+            this.ctx.fill();
+            this.ctx.stroke();
+
+            // Roof (yellow/goldish)
+            this.ctx.fillStyle = '#cdb38b';
+            this.ctx.beginPath();
+            this.ctx.moveTo(p1.x, p1.y - 20);
+            this.ctx.lineTo(p2.x, p2.y - 20);
+            this.ctx.lineTo(cx, p1.y - 50); // Peak
+            this.ctx.closePath();
+            this.ctx.fill();
+            this.ctx.stroke();
+
+            this.ctx.beginPath();
+            this.ctx.moveTo(p2.x, p2.y - 20);
+            this.ctx.lineTo(p3.x, p3.y - 20);
+            this.ctx.lineTo(cx, p1.y - 50);
+            this.ctx.closePath();
+            this.ctx.fill();
+            this.ctx.stroke();
+
+            this.ctx.restore();
+            return;
+        }
+
         // Создаем градиент для объема или текстуры
         let fill = color;
         if (type === 'water') {

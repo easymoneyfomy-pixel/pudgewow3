@@ -18,6 +18,11 @@ export class Hook {
         this.speed = owner.hookSpeed;
         this.maxDist = owner.hookMaxDist;
         this.radius = owner.hookRadius;
+        this.bouncesLeft = owner.hookBounces || 0; // Ricochet Turbine
+
+        // Item effects from owner
+        this.hasBurn = (owner.items || []).some(i => i.effect === 'burn');
+        this.hasRupture = (owner.items || []).some(i => i.effect === 'rupture');
 
         this.currentDist = 0;
         this.isReturning = false;
@@ -73,7 +78,30 @@ export class Hook {
             // 2. Проверка столкновения со стеной (isHookable == false)
             const tile = map.getTileAt(this.x, this.y);
             if (tile && !tile.isHookable) {
-                this.isReturning = true;
+                if (this.bouncesLeft > 0) {
+                    // WALL BOUNCE (Ricochet Turbine effect)
+                    this.bouncesLeft--;
+
+                    // Simple reflection: try to determine which axis to reflect
+                    const tileLeft = map.getTileAt(this.x - 20, this.y);
+                    const tileRight = map.getTileAt(this.x + 20, this.y);
+                    const tileUp = map.getTileAt(this.x, this.y - 20);
+                    const tileDown = map.getTileAt(this.x, this.y + 20);
+
+                    // Reflect X if horizontal wall, else reflect Y
+                    if ((tileLeft && !tileLeft.isHookable) || (tileRight && !tileRight.isHookable)) {
+                        this.dirX = -this.dirX;
+                    }
+                    if ((tileUp && !tileUp.isHookable) || (tileDown && !tileDown.isHookable)) {
+                        this.dirY = -this.dirY;
+                    }
+
+                    // Push slightly out of wall
+                    this.x += this.dirX * 10;
+                    this.y += this.dirY * 10;
+                } else {
+                    this.isReturning = true;
+                }
             }
 
             // 3. Столкновение с другими энтити
@@ -104,17 +132,37 @@ export class Hook {
 
                         // WC3 Hook Radius logic
                         if (edist < this.radius + entity.radius) {
-                            this.isReturning = true;
-                            this.hookedEntity = entity;
-                            entity.state = State.HOOKED;
-                            entity.takeDamage(this.owner.hookDamage);
+                            if (entity.state === State.HOOKED) {
+                                // HEADSHOT! (Instakill)
+                                this.isReturning = true;
+                                entity.takeDamage(9999);
+                                this.owner.gold += 50; // Bonus gold
+                                entity.headshotJustHappened = true; // Flag for client
+                            } else {
+                                this.isReturning = true;
+                                this.hookedEntity = entity;
+                                entity.state = State.HOOKED;
+                                entity.takeDamage(this.owner.hookDamage);
 
-                            // Начисляем золото за точный хук
-                            this.owner.gold += 10;
+                                // Flaming Hook: Apply burn DOT
+                                if (this.hasBurn) {
+                                    entity.burnTimer = 3; // 3 seconds of burn
+                                    entity.burnDps = 8; // 8 DPS burn
+                                }
 
-                            // Если убил хуком
-                            if (entity.state === State.DEAD) {
-                                this.owner.gold += 50;
+                                // Strygwyr's Claws: Apply rupture
+                                if (this.hasRupture) {
+                                    entity.ruptureTimer = 4; // 4 seconds
+                                    entity.ruptureDps = 12; // DPS when moving
+                                }
+
+                                // Начисляем золото за точный хук
+                                this.owner.gold += 10;
+
+                                // Если убил хуком
+                                if (entity.state === State.DEAD) {
+                                    this.owner.gold += 50;
+                                }
                             }
 
                             break;

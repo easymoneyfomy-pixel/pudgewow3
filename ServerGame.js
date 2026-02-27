@@ -9,7 +9,7 @@ export class ServerGame {
         this.roomId = roomId;
         this.roomManager = roomManager;
 
-        this.map = new GameMap(16, 16, 64);
+        this.map = new GameMap(20, 20, 64);
         this.entityManager = new EntityManager();
         this.rules = new GameRules();
 
@@ -22,8 +22,9 @@ export class ServerGame {
     }
 
     addPlayer(playerId, team) {
-        const spawnX = team === 'red' ? 256 : 1024 - 256;
-        const spawnY = 512;
+        // Based on 20x20 GameMap definition (grid[3][midY] and grid[16][midY])
+        const spawnX = team === 'red' ? 3 * 64 : 16 * 64;
+        const spawnY = 10 * 64;
 
         const character = new Character(spawnX, spawnY, team);
         character.id = playerId;
@@ -50,6 +51,10 @@ export class ServerGame {
             character.castHook(input.x, input.y, this.entityManager);
         } else if (input.type === 'UPGRADE') {
             this.handleUpgrade(character, input.upgradeType);
+        } else if (input.type === 'ROT') {
+            character.toggleRot();
+        } else if (input.type === 'BUY_ITEM') {
+            this.handleBuyItem(character, input.itemId);
         }
     }
 
@@ -74,6 +79,44 @@ export class ServerGame {
                     character.gold -= cost;
                     break;
             }
+        }
+    }
+
+    handleBuyItem(character, itemId) {
+        const ITEMS = {
+            'flaming_hook': { cost: 150, name: 'Flaming Hook', effect: 'burn' },
+            'ricochet_turbine': { cost: 125, name: 'Ricochet Turbine', effect: 'bounce' },
+            'strygwyr_claws': { cost: 175, name: "Strygwyr's Claws", effect: 'rupture' },
+            'healing_salve': { cost: 50, name: 'Healing Salve', effect: 'heal', consumable: true },
+            'blink_dagger': { cost: 200, name: 'Blink Dagger', effect: 'blink' },
+            'lycan_paws': { cost: 100, name: "Lycan's Paws", effect: 'speed' },
+        };
+
+        const itemDef = ITEMS[itemId];
+        if (!itemDef) return;
+        if (character.gold < itemDef.cost) return;
+        if (!itemDef.consumable && character.items.length >= character.maxItems) return;
+
+        character.gold -= itemDef.cost;
+
+        if (itemDef.consumable) {
+            // Apply immediately
+            if (itemDef.effect === 'heal') {
+                character.hp = Math.min(character.hp + 50, character.maxHp);
+            }
+            return;
+        }
+
+        character.items.push({ id: itemId, name: itemDef.name, effect: itemDef.effect });
+
+        // Apply passive effects
+        switch (itemDef.effect) {
+            case 'speed':
+                character.speed += 40;
+                break;
+            case 'bounce':
+                character.hookBounces = (character.hookBounces || 0) + 1;
+                break;
         }
     }
 
@@ -139,8 +182,12 @@ export class ServerGame {
                     hookDamage: entity.hookDamage,
                     hookSpeed: entity.hookSpeed,
                     hookMaxDist: entity.hookMaxDist,
-                    hookRadius: entity.hookRadius
+                    hookRadius: entity.hookRadius,
+                    isHeadshot: entity.headshotJustHappened,
+                    rotActive: entity.rotActive,
+                    items: entity.items || []
                 });
+                entity.headshotJustHappened = false; // Reset after sending
             } else if (entity instanceof Hook) {
                 state.entities.push({
                     type: 'HOOK',

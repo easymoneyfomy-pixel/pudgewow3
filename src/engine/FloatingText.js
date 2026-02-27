@@ -57,14 +57,24 @@ export class FloatingTextManager {
     }
 
     // Client-side autonomous tracker to spawn texts based on state changes
-    trackEntities(entities) {
+    trackEntities(entities, particleSystem) {
         for (const e of entities) {
             if (e.hp !== undefined) {
                 const lastHp = this.lastHpStates.get(e.id);
                 if (lastHp !== undefined && e.hp < lastHp) {
-                    const dmg = Math.ceil(lastHp - e.hp);
-                    // Spawn red damage text
-                    this.addText(e.x + (Math.random() * 20 - 10), e.y + (Math.random() * 20 - 10), `-${dmg}`, '#ff3333');
+                    if (e.isHeadshot) {
+                        this.addText(e.x, e.y - 40, "HEADSHOT!", '#ff0000', true);
+                        if (particleSystem) {
+                            particleSystem.spawnBlood(e.x, e.y, 40); // Massive blood
+                        }
+                    } else {
+                        const dmg = Math.ceil(lastHp - e.hp);
+                        // Spawn red damage text
+                        this.addText(e.x + (Math.random() * 20 - 10), e.y + (Math.random() * 20 - 10), `-${dmg}`, '#ff3333');
+                        if (particleSystem) {
+                            particleSystem.spawnBlood(e.x, e.y, Math.min(dmg, 20)); // Cap particles
+                        }
+                    }
                 }
                 this.lastHpStates.set(e.id, e.hp);
             }

@@ -145,37 +145,66 @@ export class UIManager {
         ctx.fillText(`Hit Radius: ${player.hookRadius}`, statX + 120, startY + 120);
 
         // 4. Command Card Area (Skills and Shop)
-        const cmdX = width - 350;
-        const cmdW = 340;
+        const cmdX = width - 420;
+        const cmdW = 410;
         ctx.fillStyle = '#111';
         ctx.fillRect(cmdX, startY + 10, cmdW, barHeight - 20);
         ctx.strokeRect(cmdX, startY + 10, cmdW, barHeight - 20);
 
-        // Meat Hook Skill (Slot 1: Top Left)
-        this._drawSkillIcon(ctx, cmdX + 15, startY + 25, 60, "Q", "Meat Hook", player.hookCooldown, player.maxHookCooldown);
-
-        // Upgrades (Shop grid)
+        // -- Skills Row --
         ctx.fillStyle = '#f0d78c';
-        ctx.font = 'bold 12px Arial';
-        ctx.fillText("Shop (50g per UPGRADE):", cmdX + 90, startY + 30);
+        ctx.font = 'bold 11px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText("Skills:", cmdX + 10, startY + 22);
 
-        this._drawUpgradeIcon(ctx, cmdX + 90, startY + 45, 50, "1", "+10 Dmg");
-        this._drawUpgradeIcon(ctx, cmdX + 145, startY + 45, 50, "2", "+50 Spd");
-        this._drawUpgradeIcon(ctx, cmdX + 90, startY + 100, 50, "3", "+Dist");
-        this._drawUpgradeIcon(ctx, cmdX + 145, startY + 100, 50, "4", "+Rad");
+        // Meat Hook Skill (Q)
+        this._drawSkillIcon(ctx, cmdX + 10, startY + 30, 50, "Q", "Hook", player.hookCooldown, player.maxHookCooldown);
+
+        // Rot Skill (W)
+        this._drawSkillIcon(ctx, cmdX + 65, startY + 30, 50, "W", "Rot", 0, 0, player.rotActive);
+
+        // -- Shop Section --
+        ctx.fillStyle = '#f0d78c';
+        ctx.font = 'bold 11px Arial';
+        ctx.fillText("Shop [F1-F6]:", cmdX + 130, startY + 22);
+
+        const shopItems = [
+            { key: 'F1', label: 'Flame', cost: 150 },
+            { key: 'F2', label: 'Ricochet', cost: 125 },
+            { key: 'F3', label: 'Rupture', cost: 175 },
+            { key: 'F4', label: 'Salve', cost: 50 },
+            { key: 'F5', label: 'Blink', cost: 200 },
+            { key: 'F6', label: 'Paws', cost: 100 },
+        ];
+
+        for (let i = 0; i < shopItems.length; i++) {
+            const ix = cmdX + 130 + (i % 3) * 90;
+            const iy = startY + 30 + Math.floor(i / 3) * 55;
+            this._drawShopItem(ctx, ix, iy, shopItems[i].key, shopItems[i].label, shopItems[i].cost, player.gold);
+        }
+
+        // -- Upgrades Row --
+        ctx.fillStyle = '#f0d78c';
+        ctx.font = 'bold 11px Arial';
+        ctx.fillText("Upgrades [1-4] 50g:", cmdX + 10, startY + 95);
+
+        this._drawUpgradeIcon(ctx, cmdX + 10, startY + 105, 40, "1", `+Dmg`);
+        this._drawUpgradeIcon(ctx, cmdX + 55, startY + 105, 40, "2", `+Spd`);
+        this._drawUpgradeIcon(ctx, cmdX + 10, startY + 120 + 30, 40, "3", `+Dist`);
+        this._drawUpgradeIcon(ctx, cmdX + 55, startY + 120 + 30, 40, "4", `+Rad`);
     }
 
-    _drawSkillIcon(ctx, x, y, size, key, name, cd, maxCd) {
-        ctx.fillStyle = '#444';
+    _drawSkillIcon(ctx, x, y, size, key, name, cd, maxCd, isActive = false) {
+        ctx.fillStyle = isActive ? '#004400' : '#444';
         ctx.fillRect(x, y, size, size);
-        ctx.strokeStyle = '#f0d78c';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = isActive ? '#00ff00' : '#f0d78c';
+        ctx.lineWidth = isActive ? 3 : 2;
         ctx.strokeRect(x, y, size, size);
 
         ctx.fillStyle = '#fff';
         ctx.textAlign = 'center';
-        ctx.font = 'bold 24px Arial';
-        ctx.fillText(key, x + size / 2, y + size / 2 + 8);
+        ctx.font = 'bold 20px Arial';
+        ctx.fillText(key, x + size / 2, y + size / 2 + 6);
 
         ctx.font = '10px Arial';
         ctx.fillText(name, x + size / 2, y + size + 12);
@@ -189,6 +218,12 @@ export class UIManager {
             ctx.font = 'bold 14px Arial';
             ctx.fillText(cd.toFixed(1), x + size / 2, y + size / 2 + 5);
         }
+
+        if (isActive) {
+            ctx.fillStyle = '#00ff00';
+            ctx.font = 'bold 9px Arial';
+            ctx.fillText('ON', x + size / 2, y + size - 4);
+        }
     }
 
     _drawUpgradeIcon(ctx, x, y, size, key, label) {
@@ -200,12 +235,37 @@ export class UIManager {
 
         ctx.fillStyle = '#fff';
         ctx.textAlign = 'center';
-        ctx.font = 'bold 16px Arial';
-        ctx.fillText(`[${key}]`, x + size / 2, y + size / 2 - 5);
+        ctx.font = 'bold 14px Arial';
+        ctx.fillText(`[${key}]`, x + size / 2, y + size / 2 - 3);
 
         ctx.fillStyle = '#ffaa00';
+        ctx.font = '9px Arial';
+        ctx.fillText(label, x + size / 2, y + size / 2 + 12);
+    }
+
+    _drawShopItem(ctx, x, y, key, label, cost, playerGold) {
+        const w = 85;
+        const h = 50;
+        const canAfford = playerGold >= cost;
+
+        ctx.fillStyle = canAfford ? '#2a2a1a' : '#1a1a1a';
+        ctx.fillRect(x, y, w, h);
+        ctx.strokeStyle = canAfford ? '#f0d78c' : '#555';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x, y, w, h);
+
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 11px Arial';
+        ctx.fillStyle = canAfford ? '#fff' : '#666';
+        ctx.fillText(`[${key}]`, x + w / 2, y + 14);
+
         ctx.font = '10px Arial';
-        ctx.fillText(label, x + size / 2, y + size / 2 + 15);
+        ctx.fillStyle = canAfford ? '#eee' : '#555';
+        ctx.fillText(label, x + w / 2, y + 28);
+
+        ctx.font = '9px Arial';
+        ctx.fillStyle = canAfford ? '#ffd700' : '#554400';
+        ctx.fillText(`${cost}g`, x + w / 2, y + 42);
     }
 
     _drawGameOver(ctx, width, height, rules) {

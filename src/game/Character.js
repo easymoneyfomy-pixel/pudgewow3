@@ -45,6 +45,20 @@ export class Character {
         // Кулдаун хука
         this.hookCooldown = 0;
         this.maxHookCooldown = 3; // 3 секунды
+
+        // Rot (W) - AOE toggle skill
+        this.rotActive = false;
+        this.rotDamagePerSec = 10; // DPS to nearby enemies
+        this.rotSelfDamagePerSec = 5; // DPS to self
+        this.rotRadius = 120; // AOE radius
+        this.rotSlowFactor = 0.6; // Move speed multiplier when rot is on
+
+        // Items inventory
+        this.items = [];
+        this.maxItems = 6;
+
+        // Headshot flag
+        this.headshotJustHappened = false;
     }
 
     setTarget(x, y) {
@@ -53,6 +67,11 @@ export class Character {
             this.targetY = y;
             this.state = State.MOVING;
         }
+    }
+
+    toggleRot() {
+        if (this.state === State.DEAD) return;
+        this.rotActive = !this.rotActive;
     }
 
     castHook(targetX, targetY, entityManager) {
@@ -97,15 +116,50 @@ export class Character {
         }
 
         if (this.state === State.DEAD) {
+            this.rotActive = false;
             this.respawnTimer -= dt;
             if (this.respawnTimer <= 0) {
                 this.respawn();
             }
-            return; // Мертвые не двигаются
+            return;
+        }
+
+        // ROT AOE damage
+        if (this.rotActive && entityManager) {
+            // Self damage
+            this.takeDamage(this.rotSelfDamagePerSec * dt);
+
+            // Damage nearby enemies
+            for (const entity of entityManager.entities) {
+                if (entity === this) continue;
+                if (!entity.takeDamage || entity.state === State.DEAD) continue;
+                if (entity.team === this.team) continue; // Don't hurt allies
+
+                const edx = entity.x - this.x;
+                const edy = entity.y - this.y;
+                const edist = Math.sqrt(edx * edx + edy * edy);
+
+                if (edist < this.rotRadius) {
+                    entity.takeDamage(this.rotDamagePerSec * dt);
+                }
+            }
+        }
+
+        // Burn DOT (Flaming Hook effect)
+        if (this.burnTimer && this.burnTimer > 0) {
+            this.burnTimer -= dt;
+            this.takeDamage(this.burnDps * dt);
+        }
+
+        // Rupture DOT (Strygwyr's Claws effect - damage while moving)
+        if (this.ruptureTimer && this.ruptureTimer > 0) {
+            this.ruptureTimer -= dt;
+            if (this.state === State.MOVING) {
+                this.takeDamage(this.ruptureDps * dt);
+            }
         }
 
         if (this.state === State.HOOKED || this.state === State.CASTING) {
-            // Во время каста или когда хукнут - цель обнуляется и не двигаемся сами
             this.targetX = this.x;
             this.targetY = this.y;
             return;
@@ -117,7 +171,8 @@ export class Character {
             const dist = Math.sqrt(dx * dx + dy * dy);
 
             if (dist > 1) {
-                const moveAmt = this.speed * dt;
+                const actualSpeed = this.rotActive ? this.speed * this.rotSlowFactor : this.speed;
+                const moveAmt = actualSpeed * dt;
                 const dirX = dx / dist;
                 const dirY = dy / dist;
 
@@ -159,6 +214,15 @@ export class Character {
         // Тело (WC3 Pudge Style)
         renderer.ctx.save();
         renderer.ctx.translate(screenPos.x, screenPos.y - 15);
+
+        // Rot AOE visual (green toxic cloud)
+        if (this.rotActive) {
+            const rotPulse = Math.sin(Date.now() / 200) * 0.15 + 0.3;
+            renderer.ctx.fillStyle = `rgba(0, 200, 0, ${rotPulse})`;
+            renderer.ctx.beginPath();
+            renderer.ctx.arc(0, 5, 60, 0, Math.PI * 2);
+            renderer.ctx.fill();
+        }
 
         // Подсветка команды (аура под ногами)
         renderer.ctx.strokeStyle = this.team === 'red' ? 'rgba(255,0,0,0.3)' : 'rgba(0,0,255,0.3)';

@@ -10,7 +10,7 @@ export class MainScene {
     constructor(game) {
         this.game = game;
 
-        this.map = new GameMap(16, 16, 64);
+        this.map = new GameMap(20, 20, 64);
         this.camera = new Camera(0, 0, 1);
         this.ui = new UIManager(game);
 
@@ -55,6 +55,9 @@ export class MainScene {
                 char.hookSpeed = eData.hookSpeed;
                 char.hookMaxDist = eData.hookMaxDist;
                 char.hookRadius = eData.hookRadius;
+                char.isHeadshot = eData.isHeadshot;
+                char.rotActive = eData.rotActive;
+                char.items = eData.items || [];
 
                 this.localEntities.push(char);
 
@@ -151,11 +154,25 @@ export class MainScene {
             this.game.network.sendInput({ type: 'HOOK', x: worldTarget.x, y: worldTarget.y });
         }
 
-        // Shop Upgrades
+        // Rot Toggle (W)
+        if (this.game.input.isKeyPressed('KeyW')) {
+            this.game.network.sendInput({ type: 'ROT' });
+        }
+
+        // Shop Upgrades (old keys)
         if (this.game.input.isKeyPressed('Digit1')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'DAMAGE' });
         if (this.game.input.isKeyPressed('Digit2')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'SPEED' });
         if (this.game.input.isKeyPressed('Digit3')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'DISTANCE' });
         if (this.game.input.isKeyPressed('Digit4')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'RADIUS' });
+
+        // Item Shop (F1-F6)
+        const itemKeys = ['F1', 'F2', 'F3', 'F4', 'F5', 'F6'];
+        const itemIds = ['flaming_hook', 'ricochet_turbine', 'strygwyr_claws', 'healing_salve', 'blink_dagger', 'lycan_paws'];
+        for (let i = 0; i < itemKeys.length; i++) {
+            if (this.game.input.isKeyPressed(itemKeys[i])) {
+                this.game.network.sendInput({ type: 'BUY_ITEM', itemId: itemIds[i] });
+            }
+        }
 
         if (this.localPlayer) {
             this.camera.x += (this.localPlayer.x - this.camera.x) * 10 * dt;

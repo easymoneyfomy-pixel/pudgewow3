@@ -4,7 +4,9 @@ export const TileType = {
     WALL: 'wall',
     OBSTACLE: 'obstacle',
     SPAWN_RED: 'spawn_red',
-    SPAWN_BLUE: 'spawn_blue'
+    SPAWN_BLUE: 'spawn_blue',
+    SHOP: 'shop',
+    RUNE: 'rune'
 };
 
 export class Tile {
@@ -39,6 +41,14 @@ export class Tile {
                 break;
             case TileType.SPAWN_BLUE:
                 this.color = '#2a2a4a';
+                break;
+            case TileType.SHOP:
+                this.isWalkable = false;
+                this.isHookable = false;
+                this.color = '#ffcc00'; // Золотой/желтый для магазина
+                break;
+            case TileType.RUNE:
+                this.color = '#aa00aa'; // Пурпурный
                 break;
         }
     }
