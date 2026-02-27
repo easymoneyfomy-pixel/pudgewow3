@@ -19,6 +19,7 @@ export class ServerGame {
 
         this.players = new Map();
         this.running = false;
+        this.recentExplosions = [];
 
         this.lastTime = performance.now();
         this.tickRate = GAME.TICK_RATE;
@@ -198,6 +199,9 @@ export class ServerGame {
             }
         } else if (item.effect === 'mine') {
             const mine = new Landmine(character.x, character.y, character.team);
+            mine.onExplode = (ex, ey) => {
+                this.recentExplosions.push({ x: ex, y: ey });
+            };
             this.entityManager.add(mine);
             item.cooldown = item.maxCooldown;
         } else if (item.effect === 'toss') {
@@ -219,6 +223,9 @@ export class ServerGame {
             if (closest) {
                 // Toss the unit to the target location
                 const tossed = new TossedUnit(character, closest, x, y);
+                tossed.onLanded = (ex, ey) => {
+                    this.recentExplosions.push({ x: ex, y: ey });
+                };
                 this.entityManager.add(tossed);
                 item.cooldown = item.maxCooldown;
             }
@@ -311,8 +318,10 @@ export class ServerGame {
                 winner: this.rules.winner
             },
             serverTime: Date.now(),
-            entities: []
+            entities: [],
+            explosions: [...this.recentExplosions]
         };
+        this.recentExplosions = [];
 
         for (const entity of this.entityManager.entities) {
             if (entity.serialize) {
@@ -320,10 +329,15 @@ export class ServerGame {
             }
         }
 
-        // Reset one-frame flags on Characters after serializing them
-        for (const char of this.players.values()) {
-            char.headshotJustHappened = false;
-            char.deniedJustHappened = false;
+        // Reset one-frame flags on Characters and Hooks after serializing them
+        for (const entity of this.entityManager.entities) {
+            if (entity.type === 'CHARACTER') {
+                entity.headshotJustHappened = false;
+                entity.deniedJustHappened = false;
+            } else if (entity.clashJustHappened !== undefined) {
+                entity.clashJustHappened = false;
+                entity.hitJustHappened = false;
+            }
         }
 
         this.roomManager.broadcastToRoom(this.roomId, state);

@@ -524,9 +524,7 @@ canvas#gameCanvas {
 
 /* Fallback icon if no image */
 .icon-fleshheap {
-    background-color: #722c2c;
-    border: 2px dashed #9b4a4a;
-    box-sizing: border-box;
+    background-image: url('assets/Flesh_Heap.png');
 }
 
 .hotkey {

@@ -45,51 +45,81 @@ export class EntityRenderer {
         ctx.fill();
 
         // Body (team color)
-        ctx.fillStyle = char.team === 'red' ? '#993333' : '#333399';
+        ctx.fillStyle = char.team === 'red' ? '#8B1A1A' : '#1A1A8B'; // Darker base
         ctx.beginPath();
         ctx.arc(0, 0, 16, 0, Math.PI * 2);
         ctx.fill();
         ctx.strokeStyle = '#000';
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Stitched patterns for "Pudge" look
+        ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        // Belly stitches
+        ctx.moveTo(-10, 0); ctx.lineTo(10, 0);
+        for (let i = -8; i <= 8; i += 4) {
+            ctx.moveTo(i, -3); ctx.lineTo(i, 3);
+        }
+        // Shoulder stitches
+        ctx.moveTo(-14, -10); ctx.lineTo(-10, -14);
+        ctx.moveTo(14, -10); ctx.lineTo(10, -14);
         ctx.stroke();
 
         // Inner body detail (flesh color for Pudge)
-        ctx.fillStyle = '#886655';
+        ctx.fillStyle = '#9C7261'; // Slightly more vibrant flesh
         ctx.beginPath();
-        ctx.arc(0, 0, 8, 0, Math.PI * 2);
+        ctx.arc(0, 0, 9, 0, Math.PI * 2);
         ctx.fill();
 
         // Head
         ctx.fillStyle = '#664444';
         ctx.beginPath();
-        ctx.arc(0, -6, 6, 0, Math.PI * 2);
+        ctx.arc(0, -8, 7, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = '#333';
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#222';
+        ctx.lineWidth = 1.5;
         ctx.stroke();
+
+        // Eyes (white dots)
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(-2, -9, 1.5, 0, Math.PI * 2);
+        ctx.arc(2, -9, 1.5, 0, Math.PI * 2);
+        ctx.fill();
 
         // Arms/Shoulders
         ctx.fillStyle = char.team === 'red' ? '#884444' : '#444488';
-        ctx.fillRect(-18, -4, 8, 8);
-        ctx.fillRect(10, -4, 8, 8);
+        ctx.fillRect(-18, -2, 8, 8);
+        ctx.fillRect(10, -2, 8, 8);
 
-        // Cleaver
+        // Cleaver (Enhanced)
         ctx.save();
-        ctx.translate(16, -3);
+        ctx.translate(16, 0);
         ctx.rotate(-0.5);
-        ctx.fillStyle = '#aaa';
-        ctx.strokeStyle = '#555';
-        ctx.lineWidth = 1;
+        ctx.fillStyle = '#999'; // Base metal
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 1.5;
         ctx.beginPath();
         ctx.moveTo(0, 0);
-        ctx.lineTo(4, -12);
-        ctx.lineTo(12, -10);
-        ctx.lineTo(10, 2);
+        ctx.lineTo(5, -14);
+        ctx.lineTo(15, -12);
+        ctx.lineTo(12, 4);
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
+
+        // Edge shine
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(15, -12); ctx.lineTo(12, 4);
+        ctx.stroke();
+
+        // Handle
         ctx.fillStyle = '#4a2c15';
-        ctx.fillRect(-1, 0, 3, 8);
+        ctx.fillRect(-1, 0, 3, 10);
         ctx.restore();
 
         // Healing visual
@@ -261,21 +291,44 @@ export class EntityRenderer {
         ctx.translate(mine.x, mine.y);
 
         // Stealthy when armed
-        ctx.globalAlpha = mine.isArmed ? 0.3 : 1.0;
+        ctx.globalAlpha = mine.isArmed ? 0.35 : 1.0;
 
-        ctx.fillStyle = '#8B4513'; // Brown barrel
+        // 1. Barrel Body
+        ctx.fillStyle = '#8B4513'; // SaddleBrown
         ctx.beginPath();
-        ctx.arc(0, 0, 10, 0, Math.PI * 2);
+        ctx.ellipse(0, 0, 12, 14, 0, 0, Math.PI * 2);
         ctx.fill();
-
-        ctx.strokeStyle = '#000';
+        ctx.strokeStyle = '#3d2b1f';
         ctx.lineWidth = 1;
         ctx.stroke();
 
+        // 2. Wood Grain (Procedural vertical curves)
+        ctx.strokeStyle = '#5D2906';
+        ctx.lineWidth = 0.5;
+        for (let i = -8; i <= 8; i += 4) {
+            ctx.beginPath();
+            ctx.moveTo(i, -12);
+            ctx.quadraticCurveTo(i * 1.5, 0, i, 12);
+            ctx.stroke();
+        }
+
+        // 3. Iron Bands
         ctx.fillStyle = '#333';
-        ctx.beginPath();
-        ctx.arc(0, 0, 4, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.fillRect(-12.5, -8, 25, 3);
+        ctx.fillRect(-12.5, 5, 25, 3);
+
+        // 4. Fuse / Lid
+        ctx.fillStyle = '#222';
+        ctx.fillRect(-4, -16, 8, 4);
+
+        // Burning Fuse Spark (if not armed yet or if active)
+        if (!mine.isArmed) {
+            const sparkGlow = Math.sin(Date.now() / 50) * 2 + 3;
+            ctx.fillStyle = '#ffaa00';
+            ctx.beginPath();
+            ctx.arc(0, -18, sparkGlow, 0, Math.PI * 2);
+            ctx.fill();
+        }
 
         ctx.restore();
     }

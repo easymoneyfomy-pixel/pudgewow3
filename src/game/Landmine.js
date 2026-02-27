@@ -135,6 +135,8 @@ export class Landmine {
         if (this.hasExploded) return;
         this.hasExploded = true;
 
+        if (this.onExplode) this.onExplode(this.x, this.y);
+
         // AOE damage to everything in blast radius
         for (const entity of entityManager.entities) {
             if (entity === this) continue;

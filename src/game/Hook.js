@@ -136,10 +136,13 @@ export class Hook {
                     if (!entity.isReturning) {
                         this.startReturning();
                         entity.startReturning();
+                        this.clashJustHappened = true;
+                        entity.clashJustHappened = true;
                         return;
                     }
                 } else if (entity.takeDamage && entity.state !== State.DEAD) {
                     this.handleHit(entity, entityManager);
+                    this.hitJustHappened = true;
                     return;
                 }
             }
@@ -246,7 +249,9 @@ export class Hook {
             ownerX: this.owner.x,
             ownerY: this.owner.y,
             radius: this.radius,
-            pathNodes: this.pathNodes.map(p => ({ x: p.x, y: p.y }))
+            pathNodes: this.pathNodes.map(p => ({ x: p.x, y: p.y })),
+            clashJustHappened: this.clashJustHappened || false,
+            hitJustHappened: this.hitJustHappened || false
         };
     }
 }

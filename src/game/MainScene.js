@@ -135,14 +135,26 @@ export class MainScene {
             this._prevAliveStates.set(eData.id, !isDead);
         }
 
-        // ── 1. Purge memory leaks (Diagnosis Fix) ──
-        // Remove tracking data for entities that no longer exist on the server
-        const currentEntityIds = new Set(data.entities.map(e => e.id));
-        for (const [id] of this._prevHp) {
-            if (!currentEntityIds.has(id)) this._prevHp.delete(id);
+        // ── Hook events (Clashing & Hits) ──
+        for (const eData of data.entities) {
+            if (eData.type === 'HOOK') {
+                if (eData.hitJustHappened) {
+                    this.particles.spawnBlood(eData.x, eData.y, 10);
+                    this.camera.shake(6);
+                }
+                if (eData.clashJustHappened) {
+                    this.particles.spawnClash(eData.x, eData.y);
+                    this.camera.shake(4);
+                }
+            }
         }
-        for (const [id] of this._prevAliveStates) {
-            if (!currentEntityIds.has(id)) this._prevAliveStates.delete(id);
+
+        // ── Explosion events (Mines & Toss) ──
+        if (data.explosions && data.explosions.length > 0) {
+            for (const exp of data.explosions) {
+                this.particles.spawnExplosion(exp.x, exp.y);
+                this.camera.shake(12);
+            }
         }
 
         // Floating text system tracks entity positions and emits damage/regen numbers

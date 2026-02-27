@@ -48,6 +48,8 @@ export class TossedUnit {
             this.targetUnit.z = 0;
             this.targetUnit.state = State.IDLE; // Free the unit
 
+            if (this.onLanded) this.onLanded(this.targetX, this.targetY);
+
             // AOE Damage on landing
             for (const entity of entityManager.entities) {
                 if (entity !== this.targetUnit && entity.takeDamage && entity.state !== State.DEAD) {
