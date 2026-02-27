@@ -1,19 +1,28 @@
 export class UIManager {
     constructor(game) {
         this.game = game;
+        this.shopOpen = false;
+        this.shopItemRects = []; // [{x, y, w, h, itemId}]
+        this._lastPlayer = null;
     }
 
     render(ctx, rules, player, enemy) {
         const width = this.game.canvas.width;
         const height = this.game.canvas.height;
+        this._lastPlayer = player;
 
-        // 1. Top Bar (Score/Timer)
+        // 1. Top Bar
         this._drawTopBar(ctx, width, rules);
 
         // 2. Bottom HUD
         this._drawBottomBar(ctx, width, height, player);
 
-        // 3. Game Over
+        // 3. Shop Overlay (center screen, toggle with B)
+        if (this.shopOpen) {
+            this._drawShopOverlay(ctx, width, height, player);
+        }
+
+        // 4. Game Over
         if (rules.isGameOver) {
             this._drawGameOver(ctx, width, height, rules);
         }
@@ -100,13 +109,15 @@ export class UIManager {
         const skillsX = portX + 280;
         this._drawSkills(ctx, skillsX, startY, player);
 
-        // === 4. Inventory / Shop (Right) ===
+        // === 4. Inventory (Right) ===
         const invX = skillsX + 140;
         this._drawInventory(ctx, invX, startY, barHeight, player);
 
-        // === 5. Shop (Far Right) ===
-        const shopX = invX + 230;
-        this._drawShopPanel(ctx, shopX, startY, barHeight, width, player);
+        // === 5. Shop hint ===
+        ctx.fillStyle = '#c4a44a';
+        ctx.font = 'bold 12px Georgia, serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('[B] — Open Shop', invX + 340, startY + barHeight / 2 + 4);
     }
 
     _drawMinimap(ctx, x, y, size, player) {
@@ -303,67 +314,134 @@ export class UIManager {
         }
     }
 
-    _drawShopPanel(ctx, x, startY, barHeight, width, player) {
-        const panelW = Math.min(width - x - 10, 280);
-        if (panelW < 100) return; // Not enough space
+    _drawShopOverlay(ctx, width, height, player) {
+        // Dim background
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillRect(0, 0, width, height);
 
-        ctx.fillStyle = '#c4a44a';
-        ctx.font = 'bold 10px Georgia, serif';
+        // Shop panel (centered)
+        const panelW = 450;
+        const panelH = 380;
+        const px = (width - panelW) / 2;
+        const py = (height - panelH) / 2;
+
+        // Panel background
+        const grad = ctx.createLinearGradient(px, py, px, py + panelH);
+        grad.addColorStop(0, '#1a150e');
+        grad.addColorStop(1, '#0d0a06');
+        ctx.fillStyle = grad;
+        ctx.fillRect(px, py, panelW, panelH);
+
+        // Gold fancy border
+        ctx.strokeStyle = '#c4a44a';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(px, py, panelW, panelH);
+        ctx.strokeStyle = '#8a6a2a';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(px + 4, py + 4, panelW - 8, panelH - 8);
+
+        // Title
+        ctx.fillStyle = '#f0d78c';
+        ctx.font = 'bold 22px Georgia, serif';
         ctx.textAlign = 'center';
-        ctx.fillText('SHOP', x + panelW / 2, startY + 12);
+        ctx.fillText('🏪 ITEM SHOP', px + panelW / 2, py + 30);
 
-        // Shop items in 2x3 grid
-        const shopItems = [
-            { key: 'F1', label: 'Flame', cost: 150, icon: '🔥' },
-            { key: 'F2', label: 'Ricochet', cost: 125, icon: '🔄' },
-            { key: 'F3', label: 'Rupture', cost: 175, icon: '🩸' },
-            { key: 'F4', label: 'Salve', cost: 50, icon: '💊' },
-            { key: 'F5', label: 'Blink', cost: 200, icon: '⚡' },
-            { key: 'F6', label: 'Paws', cost: 100, icon: '🐾' },
+        // Gold display
+        ctx.fillStyle = '#ffd700';
+        ctx.font = 'bold 16px Arial';
+        ctx.fillText(`💰 Gold: ${player.gold}`, px + panelW / 2, py + 55);
+
+        // Close hint
+        ctx.fillStyle = '#888';
+        ctx.font = 'italic 12px Arial';
+        ctx.fillText('Press [B] to close — Click item to buy', px + panelW / 2, py + panelH - 15);
+
+        // Item grid (2 rows x 3 cols)
+        const SHOP_ITEMS = [
+            { id: 'flaming_hook', label: 'Flaming Hook', cost: 150, icon: '🔥', desc: 'Burn 8 DPS / 3s' },
+            { id: 'ricochet_turbine', label: 'Ricochet Turbine', cost: 125, icon: '🔄', desc: 'Hook bounces walls' },
+            { id: 'strygwyr_claws', label: "Strygwyr's Claws", cost: 175, icon: '🩸', desc: 'Rupture on move' },
+            { id: 'healing_salve', label: 'Healing Salve', cost: 50, icon: '💊', desc: 'Instant +50 HP' },
+            { id: 'blink_dagger', label: 'Blink Dagger', cost: 200, icon: '⚡', desc: 'Teleport' },
+            { id: 'lycan_paws', label: "Lycan's Paws", cost: 100, icon: '🐾', desc: '+40 Move Speed' },
         ];
 
-        const itemW = 85;
-        const itemH = 50;
-        const colCount = Math.min(3, Math.floor(panelW / (itemW + 5)));
+        const itemW = 130;
+        const itemH = 100;
+        const gap = 10;
+        const gridStartX = px + (panelW - 3 * itemW - 2 * gap) / 2;
+        const gridStartY = py + 75;
 
-        for (let i = 0; i < shopItems.length; i++) {
-            const col = i % colCount;
-            const row = Math.floor(i / colCount);
-            const ix = x + col * (itemW + 5);
-            const iy = startY + 18 + row * (itemH + 4);
+        this.shopItemRects = []; // Reset for click detection
 
-            const item = shopItems[i];
+        for (let i = 0; i < SHOP_ITEMS.length; i++) {
+            const col = i % 3;
+            const row = Math.floor(i / 3);
+            const ix = gridStartX + col * (itemW + gap);
+            const iy = gridStartY + row * (itemH + gap);
+
+            const item = SHOP_ITEMS[i];
             const canAfford = player.gold >= item.cost;
 
-            ctx.fillStyle = canAfford ? '#1a1a0a' : '#0d0d0d';
+            // Save rect for click detection
+            this.shopItemRects.push({ x: ix, y: iy, w: itemW, h: itemH, itemId: item.id });
+
+            // Item background
+            ctx.fillStyle = canAfford ? '#2a2510' : '#151515';
             ctx.fillRect(ix, iy, itemW, itemH);
-            ctx.strokeStyle = canAfford ? '#c4a44a' : '#333';
-            ctx.lineWidth = 1;
+
+            // Border
+            ctx.strokeStyle = canAfford ? '#c4a44a' : '#444';
+            ctx.lineWidth = canAfford ? 2 : 1;
             ctx.strokeRect(ix, iy, itemW, itemH);
 
+            // Icon
+            ctx.font = '28px Arial';
             ctx.textAlign = 'center';
-            ctx.font = '14px Arial';
-            ctx.fillText(item.icon, ix + 15, iy + 20);
+            ctx.fillText(item.icon, ix + itemW / 2, iy + 30);
 
-            ctx.font = 'bold 10px Arial';
-            ctx.fillStyle = canAfford ? '#eee' : '#555';
-            ctx.fillText(`[${item.key}]`, ix + itemW / 2 + 10, iy + 16);
+            // Name
+            ctx.font = 'bold 11px Arial';
+            ctx.fillStyle = canAfford ? '#fff' : '#666';
+            ctx.fillText(item.label, ix + itemW / 2, iy + 52);
 
+            // Description
             ctx.font = '9px Arial';
-            ctx.fillStyle = canAfford ? '#ccc' : '#444';
-            ctx.fillText(item.label, ix + itemW / 2 + 10, iy + 30);
+            ctx.fillStyle = canAfford ? '#aaa' : '#555';
+            ctx.fillText(item.desc, ix + itemW / 2, iy + 68);
 
+            // Cost
+            ctx.font = 'bold 14px Arial';
             ctx.fillStyle = canAfford ? '#ffd700' : '#554400';
-            ctx.font = '9px Arial';
-            ctx.fillText(`${item.cost}g`, ix + itemW / 2 + 10, iy + 43);
+            ctx.fillText(`${item.cost}g`, ix + itemW / 2, iy + 88);
+
+            if (!canAfford) {
+                ctx.fillStyle = 'rgba(0,0,0,0.4)';
+                ctx.fillRect(ix, iy, itemW, itemH);
+            }
         }
 
-        // Upgrades section below shop
+        // Upgrades section at bottom of shop
+        const upY = gridStartY + 2 * (itemH + gap) + 15;
         ctx.fillStyle = '#c4a44a';
-        ctx.font = 'bold 9px Georgia, serif';
-        ctx.textAlign = 'left';
-        const upY = startY + barHeight - 22;
-        ctx.fillText('[1]+Dmg [2]+Spd [3]+Dist [4]+Rad — 50g each', x, upY);
+        ctx.font = 'bold 13px Georgia, serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Stat Upgrades (50g each) — use keys [1] [2] [3] [4]', px + panelW / 2, upY);
+
+        ctx.fillStyle = '#ccc';
+        ctx.font = '12px Arial';
+        ctx.fillText('[1] +10 Damage   [2] +50 Speed   [3] +100 Range   [4] +4 Radius', px + panelW / 2, upY + 20);
+    }
+
+    getClickedShopItem(mouseX, mouseY) {
+        if (!this.shopOpen) return null;
+        for (const rect of this.shopItemRects) {
+            if (mouseX >= rect.x && mouseX <= rect.x + rect.w &&
+                mouseY >= rect.y && mouseY <= rect.y + rect.h) {
+                return rect.itemId;
+            }
+        }
+        return null;
     }
 
     _drawSkillIcon(ctx, x, y, size, key, name, cd, maxCd, isActive = false) {

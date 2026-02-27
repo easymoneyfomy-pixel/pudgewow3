@@ -164,18 +164,22 @@ export class MainScene {
             this.game.network.sendInput({ type: 'ROT' });
         }
 
-        // Shop Upgrades (old keys)
+        // Shop Upgrades (1-4)
         if (this.game.input.isKeyPressed('Digit1')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'DAMAGE' });
         if (this.game.input.isKeyPressed('Digit2')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'SPEED' });
         if (this.game.input.isKeyPressed('Digit3')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'DISTANCE' });
         if (this.game.input.isKeyPressed('Digit4')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'RADIUS' });
 
-        // Item Shop (F1-F6)
-        const itemKeys = ['F1', 'F2', 'F3', 'F4', 'F5', 'F6'];
-        const itemIds = ['flaming_hook', 'ricochet_turbine', 'strygwyr_claws', 'healing_salve', 'blink_dagger', 'lycan_paws'];
-        for (let i = 0; i < itemKeys.length; i++) {
-            if (this.game.input.isKeyPressed(itemKeys[i])) {
-                this.game.network.sendInput({ type: 'BUY_ITEM', itemId: itemIds[i] });
+        // Shop toggle (B key — like WC3)
+        if (this.game.input.isKeyPressed('KeyB')) {
+            this.ui.shopOpen = !this.ui.shopOpen;
+        }
+
+        // Left click — check if clicking on a shop item in the UI
+        if (this.game.input.isMouseButtonPressed(0)) {
+            const clickedItemId = this.ui.getClickedShopItem(mousePos.x, mousePos.y);
+            if (clickedItemId) {
+                this.game.network.sendInput({ type: 'BUY_ITEM', itemId: clickedItemId });
             }
         }
 
