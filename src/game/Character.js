@@ -59,11 +59,17 @@ export class Character {
 
         // Headshot flag
         this.headshotJustHappened = false;
+        // Deny flag
+        this.deniedJustHappened = false;
 
         // WC3 Status effects
         this.invulnerableTimer = 0;
         this.isHealing = false;
         this.shieldRadius = 25;
+
+        // Barricade ability
+        this.barricadeCooldown = 0;
+        this.maxBarricadeCooldown = 15; // 15 seconds
 
         // Passive HP regen
         this.hpRegen = 2; // HP per second
@@ -85,6 +91,16 @@ export class Character {
     toggleRot() {
         if (this.state === State.DEAD) return;
         this.rotActive = !this.rotActive;
+    }
+
+    castBarricade(entityManager, BarricadeClass) {
+        if (this.state !== State.DEAD && this.barricadeCooldown <= 0) {
+            this.barricadeCooldown = this.maxBarricadeCooldown;
+            // Place barricade 40 pixels in front of the character based on current movement or just at coordinates
+            // Since we don't have mouse pos here without targetX, we just place it at (x, y)
+            const barricade = new BarricadeClass(this.x, this.y, this.team);
+            entityManager.add(barricade);
+        }
     }
 
     castHook(targetX, targetY, entityManager) {
@@ -141,9 +157,12 @@ export class Character {
     }
 
     update(dt, map, entityManager) {
-        // Обновляем кулдаун
+        // Обновляем кулдауны
         if (this.hookCooldown > 0) {
             this.hookCooldown -= dt;
+        }
+        if (this.barricadeCooldown > 0) {
+            this.barricadeCooldown -= dt;
         }
 
         // Tick invulnerability

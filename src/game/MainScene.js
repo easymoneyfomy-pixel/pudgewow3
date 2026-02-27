@@ -3,6 +3,7 @@ import { GameMap } from '../engine/GameMap.js';
 import { UIManager } from '../ui/UIManager.js';
 import { Character } from './Character.js';
 import { Hook } from './Hook.js';
+import { Barricade } from './Barricade.js';
 import { ParticleSystem } from '../engine/ParticleSystem.js';
 import { FloatingTextManager } from '../engine/FloatingText.js';
 import { KillFeed } from '../ui/KillFeed.js';
@@ -137,6 +138,13 @@ export class MainScene {
 
                     this.localEntities.push(hook);
                 }
+            } else if (eData.type === 'BARRICADE') {
+                const barricade = new Barricade(eData.x, eData.y, eData.team);
+                barricade.id = eData.id;
+                barricade.hp = eData.hp;
+                barricade.maxHp = eData.maxHp;
+                barricade.state = eData.state;
+                this.localEntities.push(barricade);
             }
         }
 
@@ -154,7 +162,9 @@ export class MainScene {
                     const victimTeam = eData.team;
                     const killerTeam = victimTeam === 'red' ? 'blue' : 'red';
 
-                    if (!this._firstBloodDone) {
+                    if (eData.isDenied) {
+                        this.killFeed.addDeny(eData.team, victimTeam);
+                    } else if (!this._firstBloodDone) {
                         this.killFeed.addFirstBlood(killerTeam);
                         this._firstBloodDone = true;
                     } else if (eData.isHeadshot) {
@@ -199,6 +209,11 @@ export class MainScene {
         // Rot Toggle (W)
         if (this.game.input.isKeyPressed('KeyW')) {
             this.game.network.sendInput({ type: 'ROT' });
+        }
+
+        // Barricade (E)
+        if (this.game.input.isKeyPressed('KeyE')) {
+            this.game.network.sendInput({ type: 'BARRICADE' });
         }
 
         // Shop Upgrades (1-4)

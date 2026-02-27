@@ -32,6 +32,20 @@ export class KillFeed {
         });
     }
 
+    addDeny(killerTeam, victimTeam) {
+        this.entries.push({
+            text: `📉 DENIED! ${killerTeam.toUpperCase()} ➜ ${victimTeam.toUpperCase()}`,
+            life: this.entryLife,
+            isHeadshot: false,
+            isDenied: true,
+            killerTeam
+        });
+
+        if (this.entries.length > this.maxEntries) {
+            this.entries.shift();
+        }
+    }
+
     update(dt) {
         for (const e of this.entries) {
             e.life -= dt;
@@ -54,7 +68,8 @@ export class KillFeed {
             // Background pill
             ctx.fillStyle = e.isFirstBlood ? 'rgba(180, 0, 0, 0.6)' :
                 e.isHeadshot ? 'rgba(160, 120, 0, 0.6)' :
-                    'rgba(0, 0, 0, 0.5)';
+                    e.isDenied ? 'rgba(80, 80, 80, 0.6)' :
+                        'rgba(0, 0, 0, 0.5)';
             const textW = ctx.measureText ? 260 : 260;
             ctx.fillRect(startX - textW, y - 8, textW, 22);
 
@@ -63,7 +78,8 @@ export class KillFeed {
             ctx.textAlign = 'right';
             ctx.fillStyle = e.isFirstBlood ? '#ff4444' :
                 e.isHeadshot ? '#ffd700' :
-                    e.killerTeam === 'red' ? '#ff8888' : '#8888ff';
+                    e.isDenied ? '#bbbbbb' :
+                        e.killerTeam === 'red' ? '#ff8888' : '#8888ff';
             ctx.fillText(e.text, startX - 10, y + 6);
         }
 

@@ -4,10 +4,10 @@ export class GameRules {
     constructor() {
         this.scoreRed = 0;
         this.scoreBlue = 0;
-        this.maxScore = 5;
+        this.maxScore = 50; // Classic Pudge Wars Kills Limit
 
-        // Таймер раунда (в секундах)
-        this.roundTimeLeft = 180; // 3 минуты
+        // Таймер раунда
+        this.roundTimeLeft = 3600; // 1 hour time limit
         this.isGameOver = false;
         this.winner = null;
     }
@@ -32,6 +32,11 @@ export class GameRules {
     }
 
     handleDeath(entity) {
+        if (entity.deniedJustHappened) {
+            // It's a deny! No points for the enemy team.
+            return;
+        }
+
         if (entity.team === 'red') {
             this.scoreBlue++;
         } else if (entity.team === 'blue') {

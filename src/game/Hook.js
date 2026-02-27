@@ -132,39 +132,72 @@ export class Hook {
 
                         // WC3 Hook Radius logic
                         if (edist < this.radius + entity.radius) {
+                            if (entity.isBarricade) {
+                                // Hit a barricade - bounce or return
+                                if (this.bouncesLeft > 0) {
+                                    this.bouncesLeft--;
+                                    // Simple reflection based on relative position
+                                    if (Math.abs(edx) > Math.abs(edy)) {
+                                        this.dirX = -this.dirX;
+                                    } else {
+                                        this.dirY = -this.dirY;
+                                    }
+
+                                    this.x += this.dirX * 10;
+                                    this.y += this.dirY * 10;
+                                } else {
+                                    this.isReturning = true;
+                                }
+                                entity.takeDamage(this.owner.hookDamage);
+                                break;
+                            }
+
                             if (entity.state === State.HOOKED) {
                                 // HEADSHOT! (Instakill)
                                 this.isReturning = true;
-                                entity.takeDamage(9999);
-                                this.owner.gold += 50;
-                                if (this.owner.gainXp) this.owner.gainXp(80); // Big XP for headshot
+                                entity.takeDamage(9999); // Force kill
+                                // If it wasn't an ally headshot
+                                if (entity.team !== this.owner.team) {
+                                    this.owner.gold += 50;
+                                    if (this.owner.gainXp) this.owner.gainXp(80); // Big XP for headshot
+                                }
                                 entity.headshotJustHappened = true; // Flag for client
                             } else {
                                 this.isReturning = true;
                                 this.hookedEntity = entity;
                                 entity.state = State.HOOKED;
+
+                                const isAlly = entity.team === this.owner.team;
                                 entity.takeDamage(this.owner.hookDamage);
 
-                                // Flaming Hook: Apply burn DOT
-                                if (this.hasBurn) {
-                                    entity.burnTimer = 3; // 3 seconds of burn
-                                    entity.burnDps = 8; // 8 DPS burn
-                                }
+                                if (!isAlly) {
+                                    // Flaming Hook: Apply burn DOT
+                                    if (this.hasBurn) {
+                                        entity.burnTimer = 3; // 3 seconds of burn
+                                        entity.burnDps = 8; // 8 DPS burn
+                                    }
 
-                                // Strygwyr's Claws: Apply rupture
-                                if (this.hasRupture) {
-                                    entity.ruptureTimer = 4; // 4 seconds
-                                    entity.ruptureDps = 12; // DPS when moving
-                                }
+                                    // Strygwyr's Claws: Apply rupture
+                                    if (this.hasRupture) {
+                                        entity.ruptureTimer = 4; // 4 seconds
+                                        entity.ruptureDps = 12; // DPS when moving
+                                    }
 
-                                // Начисляем золото за точный хук
-                                this.owner.gold += 10;
-                                if (this.owner.gainXp) this.owner.gainXp(25); // XP for hit
+                                    // Начисляем золото за точный хук
+                                    this.owner.gold += 10;
+                                    if (this.owner.gainXp) this.owner.gainXp(25); // XP for hit
 
-                                // Если убил хуком
-                                if (entity.state === State.DEAD) {
-                                    this.owner.gold += 50;
-                                    if (this.owner.gainXp) this.owner.gainXp(50); // Bonus XP for kill
+                                    // Если убил хуком
+                                    if (entity.state === State.DEAD) {
+                                        this.owner.gold += 50;
+                                        if (this.owner.gainXp) this.owner.gainXp(50); // Bonus XP for kill
+                                    }
+                                } else {
+                                    // Ally block/deny
+                                    if (entity.state === State.DEAD) {
+                                        // DENY!
+                                        entity.deniedJustHappened = true;
+                                    }
                                 }
                             }
 

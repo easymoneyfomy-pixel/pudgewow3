@@ -3,6 +3,7 @@ import { EntityManager } from './src/engine/EntityManager.js';
 import { GameRules } from './src/engine/GameRules.js';
 import { Character } from './src/game/Character.js';
 import { Hook } from './src/game/Hook.js';
+import { Barricade } from './src/game/Barricade.js';
 
 export class ServerGame {
     constructor(roomId, roomManager) {
@@ -53,6 +54,8 @@ export class ServerGame {
             this.handleUpgrade(character, input.upgradeType);
         } else if (input.type === 'ROT') {
             character.toggleRot();
+        } else if (input.type === 'BARRICADE') {
+            character.castBarricade(this.entityManager, Barricade);
         } else if (input.type === 'BUY_ITEM') {
             this.handleBuyItem(character, input.itemId);
         }
@@ -190,6 +193,7 @@ export class ServerGame {
                     hookMaxDist: entity.hookMaxDist,
                     hookRadius: entity.hookRadius,
                     isHeadshot: entity.headshotJustHappened,
+                    isDenied: entity.deniedJustHappened,
                     rotActive: entity.rotActive,
                     items: entity.items || [],
                     level: entity.level || 1,
@@ -201,6 +205,7 @@ export class ServerGame {
                     isHealing: entity.isHealing || false
                 });
                 entity.headshotJustHappened = false; // Reset after sending
+                entity.deniedJustHappened = false; // Reset after sending
             } else if (entity instanceof Hook) {
                 state.entities.push({
                     type: 'HOOK',
@@ -208,6 +213,17 @@ export class ServerGame {
                     y: entity.y,
                     ownerId: entity.owner.id,
                     radius: entity.radius
+                });
+            } else if (entity instanceof Barricade) {
+                state.entities.push({
+                    type: 'BARRICADE',
+                    id: entity.id,
+                    x: entity.x,
+                    y: entity.y,
+                    team: entity.team,
+                    hp: entity.hp,
+                    maxHp: entity.maxHp,
+                    state: entity.state
                 });
             }
         }
