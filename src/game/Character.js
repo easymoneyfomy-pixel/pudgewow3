@@ -68,8 +68,6 @@ export class Character {
         this.isHealing = false;
         this.shieldRadius = 25;
 
-        this.shieldRadius = 25;
-
         // Barricade ability — REMOVED (replaced by Flesh Heap passive)
 
         // Passive HP regen
