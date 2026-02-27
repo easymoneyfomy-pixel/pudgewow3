@@ -24,6 +24,7 @@ export class UIManager {
 
             statDmg: document.getElementById('stat-dmg'),
             statSpd: document.getElementById('stat-spd'),
+            statMoveSpd: document.getElementById('stat-move-spd'),
             statRng: document.getElementById('stat-rng'),
             statRad: document.getElementById('stat-rad'),
 
@@ -203,6 +204,7 @@ export class UIManager {
             this.dom.xpText.innerText = "XP 0/100";
             this.dom.statDmg.innerText = "---";
             this.dom.statSpd.innerText = "---";
+            this.dom.statMoveSpd.innerText = "---";
             this.dom.statRng.innerText = "---";
             this.dom.statRad.innerText = "---";
             return;
@@ -224,6 +226,7 @@ export class UIManager {
         // Combat Stats
         this.dom.statDmg.innerText = player.hookDamage;
         this.dom.statSpd.innerText = player.hookSpeed;
+        this.dom.statMoveSpd.innerText = Math.round(player.speed || 280);
         this.dom.statRng.innerText = player.hookMaxDist;
         this.dom.statRad.innerText = player.hookRadius;
     }

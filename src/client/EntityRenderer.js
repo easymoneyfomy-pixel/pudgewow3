@@ -14,9 +14,15 @@ export class EntityRenderer {
     static drawCharacter(renderer, char) {
         if (char.state === 'dead') return;
 
-        const ctx = renderer.ctx;
         const sx = char.x;
         const sy = char.y;
+        const ctx = renderer.ctx;
+
+        // NEW: Load the Pudge model asset (cached on renderer)
+        if (!renderer.pudgeSprite) {
+            renderer.pudgeSprite = new Image();
+            renderer.pudgeSprite.src = 'assets/player/pudge_player.png';
+        }
 
         ctx.save();
         const z = char.z || 0;
@@ -139,6 +145,100 @@ export class EntityRenderer {
             ctx.beginPath();
             ctx.arc(0, 0, 20, 0, Math.PI * 2);
             ctx.stroke();
+        }
+
+        // Draw the Pudge Sprite if loaded, otherwise fallback to procedural
+        if (renderer.pudgeSprite && renderer.pudgeSprite.complete) {
+            ctx.save();
+            // Scale and center the sprite accurately
+            const s = 48 / renderer.pudgeSprite.width; // Normalize to ~48px
+            ctx.scale(s, s);
+            ctx.drawImage(renderer.pudgeSprite, -renderer.pudgeSprite.width / 2, -renderer.pudgeSprite.height / 2);
+            ctx.restore();
+        } else {
+            // Shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.beginPath();
+            ctx.arc(0, 0, 18, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Body (team color)
+            ctx.fillStyle = char.team === 'red' ? '#8B1A1A' : '#1A1A8B'; // Darker base
+            ctx.beginPath();
+            ctx.arc(0, 0, 16, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Stitched patterns for "Pudge" look
+            ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            // Belly stitches
+            ctx.moveTo(-10, 0); ctx.lineTo(10, 0);
+            for (let i = -8; i <= 8; i += 4) {
+                ctx.moveTo(i, -3); ctx.lineTo(i, 3);
+            }
+            // Shoulder stitches
+            ctx.moveTo(-14, -10); ctx.lineTo(-10, -14);
+            ctx.moveTo(14, -10); ctx.lineTo(10, -14);
+            ctx.stroke();
+
+            // Inner body detail (flesh color for Pudge)
+            ctx.fillStyle = '#9C7261'; // Slightly more vibrant flesh
+            ctx.beginPath();
+            ctx.arc(0, 0, 9, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Head
+            ctx.fillStyle = '#664444';
+            ctx.beginPath();
+            ctx.arc(0, -8, 7, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#222';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Eyes (white dots)
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(-2, -9, 1.5, 0, Math.PI * 2);
+            ctx.arc(2, -9, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Arms/Shoulders
+            ctx.fillStyle = char.team === 'red' ? '#884444' : '#444488';
+            ctx.fillRect(-18, -2, 8, 8);
+            ctx.fillRect(10, -2, 8, 8);
+
+            // Cleaver (Enhanced)
+            ctx.save();
+            ctx.translate(16, 0);
+            ctx.rotate(-0.5);
+            ctx.fillStyle = '#999'; // Base metal
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(5, -14);
+            ctx.lineTo(15, -12);
+            ctx.lineTo(12, 4);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Edge shine
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(15, -12); ctx.lineTo(12, 4);
+            ctx.stroke();
+
+            // Handle
+            ctx.fillStyle = '#4a2c15';
+            ctx.fillRect(-1, 0, 3, 10);
+            ctx.restore();
         }
 
         ctx.restore();

@@ -119,6 +119,7 @@ export class ServerGame {
                     character.gold -= cost;
                     break;
             }
+            character.recalculateStats();
         }
     }
 
@@ -157,6 +158,8 @@ export class ServerGame {
             cooldown: 0,
             maxCooldown: itemDef.cooldown || 0
         });
+
+        character.recalculateStats();
 
         // Apply passive effects
         switch (itemDef.effect) {

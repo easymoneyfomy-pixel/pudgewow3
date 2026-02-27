@@ -38,7 +38,6 @@ export class Hook {
         this.ownerPrevX = owner.x;
         this.ownerPrevY = owner.y;
         this.pathNodes = []; // List of breadcrumbs {x, y} for polyline chain
-        this.hitPauseTimer = 0; // Micro-freeze logic
     }
 
     update(dt, map, entityManager) {
@@ -51,11 +50,12 @@ export class Hook {
             return;
         }
 
-        if (this.hitPauseTimer > 0) {
-            this.hitPauseTimer -= dt;
-            if (this.hitPauseTimer <= 0) {
-                this.owner.isPaused = false;
+        if (this.owner.state === State.DEAD) {
+            this.owner.isPaused = false;
+            if (this.hookedEntity) {
+                this.hookedEntity.state = State.IDLE;
             }
+            entityManager.remove(this);
             return;
         }
 
@@ -112,9 +112,7 @@ export class Hook {
 
     startReturning() {
         this.isReturning = true;
-        // Introduce a small 0.15s freeze on hit/max range for satisfaction
-        this.hitPauseTimer = 0.15;
-        // We UNPAUSE the owner only after the brief micro-freeze in the update loop
+        this.owner.isPaused = false;
     }
 
     bounce(map) {

@@ -68,6 +68,9 @@ export class Character {
         this.isHealing = false;
         this.shieldRadius = 25;
 
+        // Ensure stats are correct from the start
+        this.recalculateStats();
+
         // Barricade ability — REMOVED (replaced by Flesh Heap passive)
 
         // Passive HP regen
@@ -118,8 +121,8 @@ export class Character {
 
     castHook(targetX, targetY, entityManager) {
         if (this.state !== State.DEAD && this.state !== State.HOOKED && this.hookCooldown <= 0) {
-            // WC3 Pudge Wars: Lock movements during forward hook
-            this.isPaused = true;
+            // Disabled: Lock movements during forward hook (per user request)
+            // this.isPaused = true;
             this.hookCooldown = this.maxHookCooldown;
 
             const hook = new Hook(this, targetX, targetY);
@@ -174,6 +177,9 @@ export class Character {
         this.y = this.spawnY;
         this.targetX = this.spawnX;
         this.targetY = this.spawnY;
+
+        // Re-calculate in case items changed while dead (unlikely but safe)
+        this.recalculateStats();
 
         // Reset per-life flags
         this.killedByMine = false;
@@ -426,6 +432,22 @@ export class Character {
             isHealing: this.isHealing || false,
             hasteTimer: this.hasteTimer || 0,
             ddTimer: this.ddTimer || 0,
+            speed: this.speed,
         };
+    }
+
+    recalculateStats() {
+        // Reset to base
+        this.speed = GAME.CHAR_SPEED;
+        this.hookDamage = GAME.HOOK_DAMAGE;
+        this.hookSpeed = GAME.HOOK_SPEED + (this.level - 1) * 25;
+        this.hookMaxDist = GAME.HOOK_MAX_DIST;
+        this.hookRadius = GAME.HOOK_RADIUS;
+
+        // Apply item bonuses
+        for (const item of this.items) {
+            if (item.effect === 'speed') this.speed += 40;
+            // Add other item stat bonuses here if needed (e.g., HP, Damage)
+        }
     }
 }
