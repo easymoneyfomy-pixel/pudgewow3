@@ -151,7 +151,8 @@ export class EntityRenderer {
         if (renderer.pudgeSprite && renderer.pudgeSprite.complete) {
             ctx.save();
             // Scale and center the sprite accurately
-            const s = 48 / renderer.pudgeSprite.width; // Normalize to ~48px
+            const targetSize = 85; // Increased size relative to map
+            const s = targetSize / renderer.pudgeSprite.width;
             ctx.scale(s, s);
             ctx.drawImage(renderer.pudgeSprite, -renderer.pudgeSprite.width / 2, -renderer.pudgeSprite.height / 2);
             ctx.restore();
@@ -389,15 +390,33 @@ export class EntityRenderer {
         ctx.translate(hx, hy);
         ctx.rotate(headAngle);
 
+        // Core Shank
+        ctx.fillStyle = '#777';
+        ctx.fillRect(-2, -2, 10, 4);
+
+        // Meat Hook Curve
         ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(-12, -10);
-        ctx.lineTo(-24, -5);
-        ctx.lineTo(-18, 0);
-        ctx.lineTo(-24, 5);
-        ctx.lineTo(-12, 10);
+        ctx.strokeStyle = '#888';
+        ctx.lineWidth = 4;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.arc(8, 0, 10, -Math.PI / 2, Math.PI / 2, false);
+        ctx.stroke();
+
+        // Barb/Point
+        ctx.beginPath();
+        ctx.fillStyle = '#999';
+        ctx.moveTo(8, 10);
+        ctx.lineTo(2, 6);
+        ctx.lineTo(10, 4);
         ctx.closePath();
         ctx.fill();
+
+        // Edge Highlights
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(8, 0, 10, -Math.PI / 2, 0, false);
         ctx.stroke();
 
         ctx.restore();
