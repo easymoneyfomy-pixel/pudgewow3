@@ -112,10 +112,10 @@ export class Character {
     }
 
     gainFleshHeap() {
-        // Flesh Heap: killed an enemy — permanently gain max HP
+        // Flesh Heap: killed an enemy — permanently gain stacks
         this.fleshHeapStacks++;
-        this.maxHp += this.fleshHeapHpPerStack;
-        // Also restore that amount immediately (generous WC3 feel)
+        this.recalculateStats();
+        // Restore amount immediately
         this.hp = Math.min(this.hp + this.fleshHeapHpPerStack, this.maxHp);
     }
 
@@ -159,10 +159,9 @@ export class Character {
     levelUp() {
         this.level++;
         this.xpToLevel = Math.floor(this.xpToLevel * 1.5);
-        this.maxHp += 15;
+        this.recalculateStats();
+        // Fully restore HP on level up
         this.hp = this.maxHp;
-        this.hookDamage += 3;
-        this.hookSpeed += 25; // Professional Polish: Speed scaling
     }
 
     die() {
@@ -171,15 +170,17 @@ export class Character {
     }
 
     respawn() {
+        // 1. Re-calculate stats first to ensure maxHp is current
+        this.recalculateStats();
+
+        // 2. Set HP to correctly calculated maxHp
         this.hp = this.maxHp;
+
         this.state = State.IDLE;
         this.x = this.spawnX;
         this.y = this.spawnY;
         this.targetX = this.spawnX;
         this.targetY = this.spawnY;
-
-        // Re-calculate in case items changed while dead (unlikely but safe)
-        this.recalculateStats();
 
         // Reset per-life flags
         this.killedByMine = false;
@@ -437,17 +438,24 @@ export class Character {
     }
 
     recalculateStats() {
-        // Reset to base
+        // 1. Reset base values and apply scaling
+        // Base stats from constants
         this.speed = GAME.CHAR_SPEED;
-        this.hookDamage = GAME.HOOK_DAMAGE;
-        this.hookSpeed = GAME.HOOK_SPEED + (this.level - 1) * 25;
-        this.hookMaxDist = GAME.HOOK_MAX_DIST;
         this.hookRadius = GAME.HOOK_RADIUS;
+        this.hookMaxDist = GAME.HOOK_MAX_DIST;
 
-        // Apply item bonuses
-        for (const item of this.items) {
+        // Core scaling (Level based)
+        this.maxHp = 100 + (this.level - 1) * 15;
+        this.hookDamage = GAME.HOOK_DAMAGE + (this.level - 1) * 3;
+        this.hookSpeed = GAME.HOOK_SPEED + (this.level - 1) * 25;
+
+        // 2. Apply Flesh Heap stacks
+        this.maxHp += (this.fleshHeapStacks || 0) * (this.fleshHeapHpPerStack || 8);
+
+        // 3. Apply items bonuses
+        for (const item of this.items || []) {
             if (item.effect === 'speed') this.speed += 40;
-            // Add other item stat bonuses here if needed (e.g., HP, Damage)
+            // Expansion point: add more item effects here
         }
     }
 }
