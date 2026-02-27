@@ -66,27 +66,27 @@ export class UIManager {
         ctx.fillStyle = 'white';
         ctx.font = '16px Arial';
         ctx.textAlign = 'left';
-        ctx.fillText(`Player HP: ${player.hp} / ${player.maxHp}`, 20, startY + 30);
-        ctx.fillText(`Status: ${player.state.toUpperCase()}`, 20, startY + 55);
+        ctx.fillText(`Player HP: ${player.hp} / ${player.maxHp}`, 20, startY + 25);
+        ctx.fillStyle = 'gold';
+        ctx.fillText(`Gold: ${player.gold}g`, 20, startY + 45);
+        ctx.fillStyle = 'white';
+        ctx.fillText(`Status: ${player.state.toUpperCase()}`, 20, startY + 65);
 
         // Иконка Хука (Квадрат)
         const iconSize = 50;
-        const iconX = width / 2 - iconSize / 2;
+        const iconX = 200;
         const iconY = startY + 15;
 
-        // Фон иконки
         ctx.fillStyle = '#333';
         ctx.fillRect(iconX, iconY, iconSize, iconSize);
         ctx.strokeStyle = '#fff';
         ctx.strokeRect(iconX, iconY, iconSize, iconSize);
 
-        // Буква
         ctx.fillStyle = 'white';
         ctx.textAlign = 'center';
         ctx.font = 'bold 20px Arial';
         ctx.fillText("Q", iconX + iconSize / 2, iconY + iconSize / 2);
 
-        // Overlay кулдауна
         if (player.hookCooldown > 0) {
             const ratio = player.hookCooldown / player.maxHookCooldown;
             ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
@@ -95,6 +95,19 @@ export class UIManager {
             ctx.fillStyle = 'yellow';
             ctx.fillText(player.hookCooldown.toFixed(1), iconX + iconSize / 2, iconY + iconSize / 2 + 5);
         }
+
+        // Shop Upgrades (Cost: 50g)
+        ctx.textAlign = 'left';
+        ctx.font = '14px Arial';
+        ctx.fillStyle = '#ffaa00';
+        ctx.fillText('Shop (Cost: 50g per upgrade):', iconX + 80, startY + 20);
+
+        ctx.fillStyle = 'white';
+        ctx.font = '12px Arial';
+        ctx.fillText(`[1] Dmg: ${player.hookDamage}`, iconX + 80, startY + 40);
+        ctx.fillText(`[2] Spd: ${player.hookSpeed}`, iconX + 160, startY + 40);
+        ctx.fillText(`[3] Dist: ${player.hookMaxDist}`, iconX + 80, startY + 60);
+        ctx.fillText(`[4] Rad: ${player.hookRadius}`, iconX + 160, startY + 60);
     }
 
     _drawGameOver(ctx, width, height, rules) {
