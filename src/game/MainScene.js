@@ -227,16 +227,7 @@ export class MainScene {
         this.particles.render(renderer);
         this.floatingTexts.render(renderer);
 
-        // Fog of War — must be drawn in screen space AFTER camera release
-        this.camera.release(renderer);
-
-        if (this.localPlayer) {
-            const scx = this.game.canvas.width / 2;
-            const scy = this.game.canvas.height / 2;
-            renderer.drawFogOfWar(scx, scy, 450);
-        }
-
-        // HUD / UI is always in screen space
+        // UI/HUD overlay
         if (this.serverState && this.localPlayer) {
             this.ui.render(renderer.ctx, this.serverState.rules, this.localPlayer, this.enemies[0]);
         }

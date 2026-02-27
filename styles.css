@@ -79,19 +79,21 @@ canvas#gameCanvas {
 
 .menu-box,
 .game-over-box {
-    background: linear-gradient(to bottom, var(--bg-panel), #0a0805);
-    border: 3px solid var(--gold);
-    box-shadow: 0 0 30px rgba(196, 164, 74, 0.2), inset 0 0 20px #000;
+    background: rgba(15, 12, 18, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(0, 0, 0, 0.5);
     padding: 50px 80px;
     text-align: center;
-    border-radius: 4px;
 }
 
 .wc3-title {
     font-family: 'Cinzel', serif;
     font-size: 3.5rem;
-    color: var(--gold-glow);
-    text-shadow: 0 0 10px rgba(240, 215, 140, 0.5), 2px 2px 4px #000;
+    color: #fff;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.5), 0 4px 10px rgba(0, 0, 0, 0.8);
     margin-bottom: 5px;
     letter-spacing: 2px;
 }
@@ -275,11 +277,15 @@ canvas#gameCanvas {
 /* BOTTOM HUD */
 #hud-bottom {
     position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100vw;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto;
+    min-width: 800px;
     height: 140px;
     pointer-events: auto;
+    border-radius: 16px;
+    overflow: visible;
 }
 
 .hud-bg {
@@ -288,10 +294,13 @@ canvas#gameCanvas {
     left: 0;
     width: 100%;
     height: 100%;
-    background: url('assets/wc3_ui_bg.png') repeat;
-    background-size: 250px;
-    border-top: 4px inset #4a3c2a;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.8);
+    background: rgba(15, 12, 18, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(0, 0, 0, 0.5);
+    border-radius: 20px;
     z-index: 1;
 }
 
@@ -302,35 +311,38 @@ canvas#gameCanvas {
     align-items: center;
     justify-content: space-around;
     height: 100%;
-    padding: 10px;
-    gap: 20px;
+    padding: 15px 30px;
+    gap: 25px;
 }
 
 /* MINIMAP */
 #minimap-container {
-    width: 120px;
-    height: 120px;
+    width: 110px;
+    height: 110px;
     background: #090909;
-    border: 1px solid var(--gold);
-    box-shadow: inset 0 0 10px #000;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
     position: relative;
 }
 
 /* PORTRAIT */
 .portrait-area {
     display: flex;
-    gap: 15px;
+    gap: 20px;
     align-items: center;
-    width: 280px;
+    width: 320px;
 }
 
 .portrait-box {
     position: relative;
-    width: 70px;
-    height: 90px;
-    background: #000;
-    border: 2px solid #3a2e1d;
-    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+    width: 76px;
+    height: 96px;
+    background: linear-gradient(135deg, #1a1a24 0%, #0a0a0f 100%);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8), 0 4px 10px rgba(0, 0, 0, 0.4);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -390,32 +402,35 @@ canvas#gameCanvas {
 .bar-container {
     position: relative;
     width: 100%;
-    background: #111;
-    border: 1px solid #555;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.8);
 }
 
 .hp-container {
-    height: 16px;
-    border-color: #555;
+    height: 18px;
 }
 
 .xp-container {
     height: 8px;
-    border-color: #333;
 }
 
 .bar-fill {
     height: 100%;
     width: 0%;
-    transition: width 0.2s ease;
+    transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .hp-fill {
-    background: linear-gradient(to right, #00aa00, #007700);
+    background: linear-gradient(90deg, #119933 0%, #33cc55 100%);
+    box-shadow: 0 0 10px rgba(51, 204, 85, 0.5);
 }
 
 .xp-fill {
-    background: #6644cc;
+    background: linear-gradient(90deg, #5533bb 0%, #8855ff 100%);
+    box-shadow: 0 0 10px rgba(136, 85, 255, 0.5);
 }
 
 .bar-text {
@@ -458,28 +473,59 @@ canvas#gameCanvas {
 
 /* SKILLS */
 .skills-area {
-    width: 180px;
+    width: auto;
 }
 
 .skills-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 42px);
-    grid-template-rows: repeat(3, 42px);
-    grid-gap: 2px;
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
     justify-content: center;
 }
 
 .skill-slot,
 .inv-slot {
     position: relative;
-    width: 42px;
-    height: 42px;
-    background: #0a0a0a;
-    border: 2px outset #4a3c2a;
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
+    width: 46px;
+    height: 46px;
+    background: rgba(20, 20, 25, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8), 0 2px 5px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
     display: flex;
     justify-content: center;
     align-items: center;
+    transition: transform 0.1s, border-color 0.2s;
+}
+
+.skill-slot:hover,
+.inv-slot.has-item:hover {
+    transform: translateY(-2px);
+    border-color: rgba(240, 215, 140, 0.6);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(240, 215, 140, 0.1);
+}
+
+.skill-icon {
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+}
+
+.icon-hook {
+    background-image: url('assets/hook.png');
+}
+
+.icon-rot {
+    background-image: url('assets/rot.png');
+}
+
+/* Fallback icon if no image */
+.icon-barricade {
+    background-color: #553322;
+    border: 2px dashed #996644;
+    box-sizing: border-box;
 }
 
 .hotkey {
