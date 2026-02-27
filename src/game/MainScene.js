@@ -1,4 +1,3 @@
-```javascript
 import { Camera } from '../engine/Camera.js';
 import { GameMap } from '../engine/GameMap.js';
 import { UIManager } from '../ui/UIManager.js';
@@ -8,14 +7,14 @@ import { Hook } from './Hook.js';
 export class MainScene {
     constructor(game) {
         this.game = game;
-        
+
         this.map = new GameMap(16, 16, 64);
         this.camera = new Camera(0, 0, 1);
         this.ui = new UIManager(game);
-        
+
         // State received from server
         this.serverState = null;
-        
+
         // Dummy local representations for rendering
         this.localEntities = [];
         this.localPlayer = null;
@@ -30,7 +29,7 @@ export class MainScene {
 
     onServerState(data) {
         this.serverState = data;
-        
+
         this.localEntities = [];
         this.localPlayer = null;
         this.localEnemy = null;
@@ -44,7 +43,7 @@ export class MainScene {
                 char.state = eData.state;
                 char.hookCooldown = eData.hookCooldown;
                 char.maxHookCooldown = eData.maxHookCooldown;
-                
+
                 // Economics
                 char.gold = eData.gold;
                 char.hookDamage = eData.hookDamage;
@@ -57,26 +56,26 @@ export class MainScene {
                 if (char.team === this.game.network.team) {
                     this.localPlayer = char;
                 } else {
-                    this.localEnemy = char; 
+                    this.localEnemy = char;
                 }
             } else if (eData.type === 'HOOK') {
                 const owner = this.localEntities.find(c => c.id === eData.ownerId);
                 if (owner) {
-                    const hook = new Hook(owner, eData.x, eData.y); 
+                    const hook = new Hook(owner, eData.x, eData.y);
                     hook.x = eData.x;
                     hook.y = eData.y;
                     hook.radius = eData.radius; // Sync radius for drawing
-                    
+
                     // Переопределяем render для динамического радиуса
-                    hook.render = function(renderer) {
+                    hook.render = function (renderer) {
                         const pOwner = renderer.worldToScreen(this.owner.x, this.owner.y, 10);
                         const pHook = renderer.worldToScreen(this.x, this.y, 10);
 
                         renderer.ctx.strokeStyle = '#888';
                         renderer.ctx.lineWidth = 2;
                         renderer.ctx.beginPath();
-                        renderer.ctx.moveTo(pOwner.x, pOwner.y - 20); 
-                        renderer.ctx.lineTo(pHook.x, pHook.y - 20); 
+                        renderer.ctx.moveTo(pOwner.x, pOwner.y - 20);
+                        renderer.ctx.lineTo(pHook.x, pHook.y - 20);
                         renderer.ctx.stroke();
 
                         renderer.ctx.fillStyle = '#ccc';
@@ -97,7 +96,7 @@ export class MainScene {
     update(dt) {
         if (this.serverState && this.serverState.rules.isGameOver) {
             if (this.game.input.isKeyPressed('KeyR')) {
-                 location.reload(); 
+                location.reload();
             }
             return;
         }
@@ -105,7 +104,7 @@ export class MainScene {
         const mousePos = this.game.input.getMousePosition();
         const cx = this.game.canvas.width / 2;
         const cy = this.game.canvas.height / 2;
-        
+
         const targetScreen = this.game.renderer.worldToScreen(this.camera.x, this.camera.y);
         const worldScreenX = (mousePos.x - cx) + targetScreen.x;
         const worldScreenY = (mousePos.y - cy) + targetScreen.y;
@@ -155,4 +154,3 @@ export class MainScene {
         }
     }
 }
-```
