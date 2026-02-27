@@ -7,12 +7,13 @@ import { Barricade } from './Barricade.js';
 import { ParticleSystem } from '../engine/ParticleSystem.js';
 import { FloatingTextManager } from '../engine/FloatingText.js';
 import { KillFeed } from '../ui/KillFeed.js';
+import { GAME } from '../shared/GameConstants.js';
 
 export class MainScene {
     constructor(game) {
         this.game = game;
 
-        this.map = new GameMap(24, 24, 64);
+        this.map = new GameMap(GAME.MAP_WIDTH, GAME.MAP_HEIGHT, GAME.TILE_SIZE);
         this.camera = new Camera(0, 0, 1);
         this.ui = new UIManager(game);
 
@@ -219,6 +220,14 @@ export class MainScene {
         if (this.game.input.isKeyPressed('Digit2')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'SPEED' });
         if (this.game.input.isKeyPressed('Digit3')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'DISTANCE' });
         if (this.game.input.isKeyPressed('Digit4')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'RADIUS' });
+
+        // Item Usage (Z, X, C, V, D, F)
+        const itemKeys = ['KeyZ', 'KeyX', 'KeyC', 'KeyV', 'KeyD', 'KeyF'];
+        for (let i = 0; i < 6; i++) {
+            if (this.game.input.isKeyPressed(itemKeys[i])) {
+                this.game.network.sendInput({ type: 'USE_ITEM', slot: i, x: worldX, y: worldY });
+            }
+        }
 
         // Shop toggle (B key)
         if (this.game.input.isKeyPressed('KeyB')) {

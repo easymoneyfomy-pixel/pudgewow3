@@ -136,21 +136,26 @@ export class UIManager {
             for (let gy = 0; gy < 24; gy++) {
                 const tx = x + gx * tileSize;
                 const ty = y + gy * tileSize;
-                const midMapX = 12;
 
-                // Walls
-                if (gx === 0 || gy === 0 || gx === 23 || gy === 23) {
+                // Walls (2-tile border)
+                if (gx < 2 || gy < 2 || gx >= 22 || gy >= 22) {
                     ctx.fillStyle = '#333';
                     ctx.fillRect(tx, ty, tileSize, tileSize);
                 }
-                // River
-                else if (gx === midMapX || gx === midMapX - 1) {
-                    ctx.fillStyle = '#003366';
-                    ctx.fillRect(tx, ty, tileSize, tileSize);
+                // River (columns 10-13)
+                else if (gx >= 10 && gx <= 13) {
+                    // Bridges at y=5-6, 11-12, 17-18
+                    if ((gy >= 5 && gy <= 6) || (gy >= 11 && gy <= 12) || (gy >= 17 && gy <= 18)) {
+                        ctx.fillStyle = '#2a3a22'; // Bridge (ground)
+                        ctx.fillRect(tx, ty, tileSize, tileSize);
+                    } else {
+                        ctx.fillStyle = '#003366'; // Water
+                        ctx.fillRect(tx, ty, tileSize, tileSize);
+                    }
                 }
-                // Grass
+                // Team sides
                 else {
-                    ctx.fillStyle = gx < midMapX - 1 ? '#1a2a16' : '#16192a';
+                    ctx.fillStyle = gx < 10 ? '#1a2a16' : '#16192a';
                     ctx.fillRect(tx, ty, tileSize, tileSize);
                 }
             }
@@ -300,12 +305,25 @@ export class UIManager {
                     'burn': '🔥',
                     'bounce': '🔄',
                     'rupture': '🩸',
+                    'grapple': '🪢',
+                    'lifesteal': '🦇',
                     'blink': '⚡',
                     'speed': '🐾'
                 };
                 ctx.font = '18px Arial';
                 ctx.textAlign = 'center';
                 ctx.fillText(icons[item.effect] || '📦', sx + slotSize / 2, sy + slotSize / 2 + 6);
+
+                // Cooldown overlay
+                if (item.active && item.cooldown > 0) {
+                    const ratio = item.cooldown / item.maxCooldown;
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+                    ctx.fillRect(sx, sy + slotSize * (1 - ratio), slotSize, slotSize * ratio);
+
+                    ctx.fillStyle = '#ffff00';
+                    ctx.font = 'bold 12px Arial';
+                    ctx.fillText(item.cooldown.toFixed(1), sx + slotSize / 2, sy + slotSize / 2 + 4);
+                }
             } else {
                 // Empty slot number
                 ctx.fillStyle = '#333';
@@ -313,6 +331,13 @@ export class UIManager {
                 ctx.textAlign = 'center';
                 ctx.fillText(`slot ${i + 1}`, sx + slotSize / 2, sy + slotSize / 2 + 4);
             }
+
+            // Draw hotkey hint
+            const hotkeys = ['Z', 'X', 'C', 'V', 'D', 'F'];
+            ctx.fillStyle = '#888';
+            ctx.font = 'bold 10px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText(hotkeys[i], sx + 2, sy + 10);
         }
     }
 

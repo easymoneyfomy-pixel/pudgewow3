@@ -152,6 +152,40 @@ export class Renderer {
             ctx.fillRect(cx - 8, cy - 1, 16, 2);
         }
 
+        // ========== SPAWN RED ==========
+        else if (type === 'spawn_red') {
+            const hash = (worldX * 7 + worldY * 13) % 100;
+            ctx.fillStyle = `rgb(${55 + (hash % 15)}, ${25 + (hash % 10)}, ${22 + (hash % 8)})`;
+            ctx.fillRect(worldX, worldY, size, size);
+            ctx.strokeStyle = 'rgba(255,50,50,0.08)';
+            ctx.lineWidth = 0.5;
+            ctx.strokeRect(worldX, worldY, size, size);
+            // Subtle team marker
+            const cx = worldX + size / 2;
+            const cy = worldY + size / 2;
+            ctx.fillStyle = 'rgba(255, 50, 50, 0.08)';
+            ctx.beginPath();
+            ctx.arc(cx, cy, size / 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // ========== SPAWN BLUE ==========
+        else if (type === 'spawn_blue') {
+            const hash = (worldX * 7 + worldY * 13) % 100;
+            ctx.fillStyle = `rgb(${22 + (hash % 8)}, ${25 + (hash % 10)}, ${55 + (hash % 15)})`;
+            ctx.fillRect(worldX, worldY, size, size);
+            ctx.strokeStyle = 'rgba(50,50,255,0.08)';
+            ctx.lineWidth = 0.5;
+            ctx.strokeRect(worldX, worldY, size, size);
+            // Subtle team marker
+            const cx = worldX + size / 2;
+            const cy = worldY + size / 2;
+            ctx.fillStyle = 'rgba(50, 50, 255, 0.08)';
+            ctx.beginPath();
+            ctx.arc(cx, cy, size / 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
         // ========== DEFAULT ==========
         else {
             ctx.fillStyle = '#2a2a2a';

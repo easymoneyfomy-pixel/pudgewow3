@@ -23,6 +23,8 @@ export class Hook {
         // Item effects from owner
         this.hasBurn = (owner.items || []).some(i => i.effect === 'burn');
         this.hasRupture = (owner.items || []).some(i => i.effect === 'rupture');
+        this.hasGrapple = (owner.items || []).some(i => i.effect === 'grapple');
+        this.hasLifesteal = (owner.items || []).some(i => i.effect === 'lifesteal');
 
         this.currentDist = 0;
         this.isReturning = false;
@@ -78,7 +80,12 @@ export class Hook {
             // 2. Проверка столкновения со стеной (isHookable == false)
             const tile = map.getTileAt(this.x, this.y);
             if (tile && !tile.isHookable) {
-                if (this.bouncesLeft > 0) {
+                if (this.hasGrapple) {
+                    // GRAPPLING HOOK: Hook anchors to the wall and pulls the owner
+                    this.isReturning = true;
+                    this.isGrappling = true; // Special flag to pull owner
+                    this.hookedEntity = null; // Can't hook entities while grappling
+                } else if (this.bouncesLeft > 0) {
                     // WALL BOUNCE (Ricochet Turbine effect)
                     this.bouncesLeft--;
 
@@ -183,6 +190,11 @@ export class Hook {
                                         entity.ruptureDps = 12; // DPS when moving
                                     }
 
+                                    // Naix Jaws: Lifesteal
+                                    if (this.hasLifesteal) {
+                                        this.owner.hp = Math.min(this.owner.hp + 20, this.owner.maxHp);
+                                    }
+
                                     // Начисляем золото за точный хук
                                     this.owner.gold += 10;
                                     if (this.owner.gainXp) this.owner.gainXp(25); // XP for hit
@@ -218,8 +230,15 @@ export class Hook {
             }
 
             if (rdist <= moveAmt) {
-                // Хук вернулся
+                // Хук вернулся (или мы притянулись)
                 this.owner.state = State.IDLE; // Владелец может двигаться дальше
+
+                if (this.isGrappling) {
+                    // Owner arrived at the grapple point
+                    this.owner.x = this.x;
+                    this.owner.y = this.y;
+                    this.owner.setTarget(this.x, this.y);
+                }
 
                 if (this.hookedEntity) {
                     this.hookedEntity.x = this.owner.x + this.dirX * (this.owner.radius + this.hookedEntity.radius + 5);
@@ -233,13 +252,21 @@ export class Hook {
                 const rDirX = rdx / rdist;
                 const rDirY = rdy / rdist;
 
-                this.x += rDirX * moveAmt;
-                this.y += rDirY * moveAmt;
+                if (this.isGrappling) {
+                    // Pull the owner to the hook
+                    this.owner.x -= rDirX * moveAmt;
+                    this.owner.y -= rDirY * moveAmt;
+                    this.owner.setTarget(this.owner.x, this.owner.y); // lock position
+                } else {
+                    // Hook returns to owner
+                    this.x += rDirX * moveAmt;
+                    this.y += rDirY * moveAmt;
 
-                // Тащим привязанного
-                if (this.hookedEntity) {
-                    this.hookedEntity.x = this.x;
-                    this.hookedEntity.y = this.y;
+                    // Тащим привязанного
+                    if (this.hookedEntity) {
+                        this.hookedEntity.x = this.x;
+                        this.hookedEntity.y = this.y;
+                    }
                 }
             }
         }

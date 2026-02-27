@@ -70,6 +70,8 @@ export class ServerGame {
             character.castBarricade(this.entityManager, Barricade);
         } else if (input.type === 'BUY_ITEM') {
             this.handleBuyItem(character, input.itemId);
+        } else if (input.type === 'USE_ITEM') {
+            this.handleUseItem(character, input.slot, input.x, input.y);
         }
     }
 
@@ -113,7 +115,14 @@ export class ServerGame {
             return;
         }
 
-        character.items.push({ id: itemId, name: itemDef.label, effect: itemDef.effect });
+        character.items.push({
+            id: itemId,
+            name: itemDef.label,
+            effect: itemDef.effect,
+            active: itemDef.active || false,
+            cooldown: 0,
+            maxCooldown: itemDef.cooldown || 0
+        });
 
         // Apply passive effects
         switch (itemDef.effect) {
@@ -123,6 +132,37 @@ export class ServerGame {
             case 'bounce':
                 character.hookBounces = (character.hookBounces || 0) + 1;
                 break;
+        }
+    }
+
+    handleUseItem(character, slot, x, y) {
+        if (!character.items || slot < 0 || slot >= character.items.length) return;
+
+        const item = character.items[slot];
+        if (!item.active || item.cooldown > 0) return;
+
+        if (item.effect === 'blink') {
+            // Blink Dagger logic (max range 400)
+            const dx = x - character.x;
+            const dy = y - character.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const maxBlink = 400;
+
+            let targetX = x;
+            let targetY = y;
+
+            if (dist > maxBlink) {
+                targetX = character.x + (dx / dist) * maxBlink;
+                targetY = character.y + (dy / dist) * maxBlink;
+            }
+
+            // Check if walkable
+            if (this.map.isWalkable(targetX, targetY)) {
+                character.x = targetX;
+                character.y = targetY;
+                character.setTarget(targetX, targetY); // Stop moving immediately to new pos
+                item.cooldown = item.maxCooldown;
+            }
         }
     }
 
@@ -155,6 +195,15 @@ export class ServerGame {
                 if (entity instanceof Character) {
                     const tile = this.map.getTileAt(entity.x, entity.y);
                     entity.isHealing = (tile && tile.type === 'rune');
+
+                    // Tick items cooldown
+                    if (entity.items) {
+                        for (const item of entity.items) {
+                            if (item.cooldown > 0) {
+                                item.cooldown = Math.max(0, item.cooldown - dt);
+                            }
+                        }
+                    }
                 }
             }
             this.entityManager.update(dt, this.map);
