@@ -25,7 +25,10 @@ export class MainScene {
         this.game = game;
 
         this.map = new GameMap(GAME.MAP_WIDTH, GAME.MAP_HEIGHT, GAME.TILE_SIZE);
-        this.camera = new Camera(0, 0, 1);
+        // Initialize camera to center of map
+        const centerX = (GAME.MAP_WIDTH * GAME.TILE_SIZE) / 2;
+        const centerY = (GAME.MAP_HEIGHT * GAME.TILE_SIZE) / 2;
+        this.camera = new Camera(centerX, centerY, 1);
         this.ui = new UIManager(game);
 
         /** @type {object[]} — plain eData objects from the last server tick */
@@ -165,9 +168,9 @@ export class MainScene {
         const cx = canvas.width / 2;
         const cy = canvas.height / 2;
 
-        // World coordinates derived from screen position + camera
-        const worldX = mousePos.x - cx + this.camera.x;
-        const worldY = mousePos.y - cy + this.camera.y;
+        // World coordinates derived from screen position + camera (Corrected for Zoom)
+        const worldX = (mousePos.x - cx) / this.camera.zoom + this.camera.x;
+        const worldY = (mousePos.y - cy) / this.camera.zoom + this.camera.y;
 
         // ============================================================
         // WC3 PUDGE WARS CONTROLS
@@ -342,8 +345,9 @@ export class MainScene {
         this.camera.release(renderer);
 
         // UI/HUD overlay
-        if (this.serverState && this.localPlayer) {
-            this.ui.render(renderer.ctx, this.serverState.rules, this.localPlayer, this.enemies[0]);
+        if (this.serverState) {
+            // Passes null for player if not spawned, UIManager handles this gracefully
+            this.ui.render(renderer.ctx, this.serverState.rules, this.localPlayer || null, this.enemies[0] || null);
         }
 
         this.killFeed.render(renderer.ctx, this.game.canvas.width);

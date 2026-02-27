@@ -146,7 +146,7 @@ export class UIManager {
         this.updateInventory(player);
 
         // Shop Mode
-        if (this.shopOpen) {
+        if (this.shopOpen && player) {
             this.dom.shopOverlay.classList.remove('hidden');
             this.dom.shopGoldVal.innerText = player.gold;
 
@@ -192,6 +192,20 @@ export class UIManager {
     }
 
     updatePortraitAndStats(player) {
+        if (!player) {
+            this.dom.playerName.innerText = "Pudge (Loading...)";
+            this.dom.playerLevel.innerText = "Lv 1";
+            this.dom.playerGold.innerText = "0";
+            this.dom.hpBar.style.width = "100%";
+            this.dom.hpText.innerText = "Connecting...";
+            this.dom.xpBar.style.width = "0%";
+            this.dom.xpText.innerText = "XP 0/100";
+            this.dom.statDmg.innerText = "---";
+            this.dom.statSpd.innerText = "---";
+            this.dom.statRng.innerText = "---";
+            this.dom.statRad.innerText = "---";
+            return;
+        }
         this.dom.playerName.innerText = `Pudge (${player.team.toUpperCase()})`;
         this.dom.playerLevel.innerText = `Lv ${player.level}`;
         this.dom.playerGold.innerText = player.gold;
@@ -214,6 +228,7 @@ export class UIManager {
     }
 
     updateSkills(player) {
+        if (!player) return;
         // Hook (Q)
         this._updateSkillSlot(
             this.dom.cdQ, this.dom.cdTextQ, this.dom.activeQ,
@@ -253,6 +268,7 @@ export class UIManager {
     }
 
     updateInventory(player) {
+        if (!player) return;
         const icons = {
             'burn': '🔥', 'bounce': '🔄', 'rupture': '🩸',
             'grapple': '🪢', 'lifesteal': '🦇', 'blink': '⚡', 'speed': '🐾'
