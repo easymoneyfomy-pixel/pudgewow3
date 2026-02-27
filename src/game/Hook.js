@@ -227,8 +227,8 @@ export class Hook {
                                     this.owner.gold += GAME.GOLD_ON_HIT;
                                     if (this.owner.gainXp) this.owner.gainXp(GAME.XP_ON_HIT); // XP for hit
 
-                                    // Если убил хуком
-                                    if (entity.state === State.DEAD) {
+                                    // Если убил хуком (но НЕ миной — WC3 Pudge Wars)
+                                    if (entity.state === State.DEAD && !entity.killedByMine) {
                                         this.owner.gold += GAME.GOLD_ON_KILL;
                                         if (this.owner.gainXp) this.owner.gainXp(GAME.XP_ON_KILL); // Bonus XP for kill
                                     }

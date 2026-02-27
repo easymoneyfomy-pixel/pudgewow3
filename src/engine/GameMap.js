@@ -186,17 +186,13 @@ export class GameMap {
                     ctx.fill();
                     ctx.shadowBlur = 0; // Reset
                 }
-                else if (tile.type === TileType.SPAWN_RED) {
-                    ctx.fillStyle = '#3a1a1a';
+                else if (tile.type === TileType.SPAWN_RED || tile.type === TileType.SPAWN_BLUE) {
+                    // WC3 Pudge Wars: spawn zones look like regular ground (no colored lines)
+                    ctx.fillStyle = '#1e2420';
                     ctx.fillRect(px, py, size, size);
-                    ctx.strokeStyle = '#ff4444';
-                    ctx.strokeRect(px + 4, py + 4, size - 8, size - 8);
-                }
-                else if (tile.type === TileType.SPAWN_BLUE) {
-                    ctx.fillStyle = '#1a1a3a';
-                    ctx.fillRect(px, py, size, size);
-                    ctx.strokeStyle = '#4488ff';
-                    ctx.strokeRect(px + 4, py + 4, size - 8, size - 8);
+                    ctx.fillStyle = '#26302a';
+                    ctx.fillRect(px + 10, py + 10, 4, 4);
+                    ctx.fillRect(px + 40, py + 30, 4, 4);
                 }
             }
         }
