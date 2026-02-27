@@ -87,58 +87,8 @@ export class GameMap {
             this.grid[this.width - 5][y] = new Tile(TileType.SPAWN_BLUE);
         }
 
-        // 8. DENSE TREE LINES — creating corridors, hiding spots, juke paths
-        // This is the signature WC3 Pudge Wars feature
-
-        // ---- RED SIDE TREES (columns 3-9) ----
-        const redTrees = [
-            // Base walls/fence (column 3 tree line)
-            [3, 5], [3, 7], [3, 9], [3, 13], [3, 15], [3, 17], [3, 19],
-            // Inner forest corridor (column 5)
-            [5, 3], [5, 5], [5, 7], [5, 9], [5, 14], [5, 16], [5, 18], [5, 20],
-            // Mid forest (column 6-7 scattered)
-            [6, 4], [6, 8], [6, 13], [6, 17], [6, 20],
-            [7, 3], [7, 6], [7, 10], [7, 15], [7, 19], [7, 21],
-            // Near-river forest (column 8-9 — dense cover near river)
-            [8, 4], [8, 7], [8, 9], [8, 14], [8, 16], [8, 20],
-            [9, 3], [9, 5], [9, 8], [9, 10], [9, 13], [9, 15], [9, 19], [9, 21],
-        ];
-
-        for (const [tx, ty] of redTrees) {
-            if (tx >= 0 && tx < this.width && ty >= 0 && ty < this.height) {
-                if (this.grid[tx][ty].type === TileType.GROUND) {
-                    this.grid[tx][ty] = new Tile(TileType.OBSTACLE);
-                }
-            }
-        }
-
-        // ---- BLUE SIDE TREES — mirror of red side ----
-        for (const [tx, ty] of redTrees) {
-            const mx = this.width - 1 - tx;
-            const my = this.height - 1 - ty;
-            if (mx >= 0 && mx < this.width && my >= 0 && my < this.height) {
-                if (this.grid[mx][my].type === TileType.GROUND) {
-                    this.grid[mx][my] = new Tile(TileType.OBSTACLE);
-                }
-            }
-        }
-
-        // ---- BRIDGE GUARD TREES — trees near bridges for tactical play ----
-        const bridgeGuardTrees = [
-            // Top bridge guards
-            [9, 4], [9, 7], [14, 4], [14, 7],
-            // Center bridge guards
-            [9, 10], [9, 13], [14, 10], [14, 13],
-            // Bottom bridge guards
-            [9, 16], [9, 19], [14, 16], [14, 19],
-        ];
-        for (const [tx, ty] of bridgeGuardTrees) {
-            if (tx >= 0 && tx < this.width && ty >= 0 && ty < this.height) {
-                if (this.grid[tx][ty].type === TileType.GROUND) {
-                    this.grid[tx][ty] = new Tile(TileType.OBSTACLE);
-                }
-            }
-        }
+        // 8. TREES REMOVED (User requested an open arena map without trees)
+        // DENSE TREE LINES — removed to create a clean geometric arena.
 
         // ---- WALL PILLARS along river banks (stone pillars like WC3) ----
         const riverPillars = [
