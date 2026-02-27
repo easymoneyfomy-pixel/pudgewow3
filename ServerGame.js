@@ -68,8 +68,6 @@ export class ServerGame {
             this.handleUpgrade(character, input.upgradeType);
         } else if (input.type === 'ROT') {
             character.toggleRot();
-        } else if (input.type === 'BARRICADE') {
-            character.castBarricade(this.entityManager, Barricade);
         } else if (input.type === 'BUY_ITEM') {
             this.handleBuyItem(character, input.itemId);
         } else if (input.type === 'USE_ITEM') {

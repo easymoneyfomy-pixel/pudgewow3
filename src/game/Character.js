@@ -81,6 +81,11 @@ export class Character {
         this.level = 1;
         this.xp = 0;
         this.xpToLevel = 100;
+
+        // Buff timers
+        this.hasteTimer = 0;
+        this.ddTimer = 0;
+        this.lastAttacker = null;
     }
 
     setTarget(x, y) {
@@ -114,8 +119,12 @@ export class Character {
         }
     }
 
-    takeDamage(amount) {
+    takeDamage(amount, attacker = null) {
         if (this.state === State.DEAD || this.invulnerableTimer > 0) return;
+
+        if (attacker && attacker !== this) {
+            this.lastAttacker = attacker;
+        }
 
         this.hp -= amount;
         if (this.hp <= 0) {

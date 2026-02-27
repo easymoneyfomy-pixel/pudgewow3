@@ -27,7 +27,7 @@ export class UIManager {
             statRng: document.getElementById('stat-rng'),
             statRad: document.getElementById('stat-rad'),
 
-            // Skill elements (Q, W)
+            // Skill elements (Q, W, E)
             cdQ: document.getElementById('cd-q'),
             cdTextQ: document.getElementById('cd-text-q'),
             activeQ: document.getElementById('active-q'),
@@ -35,6 +35,9 @@ export class UIManager {
             cdW: document.getElementById('cd-w'),
             cdTextW: document.getElementById('cd-text-w'),
             activeW: document.getElementById('active-w'),
+
+            cdE: document.getElementById('cd-e'),
+            cdTextE: document.getElementById('cd-text-e'),
 
             // Item Grid
             inventoryGrid: document.getElementById('inventory-grid'),
@@ -200,6 +203,14 @@ export class UIManager {
             this.dom.cdW, this.dom.cdTextW, this.dom.activeW,
             0, 0, player.rotActive
         );
+
+        // Flesh Heap (E) - Passive
+        if (this.dom.cdE) {
+            this.dom.cdE.style.height = '0%';
+            this.dom.cdTextE.innerText = player.fleshHeapStacks > 0 ? `+${player.fleshHeapStacks}` : '';
+            this.dom.cdTextE.style.fontSize = '12px';
+            this.dom.cdTextE.style.color = '#fff';
+        }
     }
 
     _updateSkillSlot(cdOverlay, cdText, activeGlow, cd, maxCd, isActive) {

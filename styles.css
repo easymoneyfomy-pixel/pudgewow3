@@ -522,9 +522,9 @@ canvas#gameCanvas {
 }
 
 /* Fallback icon if no image */
-.icon-barricade {
-    background-color: #553322;
-    border: 2px dashed #996644;
+.icon-fleshheap {
+    background-color: #722c2c;
+    border: 2px dashed #9b4a4a;
     box-sizing: border-box;
 }
 

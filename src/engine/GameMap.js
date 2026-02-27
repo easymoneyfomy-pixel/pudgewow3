@@ -72,18 +72,6 @@ export class GameMap {
             this.grid[this.width - 4][y] = new Tile(TileType.SPAWN_BLUE);
         }
 
-        // 7. WALL PILLARS (Stone blocks along the river banks)
-        // Placed periodically to add aesthetics and bounce spots
-        const riverPillars = [
-            [10, 5], [10, 10], [10, 15], [10, 20],
-            [13, 5], [13, 10], [13, 15], [13, 20],
-        ];
-        for (const [tx, ty] of riverPillars) {
-            // Only convert valid water edge tiles
-            if (this.grid[tx] && this.grid[tx][ty]) {
-                this.grid[tx][ty] = new Tile(TileType.WALL);
-            }
-        }
     }
 
     render(renderer, dt) {

@@ -60,6 +60,11 @@ export class GameRules {
             this.scoreRed++;
         }
 
+        // FLESH HEAP: If there's an attacker (killer), give them a stack
+        if (entity.lastAttacker && entity.lastAttacker.gainFleshHeap) {
+            entity.lastAttacker.gainFleshHeap();
+        }
+
         this.checkWinCondition();
     }
 

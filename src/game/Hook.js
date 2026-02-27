@@ -210,7 +210,7 @@ export class Hook {
                                     entity.deniedJustHappened = true;
                                 }
 
-                                entity.takeDamage(totalHitDamage);
+                                entity.takeDamage(totalHitDamage, this.owner);
 
                                 if (!isAlly) {
                                     // Flaming Hook: Apply burn DOT
