@@ -33,15 +33,4 @@ export class EntityManager {
             this.entitiesToRemove = [];
         }
     }
-
-    render(renderer) {
-        // Простая сортировка по Y для правильного перекрытия спрайтов (fake depth)
-        const sorted = [...this.entities].sort((a, b) => a.y - b.y);
-
-        for (const entity of sorted) {
-            if (entity.render) {
-                entity.render(renderer);
-            }
-        }
-    }
 }

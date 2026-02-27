@@ -4,6 +4,7 @@ import { GameRules } from './src/engine/GameRules.js';
 import { Character } from './src/game/Character.js';
 import { Hook } from './src/game/Hook.js';
 import { Barricade } from './src/game/Barricade.js';
+import { ITEM_MAP } from './src/shared/ItemDefs.js';
 
 export class ServerGame {
     constructor(roomId, roomManager) {
@@ -96,16 +97,7 @@ export class ServerGame {
     }
 
     handleBuyItem(character, itemId) {
-        const ITEMS = {
-            'flaming_hook': { cost: 150, name: 'Flaming Hook', effect: 'burn' },
-            'ricochet_turbine': { cost: 125, name: 'Ricochet Turbine', effect: 'bounce' },
-            'strygwyr_claws': { cost: 175, name: "Strygwyr's Claws", effect: 'rupture' },
-            'healing_salve': { cost: 50, name: 'Healing Salve', effect: 'heal', consumable: true },
-            'blink_dagger': { cost: 200, name: 'Blink Dagger', effect: 'blink' },
-            'lycan_paws': { cost: 100, name: "Lycan's Paws", effect: 'speed' },
-        };
-
-        const itemDef = ITEMS[itemId];
+        const itemDef = ITEM_MAP[itemId];
         if (!itemDef) return;
         if (character.gold < itemDef.cost) return;
         if (!itemDef.consumable && character.items.length >= character.maxItems) return;
@@ -120,7 +112,7 @@ export class ServerGame {
             return;
         }
 
-        character.items.push({ id: itemId, name: itemDef.name, effect: itemDef.effect });
+        character.items.push({ id: itemId, name: itemDef.label, effect: itemDef.effect });
 
         // Apply passive effects
         switch (itemDef.effect) {

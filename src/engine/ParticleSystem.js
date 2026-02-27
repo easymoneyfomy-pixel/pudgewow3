@@ -27,16 +27,16 @@ export class Particle {
     }
 
     render(renderer) {
-        const screenPos = renderer.worldToScreen(this.x, this.y, this.z);
+        // Top-down: use direct coords, z offsets upward
+        const screenX = this.x;
+        const screenY = this.y - this.z;
         const alpha = Math.max(0, this.life / this.maxLife);
 
-        renderer.ctx.fillStyle = this.color.replace('rgba', 'rgba').replace(')', `, ${alpha})`); // Assuming rgb or hex string is passed and converted. If hex, we do it simpler:
-        // Let's just use globalAlpha
         renderer.ctx.save();
         renderer.ctx.globalAlpha = alpha;
         renderer.ctx.fillStyle = this.color;
         renderer.ctx.beginPath();
-        renderer.ctx.arc(screenPos.x, screenPos.y, this.size, 0, Math.PI * 2);
+        renderer.ctx.arc(screenX, screenY, this.size, 0, Math.PI * 2);
         renderer.ctx.fill();
         renderer.ctx.restore();
     }
@@ -70,8 +70,6 @@ export class ParticleSystem {
     }
 
     render(renderer) {
-        // Sort by Y for iso drawing
-        this.particles.sort((a, b) => a.y - b.y);
         this.particles.forEach(p => p.render(renderer));
     }
 }

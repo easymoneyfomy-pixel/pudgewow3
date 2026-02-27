@@ -1,3 +1,5 @@
+import { SHOP_ITEMS } from '../shared/ItemDefs.js';
+
 export class UIManager {
     constructor(game) {
         this.game = game;
@@ -128,16 +130,16 @@ export class UIManager {
         ctx.lineWidth = 1;
         ctx.strokeRect(x, y, size, size);
 
-        // Draw simplified map (20x20 grid)
-        const tileSize = size / 20;
-        for (let gx = 0; gx < 20; gx++) {
-            for (let gy = 0; gy < 20; gy++) {
+        // Draw simplified map (24x24 grid)
+        const tileSize = size / 24;
+        for (let gx = 0; gx < 24; gx++) {
+            for (let gy = 0; gy < 24; gy++) {
                 const tx = x + gx * tileSize;
                 const ty = y + gy * tileSize;
-                const midMapX = 10;
+                const midMapX = 12;
 
                 // Walls
-                if (gx === 0 || gy === 0 || gx === 19 || gy === 19) {
+                if (gx === 0 || gy === 0 || gx === 23 || gy === 23) {
                     ctx.fillStyle = '#333';
                     ctx.fillRect(tx, ty, tileSize, tileSize);
                 }
@@ -156,7 +158,7 @@ export class UIManager {
 
         // Player dot (based on world position, map is 20*64 = 1280 world units)
         if (player) {
-            const mapWorldSize = 20 * 64;
+            const mapWorldSize = 24 * 64;
             const px = x + (player.x / mapWorldSize) * size;
             const py = y + (player.y / mapWorldSize) * size;
 
@@ -357,14 +359,6 @@ export class UIManager {
         ctx.fillText('Press [B] to close — Click item to buy', px + panelW / 2, py + panelH - 15);
 
         // Item grid (2 rows x 3 cols)
-        const SHOP_ITEMS = [
-            { id: 'flaming_hook', label: 'Flaming Hook', cost: 150, icon: '🔥', desc: 'Burn 8 DPS / 3s' },
-            { id: 'ricochet_turbine', label: 'Ricochet Turbine', cost: 125, icon: '🔄', desc: 'Hook bounces walls' },
-            { id: 'strygwyr_claws', label: "Strygwyr's Claws", cost: 175, icon: '🩸', desc: 'Rupture on move' },
-            { id: 'healing_salve', label: 'Healing Salve', cost: 50, icon: '💊', desc: 'Instant +50 HP' },
-            { id: 'blink_dagger', label: 'Blink Dagger', cost: 200, icon: '⚡', desc: 'Teleport' },
-            { id: 'lycan_paws', label: "Lycan's Paws", cost: 100, icon: '🐾', desc: '+40 Move Speed' },
-        ];
 
         const itemW = 130;
         const itemH = 100;

@@ -66,14 +66,14 @@ export class LobbyUI {
             ctx.font = '18px Arial';
             for (let i = 0; i < this.rooms.length; i++) {
                 const r = this.rooms[i];
-                const isFull = r.players >= 2;
+                const isFull = r.players >= 10;
                 ctx.fillStyle = isFull ? '#666' : '#fff';
                 ctx.textAlign = 'left';
                 ctx.fillText(`[${i + 1}] ${r.name.toUpperCase()}`, listX + 40, y);
 
                 ctx.textAlign = 'right';
                 ctx.fillStyle = isFull ? '#844' : '#4a4';
-                ctx.fillText(`${r.players}/2 Souls ${r.isPlaying ? '(BATTLE)' : '(WAITING)'}`, listX + listWidth - 40, y);
+                ctx.fillText(`${r.players}/10 Souls ${r.isPlaying ? '(BATTLE)' : '(WAITING)'}`, listX + listWidth - 40, y);
                 y += 40;
             }
         }

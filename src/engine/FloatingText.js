@@ -17,7 +17,9 @@ export class FloatingText {
     }
 
     render(renderer) {
-        const screenPos = renderer.worldToScreen(this.x, this.y, this.z);
+        // Top-down: direct coords, z floats text upward
+        const screenX = this.x;
+        const screenY = this.y - this.z;
         const alpha = Math.max(0, this.life / this.maxLife);
 
         renderer.ctx.save();
@@ -25,7 +27,6 @@ export class FloatingText {
 
         let fontSize = this.isCritical ? 24 : 16;
         if (this.isCritical) {
-            // Slight pop animation on start
             const pop = Math.sin((1 - (this.life / this.maxLife)) * Math.PI) * 10;
             fontSize += pop;
         }
@@ -33,13 +34,13 @@ export class FloatingText {
         renderer.ctx.font = `bold ${fontSize}px Arial`;
         renderer.ctx.textAlign = 'center';
 
-        // Text Shadow/Stroke for readability like WC3
+        // Text Shadow for readability
         renderer.ctx.strokeStyle = 'black';
         renderer.ctx.lineWidth = 3;
-        renderer.ctx.strokeText(this.text, screenPos.x, screenPos.y);
+        renderer.ctx.strokeText(this.text, screenX, screenY);
 
         renderer.ctx.fillStyle = this.color;
-        renderer.ctx.fillText(this.text, screenPos.x, screenPos.y);
+        renderer.ctx.fillText(this.text, screenX, screenY);
 
         renderer.ctx.restore();
     }
