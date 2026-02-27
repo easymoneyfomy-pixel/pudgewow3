@@ -2,6 +2,8 @@ import { State } from '../engine/State.js';
 
 export class Landmine {
     constructor(x, y, ownerTeam) {
+        this.id = 'mine_' + Math.random().toString(36).substr(2, 9);
+        this.type = 'LANDMINE';
         this.x = x;
         this.y = y;
         this.team = ownerTeam;
@@ -14,10 +16,23 @@ export class Landmine {
 
         this.isArmed = false;
         this.hasExploded = false;
+        this.state = State.IDLE;
+
+        // Needed so explode can remove itself from entityManager
+        this._entityManagerRef = null;
+    }
+
+    takeDamage(amount) {
+        if (!this.hasExploded && this._entityManagerRef) {
+            this.explode(this._entityManagerRef);
+        }
     }
 
     update(dt, map, entityManager) {
         if (this.hasExploded) return;
+
+        // Save ref for takeDamage triggered by Hook
+        this._entityManagerRef = entityManager;
 
         this.lifeTime -= dt;
         if (this.lifeTime <= 0) {
@@ -69,6 +84,9 @@ export class Landmine {
         }
 
         entityManager.remove(this);
+
+        // Visual hook for the client-side particle system later
+        this.state = State.DEAD;
     }
 
     render(renderer) {

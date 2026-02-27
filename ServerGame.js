@@ -102,6 +102,21 @@ export class ServerGame {
     }
 
     handleBuyItem(character, itemId) {
+        // Proximity check (must be within 2 tiles of a shop)
+        let nearShop = false;
+        const tx = Math.floor(character.x / GAME.TILE_SIZE);
+        const ty = Math.floor(character.y / GAME.TILE_SIZE);
+        for (let dx = -2; dx <= 2; dx++) {
+            for (let dy = -2; dy <= 2; dy++) {
+                const cx = tx + dx;
+                const cy = ty + dy;
+                if (cx >= 0 && cx < this.map.width && cy >= 0 && cy < this.map.height) {
+                    if (this.map.grid[cx][cy].type === 'shop') nearShop = true;
+                }
+            }
+        }
+        if (!nearShop) return;
+
         const itemDef = ITEM_MAP[itemId];
         if (!itemDef) return;
         if (character.gold < itemDef.cost) return;
@@ -304,6 +319,15 @@ export class ServerGame {
                     hp: entity.hp,
                     maxHp: entity.maxHp,
                     state: entity.state
+                });
+            } else if (entity.type === 'LANDMINE') {
+                state.entities.push({
+                    type: 'LANDMINE',
+                    id: entity.id,
+                    x: entity.x,
+                    y: entity.y,
+                    team: entity.team,
+                    isArmed: entity.isArmed
                 });
             }
         }

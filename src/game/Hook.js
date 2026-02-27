@@ -161,6 +161,12 @@ export class Hook {
                                 break;
                             }
 
+                            if (entity.type === 'LANDMINE') {
+                                this.isReturning = true;
+                                entity.takeDamage(1); // Triggers explode() inside Landmine.js
+                                break;
+                            }
+
                             if (entity.state === State.HOOKED) {
                                 // HEADSHOT! (Instakill)
                                 this.isReturning = true;

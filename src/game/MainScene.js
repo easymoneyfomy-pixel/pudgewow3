@@ -4,6 +4,7 @@ import { UIManager } from '../ui/UIManager.js';
 import { Character } from './Character.js';
 import { Hook } from './Hook.js';
 import { Barricade } from './Barricade.js';
+import { Landmine } from './Landmine.js';
 import { ParticleSystem } from '../engine/ParticleSystem.js';
 import { FloatingTextManager } from '../engine/FloatingText.js';
 import { KillFeed } from '../ui/KillFeed.js';
@@ -146,6 +147,14 @@ export class MainScene {
                 barricade.maxHp = eData.maxHp;
                 barricade.state = eData.state;
                 this.localEntities.push(barricade);
+            } else if (eData.type === 'LANDMINE') {
+                // WC3 Techies mines are invisible to enemies, only render for allies
+                if (eData.team === myTeam) {
+                    const mine = new Landmine(eData.x, eData.y, eData.team);
+                    mine.id = eData.id;
+                    mine.isArmed = eData.isArmed;
+                    this.localEntities.push(mine);
+                }
             }
         }
 
@@ -248,8 +257,32 @@ export class MainScene {
         }
 
         // Shop toggle (B key)
+        let nearShop = false;
+        if (this.localPlayer) {
+            const tx = Math.floor(this.localPlayer.x / GAME.TILE_SIZE);
+            const ty = Math.floor(this.localPlayer.y / GAME.TILE_SIZE);
+            for (let dx = -2; dx <= 2; dx++) {
+                for (let dy = -2; dy <= 2; dy++) {
+                    const cx = tx + dx;
+                    const cy = ty + dy;
+                    if (cx >= 0 && cx < this.map.width && cy >= 0 && cy < this.map.height) {
+                        if (this.map.grid[cx][cy].type === 'shop') nearShop = true;
+                    }
+                }
+            }
+        }
+
         if (this.game.input.isKeyPressed('KeyB')) {
-            this.ui.shopOpen = !this.ui.shopOpen;
+            if (nearShop) {
+                this.ui.shopOpen = !this.ui.shopOpen;
+            } else {
+                this.ui.shopOpen = false;
+            }
+        }
+
+        // Auto close shop if walking away
+        if (this.ui.shopOpen && !nearShop) {
+            this.ui.shopOpen = false;
         }
 
         // Camera follow
