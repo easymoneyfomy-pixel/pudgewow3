@@ -115,12 +115,13 @@ export class Landmine {
 
             if (!shouldCheck) continue;
 
-            // Distance check
+            // Distance check (Optimized: Squared distance)
             const dx = entity.x - this.x;
             const dy = entity.y - this.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
+            const distSq = dx * dx + dy * dy;
+            const rSum = this.radius + (entity.radius || 16);
 
-            if (dist < this.radius + (entity.radius || 16)) {
+            if (distSq < rSum * rSum) {
                 this.explode(entityManager);
                 return; // mine is gone
             }
@@ -141,9 +142,9 @@ export class Landmine {
 
             const dx = entity.x - this.x;
             const dy = entity.y - this.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
+            const distSq = dx * dx + dy * dy;
 
-            if (dist < this.explosionRadius) {
+            if (distSq < this.explosionRadius * this.explosionRadius) {
                 // WC3: mine kills do NOT award score points.
                 // Only flag if the damage would actually kill them.
                 if (entity.hp !== undefined && entity.hp - this.damage <= 0) {

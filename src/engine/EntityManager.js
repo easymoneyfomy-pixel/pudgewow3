@@ -29,7 +29,14 @@ export class EntityManager {
 
         // Удаляем мертвые/уничтоженные
         if (this.entitiesToRemove.size > 0) {
-            this.entities = this.entities.filter(e => !this.entitiesToRemove.has(e));
+            let keepCount = 0;
+            for (let i = 0; i < this.entities.length; i++) {
+                const e = this.entities[i];
+                if (!this.entitiesToRemove.has(e)) {
+                    this.entities[keepCount++] = e;
+                }
+            }
+            this.entities.length = keepCount; // Truncate cleanly without reallocation
             this.entitiesToRemove.clear();
         }
     }

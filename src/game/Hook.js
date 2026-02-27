@@ -127,10 +127,11 @@ export class Hook {
                         if (!entity.isReturning) {
                             const edx = entity.x - this.x;
                             const edy = entity.y - this.y;
-                            const edist = Math.sqrt(edx * edx + edy * edy);
+                            const edistSq = edx * edx + edy * edy;
 
-                            // Расширенный хитбокс для звона хуков
-                            if (edist < this.radius + entity.radius + 10) {
+                            // Расширенный хитбокс для звона хуков (Optimized)
+                            const rSum = this.radius + entity.radius + 10;
+                            if (edistSq < rSum * rSum) {
                                 this.isReturning = true;
                                 entity.isReturning = true;
                                 // Эффекты/Звуки можно было бы вызывать здесь
@@ -138,13 +139,14 @@ export class Hook {
                             }
                         }
                     } else if (entity.state !== State.DEAD && entity.takeDamage) {
-                        // Попали в пуджа
+                        // Попали в пуджа (Optimized distance check)
                         const edx = entity.x - this.x;
                         const edy = entity.y - this.y;
-                        const edist = Math.sqrt(edx * edx + edy * edy);
+                        const edistSq = edx * edx + edy * edy;
 
                         // WC3 Hook Radius logic
-                        if (edist < this.radius + entity.radius) {
+                        const rSum = this.radius + entity.radius;
+                        if (edistSq < rSum * rSum) {
                             if (entity.isBarricade) {
                                 // Hit a barricade - bounce or return
                                 if (this.bouncesLeft > 0) {

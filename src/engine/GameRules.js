@@ -88,12 +88,17 @@ export class GameRules {
         const types = ['haste', 'dd', 'heal', 'illusion'];
         const type = types[Math.floor(Math.random() * types.length)];
 
-        // Spawn at random river pillar or center coordinate
+        // Spawn at relative points around the middle of the map
+        const ts = GAME.TILE_SIZE;
+        const midX = Math.floor(GAME.MAP_WIDTH / 2);
+        const midY = Math.floor(GAME.MAP_HEIGHT / 2);
+        const offset = ts / 2;
+
         const spawnPoints = [
-            { x: 11 * 64 + 32, y: 11 * 64 + 32 },
-            { x: 12 * 64 + 32, y: 12 * 64 + 32 },
-            { x: 11 * 64 + 32, y: 5 * 64 + 32 },
-            { x: 12 * 64 + 32, y: 18 * 64 + 32 }
+            { x: (midX - 1) * ts + offset, y: (midY - 1) * ts + offset }, // Center-top-left
+            { x: midX * ts + offset, y: midY * ts + offset },       // Center-bottom-right
+            { x: (midX - 1) * ts + offset, y: (midY - 7) * ts + offset }, // Top river
+            { x: midX * ts + offset, y: (midY + 6) * ts + offset }  // Bottom river
         ];
         const pt = spawnPoints[Math.floor(Math.random() * spawnPoints.length)];
 

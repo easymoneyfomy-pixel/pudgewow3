@@ -116,6 +116,16 @@ export class MainScene {
             this._prevAliveStates.set(eData.id, !isDead);
         }
 
+        // ── 1. Purge memory leaks (Diagnosis Fix) ──
+        // Remove tracking data for entities that no longer exist on the server
+        const currentEntityIds = new Set(data.entities.map(e => e.id));
+        for (const [id] of this._prevHp) {
+            if (!currentEntityIds.has(id)) this._prevHp.delete(id);
+        }
+        for (const [id] of this._prevAliveStates) {
+            if (!currentEntityIds.has(id)) this._prevAliveStates.delete(id);
+        }
+
         // Floating text system tracks entity positions and emits damage/regen numbers
         this.floatingTexts.trackEntities(this.entities, this.particles);
     }
@@ -192,10 +202,12 @@ export class MainScene {
             this.ui.shopOpen = false;
         }
 
-        // Camera follow local player
+        // Camera follow local player (Frame-independent decay)
         if (this.localPlayer) {
-            this.camera.x += (this.localPlayer.x - this.camera.x) * 10 * dt;
-            this.camera.y += (this.localPlayer.y - this.camera.y) * 10 * dt;
+            const decay = 10;
+            const lerpFactor = 1 - Math.exp(-decay * dt);
+            this.camera.x += (this.localPlayer.x - this.camera.x) * lerpFactor;
+            this.camera.y += (this.localPlayer.y - this.camera.y) * lerpFactor;
         }
 
         this.particles.update(dt);
