@@ -49,6 +49,7 @@ export class MainScene {
         this._prevHp = new Map();
         this._prevAliveStates = new Map();
         this._firstBloodDone = false;
+        this._cameraInitialized = false;
     }
 
     init() { }
@@ -204,10 +205,17 @@ export class MainScene {
 
         // Camera follow local player (Frame-independent decay)
         if (this.localPlayer) {
-            const decay = 10;
-            const lerpFactor = 1 - Math.exp(-decay * dt);
-            this.camera.x += (this.localPlayer.x - this.camera.x) * lerpFactor;
-            this.camera.y += (this.localPlayer.y - this.camera.y) * lerpFactor;
+            if (!this._cameraInitialized) {
+                // Snap immediately on first spawn
+                this.camera.x = this.localPlayer.x;
+                this.camera.y = this.localPlayer.y;
+                this._cameraInitialized = true;
+            } else {
+                const decay = 10;
+                const lerpFactor = 1 - Math.exp(-decay * dt);
+                this.camera.x += (this.localPlayer.x - this.camera.x) * lerpFactor;
+                this.camera.y += (this.localPlayer.y - this.camera.y) * lerpFactor;
+            }
         }
 
         this.particles.update(dt);
@@ -238,6 +246,8 @@ export class MainScene {
 
         this.particles.render(renderer);
         this.floatingTexts.render(renderer);
+
+        this.camera.release(renderer);
 
         // UI/HUD overlay
         if (this.serverState && this.localPlayer) {
