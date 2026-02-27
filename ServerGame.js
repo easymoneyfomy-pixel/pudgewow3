@@ -143,10 +143,6 @@ export class ServerGame {
         character.gold -= itemDef.cost;
 
         if (itemDef.consumable) {
-            // Apply immediately
-            if (itemDef.effect === 'heal') {
-                character.hp = Math.min(character.hp + 50, character.maxHp);
-            }
             return;
         }
 
@@ -224,6 +220,10 @@ export class ServerGame {
                 this.entityManager.add(tossed);
                 item.cooldown = item.maxCooldown;
             }
+        } else if (item.effect === 'heal') {
+            // Healing Salve: 10s duration
+            character.salveTimer = 10;
+            item.cooldown = item.maxCooldown;
         }
     }
 

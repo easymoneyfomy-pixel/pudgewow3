@@ -74,11 +74,23 @@ export class UIManager {
             const slot = document.createElement('div');
             slot.className = 'inv-slot';
             slot.innerHTML = `
-                <div class="hotkey">${['Z', 'X', 'C', 'V', 'D', 'F'][i]}</div>
                 <div class="item-icon" id="inv-icon-${i}"></div>
+                <div class="hotkey">${['Z', 'X', 'C', 'V', 'D', 'F'][i]}</div>
                 <div class="cooldown-overlay" id="inv-cd-${i}"></div>
                 <div class="cooldown-text" id="inv-text-${i}"></div>
             `;
+
+            // Add click listener for active items
+            slot.addEventListener('click', () => {
+                if (this.game.scene && this.game.scene.localPlayer) {
+                    const item = this.game.scene.localPlayer.items[i];
+                    if (item && item.active && item.cooldown <= 0) {
+                        this.game.scene.activeItemSlot = i;
+                        this.game.canvas.style.cursor = 'crosshair';
+                    }
+                }
+            });
+
             this.dom.inventoryGrid.appendChild(slot);
         }
     }

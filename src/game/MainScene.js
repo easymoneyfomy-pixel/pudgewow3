@@ -51,6 +51,9 @@ export class MainScene {
         this._firstBloodDone = false;
         this._cameraInitialized = false;
 
+        // Active item targeting state
+        this.activeItemSlot = null;
+
         // Interpolation
         this._serverTickMs = 1000 / GAME.TICK_RATE;
         this._lastServerTime = 0;
@@ -173,6 +176,13 @@ export class MainScene {
         // ============================================================
 
         if (this.game.input.isMouseButtonPressed(2)) {
+            // Cancel targeting on right click
+            if (this.activeItemSlot !== null) {
+                this.activeItemSlot = null;
+                this.game.canvas.style.cursor = 'default';
+                return; // Early return to avoid moving immediately
+            }
+
             // Check if clicking a rune for explicit pickup (WC3 Pudge Wars style)
             let clickedRuneId = null;
             for (const eData of this.entities) {
@@ -196,7 +206,14 @@ export class MainScene {
         }
 
         if (this.game.input.isMouseButtonPressed(0) && !this.ui.shopOpen) {
-            this.game.network.sendInput({ type: 'HOOK', x: worldX, y: worldY });
+            // If we are holding an active item target
+            if (this.activeItemSlot !== null) {
+                this.game.network.sendInput({ type: 'USE_ITEM', slot: this.activeItemSlot, x: worldX, y: worldY });
+                this.activeItemSlot = null;
+                this.game.canvas.style.cursor = 'default';
+            } else {
+                this.game.network.sendInput({ type: 'HOOK', x: worldX, y: worldY });
+            }
         }
 
         if (this.game.input.isKeyPressed('KeyQ')) {
@@ -221,7 +238,14 @@ export class MainScene {
         const itemKeys = ['KeyZ', 'KeyX', 'KeyC', 'KeyV', 'KeyD', 'KeyF'];
         for (let i = 0; i < 6; i++) {
             if (this.game.input.isKeyPressed(itemKeys[i])) {
-                this.game.network.sendInput({ type: 'USE_ITEM', slot: i, x: worldX, y: worldY });
+                // If the player has the item and it's active
+                if (this.localPlayer && this.localPlayer.items && this.localPlayer.items[i]) {
+                    const item = this.localPlayer.items[i];
+                    if (item.active && item.cooldown <= 0) {
+                        this.activeItemSlot = i;
+                        this.game.canvas.style.cursor = 'crosshair';
+                    }
+                }
             }
         }
 

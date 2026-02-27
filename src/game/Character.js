@@ -86,6 +86,9 @@ export class Character {
         this.hasteTimer = 0;
         this.ddTimer = 0;
         this.lastAttacker = null;
+
+        // Active Items
+        this.salveTimer = 0;
     }
 
     setTarget(x, y) {
@@ -121,6 +124,9 @@ export class Character {
 
     takeDamage(amount, attacker = null) {
         if (this.state === State.DEAD || this.invulnerableTimer > 0) return;
+
+        // Taking damage breaks Healing Salve effect
+        this.salveTimer = 0;
 
         if (attacker && attacker !== this) {
             this.lastAttacker = attacker;
@@ -246,6 +252,12 @@ export class Character {
         }
         if (this.ddTimer > 0) {
             this.ddTimer -= dt;
+        }
+
+        // Healing Salve tick
+        if (this.salveTimer > 0) {
+            this.salveTimer -= dt;
+            this.hp = Math.min(this.maxHp, this.hp + 10 * dt); // 100 HP over 10s
         }
 
         // CHARACTER COLLISION & UNSTUCK
