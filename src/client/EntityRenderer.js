@@ -41,16 +41,22 @@ export class EntityRenderer {
         // HP Bar and other UI handled below
         // Pudge Sprite - Team-specific skins (1.png for Red, 2.png for Blue)
         // Level 5+ uses pudge_5lvl.png for HUD portrait only
+        // Flesh Heap: +1% size per stack
         const teamSprite = (char.team === 'red') ? renderer.radiantSprite : renderer.direSprite;
+        const fleshHeapScale = 1 + (char.fleshHeapStacks || 0) * 0.01;
 
         if (teamSprite && teamSprite.complete && teamSprite.naturalWidth > 0) {
             ctx.save();
             ctx.rotate(char.rot || 0);
+            ctx.scale(fleshHeapScale, fleshHeapScale);
             const targetSize = char.radius * 3.5 || 84;
             ctx.drawImage(teamSprite, -targetSize / 2, -targetSize / 2, targetSize, targetSize);
             ctx.restore();
         } else {
             // Procedural Pudge (the one they liked as fallback or primary)
+            // Flesh Heap scale applied
+            ctx.scale(fleshHeapScale, fleshHeapScale);
+            
             // Shadow
             ctx.fillStyle = 'rgba(0,0,0,0.3)';
             ctx.beginPath();
