@@ -317,14 +317,22 @@ canvas#gameCanvas {
 
 /* MINIMAP */
 #minimap-container {
-    width: 110px;
-    height: 110px;
+    width: 120px;
+    height: 120px;
     background: #090909;
     border: 2px solid rgba(255, 255, 255, 0.15);
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
     overflow: hidden;
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#minimapCanvas {
+    width: 100%;
+    height: 100%;
 }
 
 /* PORTRAIT */

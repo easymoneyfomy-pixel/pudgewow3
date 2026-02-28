@@ -3,7 +3,7 @@ export const SHOP_ITEMS = [
     { id: 'flaming_hook', label: 'Flaming Hook', cost: 300, icon: 'assets/shop/flaming_hook.png', desc: 'Burn 8 DPS / 3s', effect: 'burn' },
     { id: 'ricochet_turbine', label: 'Ricochet Turbine', cost: 250, icon: 'assets/shop/Ricochet_Turbline.png', desc: 'Hook bounces walls', effect: 'bounce' },
     { id: 'strygwyr_claws', label: "Strygwyr's Claws", cost: 350, icon: 'assets/shop/Stragwyr\'s_Claws.png', desc: 'Rupture on move', effect: 'rupture' },
-    { id: 'grappling_hook', label: 'Grappling Hook', cost: 400, icon: 'assets/shop/Grappling_Hook.png', desc: 'Active: Next hook pulls you to walls', effect: 'grapple', active: true, cooldown: 5 },
+    { id: 'grappling_hook', label: 'Grappling Hook', cost: 400, icon: 'assets/shop/Grappling_Hook.png', desc: 'Shoots a hook that pulls you', effect: 'grapple', active: true, cooldown: 10 },
     { id: 'naix_jaws', label: "Naix's Jaws", cost: 300, icon: 'assets/shop/naix\'s_jaws.png', desc: 'Heal 20 HP on hook hit', effect: 'lifesteal' },
     { id: 'healing_salve', label: 'Healing Salve', cost: 100, icon: 'assets/shop/Healling_salve.png', desc: 'Regen 100 HP over 20s', effect: 'heal', active: true, cooldown: 20 },
     { id: 'blink_dagger', label: 'Blink Dagger', cost: 500, icon: 'assets/shop/Blink_Dagger.png', desc: 'Teleport to cursor', effect: 'blink', active: true, cooldown: 8 },

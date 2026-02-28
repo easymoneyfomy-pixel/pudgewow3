@@ -270,8 +270,11 @@ export class ServerGame {
             character.salveTimer = 10;
             item.cooldown = item.maxCooldown;
         } else if (item.effect === 'grapple') {
-            // Active Grapple: Next hook will be a grapple
-            character.nextHookGrapple = true;
+            // Grappling Hook: Shoot hook immediately to target position
+            const hook = new Hook(character, x, y);
+            hook.hasGrapple = true;
+            hook.isGrappling = true;
+            this.entityManager.add(hook);
             item.cooldown = item.maxCooldown;
         }
     }
