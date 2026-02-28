@@ -96,11 +96,16 @@ export class UIManager {
                     }
                 }
             });
-            // Right-click to sell
+            // Right-click to sell (only if item exists and near shop)
             slot.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
                 const scene = this.game.sceneManager.currentScene;
                 if (scene && scene.localPlayer && scene.localPlayer.items && scene.localPlayer.items[i]) {
+                    // Check if near shop
+                    if (!this._isNearShop(scene.localPlayer)) {
+                        alert('Можно продавать только возле лавки!');
+                        return;
+                    }
                     const item = scene.localPlayer.items[i];
                     const sellPrice = Math.floor(this._getItemCost(item.id) * 0.5);
                     if (confirm(`Продать ${item.label} за ${sellPrice}g? (50% стоимости)`)) {
@@ -108,7 +113,14 @@ export class UIManager {
                     }
                 }
             });
-            slot.addEventListener('mouseenter', () => { this.hoveredType = 'item'; this.hoveredObjectId = i.toString(); });
+            slot.addEventListener('mouseenter', () => { 
+                const scene = this.game.sceneManager.currentScene;
+                const hasItem = scene && scene.localPlayer && scene.localPlayer.items && scene.localPlayer.items[i];
+                if (hasItem) {
+                    this.hoveredType = 'item'; 
+                    this.hoveredObjectId = i.toString(); 
+                }
+            });
             slot.addEventListener('mouseleave', () => { this.hoveredObjectId = null; });
             this.dom.inventoryGrid.appendChild(slot);
         }
@@ -400,6 +412,26 @@ export class UIManager {
     _getItemCost(itemId) {
         const itemDef = SHOP_ITEMS.find(item => item.id === itemId);
         return itemDef ? itemDef.cost : 0;
+    }
+
+    /** Check if player is within 2 tiles of a shop */
+    _isNearShop(player) {
+        if (!player) return false;
+        const tx = Math.floor(player.x / 64);
+        const ty = Math.floor(player.y / 64);
+        for (let dx = -2; dx <= 2; dx++) {
+            for (let dy = -2; dy <= 2; dy++) {
+                const cx = tx + dx;
+                const cy = ty + dy;
+                if (cx >= 0 && cx < 24 && cy >= 0 && cy < 24) {
+                    const scene = this.game.sceneManager.currentScene;
+                    if (scene && scene.map && scene.map.grid[cx][cy].type === 'shop') {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     _updatePing(scene) {

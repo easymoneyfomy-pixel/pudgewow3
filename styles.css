@@ -582,7 +582,7 @@ canvas#gameCanvas {
     pointer-events: none;
 }
 
-.inv-slot:hover .sell-overlay {
+.inv-slot.has-item:hover .sell-overlay {
     height: 100%;
 }
 
