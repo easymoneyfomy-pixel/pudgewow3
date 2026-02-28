@@ -108,9 +108,8 @@ export class UIManager {
                     }
                     const item = scene.localPlayer.items[i];
                     const sellPrice = Math.floor(this._getItemCost(item.id) * 0.5);
-                    if (confirm(`Продать ${item.label} за ${sellPrice}g? (50% стоимости)`)) {
-                        this.game.network.sendInput({ type: 'SELL_ITEM', slot: i });
-                    }
+                    // Sell without confirmation
+                    this.game.network.sendInput({ type: 'SELL_ITEM', slot: i });
                 }
             });
             slot.addEventListener('mouseenter', () => { 
