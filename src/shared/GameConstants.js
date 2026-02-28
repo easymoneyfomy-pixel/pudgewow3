@@ -23,7 +23,7 @@ export const GAME = {
     XP_ON_HEADSHOT: 80,
 
     // Balance: Character
-    CHAR_SPEED: 280,
+    CHAR_SPEED: 200,
     CHAR_RADIUS: 20,
     CHAR_HP_REGEN: 2,
     RESPAWN_DELAY: 3,
@@ -38,8 +38,8 @@ export const GAME = {
     FLESH_HEAP_HP: 8,
 
     // Balance: Hook (Q)
-    HOOK_SPEED: 750,
-    HOOK_MAX_DIST: 800,
+    HOOK_SPEED: 500,
+    HOOK_MAX_DIST: 400,
     HOOK_RADIUS: 20,
     HOOK_COOLDOWN: 3,
     HOOK_CURVE_POWER: 0.5,
