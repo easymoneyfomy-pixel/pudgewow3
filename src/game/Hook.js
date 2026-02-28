@@ -232,11 +232,12 @@ export class Hook {
         let remaining = moveAmt;
 
         // Apply Rupture damage while enemy is hooked (Strygwyr's Claws logic)
+        // Enemy bleeds while flying on hook - total ~2 damage over flight time
         if (this.hookedEntity && this.hookedEntity.state === State.HOOKED && this.hookedEntity.type !== 'LANDMINE') {
             const hasRupture = (this.owner.items || []).some(i => i.id === 'strygwyr_claws' || i.effect === 'rupture');
             if (hasRupture) {
-                // Deal damage per second while hooked (5 DPS)
-                this.hookedEntity.takeDamage(5 * dt, this.owner);
+                // Deal damage per second while hooked (~2 DPS = ~2 total damage over ~1 sec flight)
+                this.hookedEntity.takeDamage(2 * dt, this.owner);
             }
         }
 
