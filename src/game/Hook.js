@@ -272,31 +272,33 @@ export class Hook {
         const dx = this.x - this.owner.x;
         const dy = this.y - this.owner.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        
+
         // Grapple pulls at normal hook speed (x1)
         const grappleSpeed = moveAmt;
 
-        // Check if owner reached the hook position
-        if (dist <= grappleSpeed || dist < 5) {
-            // Owner reached hook - stop grappling
+        // Check if owner reached the hook position (immediate release)
+        if (dist <= grappleSpeed) {
+            // Snap to hook position and release immediately
             this.owner.x = this.x;
             this.owner.y = this.y;
             this.owner.isPaused = false;
-            
-            // Reset grapple flag
+
+            // Reset grapple flag and remove hook
             this.hasGrapple = false;
             this.isGrappling = false;
-
-            // Remove hook
             entityManager.remove(this);
             return;
         }
-        
-        // Check if owner is stuck in wall
+
+        // Calculate next position
+        const nextX = this.owner.x + (dx / dist) * grappleSpeed;
+        const nextY = this.owner.y + (dy / dist) * grappleSpeed;
+
+        // Check if next position is in wall BEFORE moving
         if (map) {
-            const tile = map.getTileAt(this.owner.x, this.owner.y);
-            if (tile && !tile.isWalkable) {
-                // Owner hit wall - stop grappling
+            const tile = map.getTileAt(nextX, nextY);
+            if (tile && !tile.isWalkable && tile.type !== 'water') {
+                // Owner would hit wall - stop grappling immediately
                 this.owner.isPaused = false;
                 this.hasGrapple = false;
                 this.isGrappling = false;
@@ -305,21 +307,11 @@ export class Hook {
             }
         }
 
-        const nextX = this.owner.x + (dx / dist) * grappleSpeed;
-        const nextY = this.owner.y + (dy / dist) * grappleSpeed;
-
-        // Move the owner directly (ignore collision for grapple pull to allow "jumping" over small corners)
+        // Move the owner directly
         this.owner.x = nextX;
         this.owner.y = nextY;
 
-        // Safety timeout
-        this.grappleLifetime = (this.grappleLifetime || 0) + 1;
-        if (this.grappleLifetime > 300) { // Timeout 300 ticks (~10s)
-            this.owner.isPaused = false;
-            this.hasGrapple = false;
-            this.isGrappling = false;
-            entityManager.remove(this);
-        }
+        // No safety timeout - grapple should be instant
     }
 
     /** Returns a plain-data snapshot for server→client broadcast. */
