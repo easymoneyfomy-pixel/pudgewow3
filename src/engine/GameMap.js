@@ -160,13 +160,15 @@ export class GameMap {
                     }
                 }
                 else if (tile.type === TileType.STONE) {
-                    if (renderer.stoneSprite && renderer.stoneSprite.complete && renderer.stoneSprite.naturalWidth > 0) {
-                        ctx.drawImage(renderer.stoneSprite, px, py, size, size);
+                    const stoneSeed = (x * 12.9898 + y * 78.233) * 43758.5453;
+                    const stoneRand = stoneSeed - Math.floor(stoneSeed);
+                    const stoneSprite = stoneRand > 0.5 ? renderer.stone2Sprite : renderer.stoneSprite;
+
+                    if (stoneSprite && stoneSprite.complete && stoneSprite.naturalWidth > 0) {
+                        ctx.drawImage(stoneSprite, px, py, size, size);
                     } else {
                         ctx.fillStyle = '#444';
-                        ctx.beginPath();
-                        ctx.arc(px + size / 2, py + size * 0.7, size / 3, 0, Math.PI * 2);
-                        ctx.fill();
+                        ctx.fillRect(px + 4, py + 4, size - 8, size - 8);
                     }
                 }
                 else if (tile.type === TileType.SHOP) {

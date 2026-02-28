@@ -44,7 +44,10 @@ export class Renderer {
         this.landmineSprite.src = 'assets/mine.png';
 
         this.stoneSprite = new Image();
-        this.stoneSprite.src = 'assets/rook1.png'; // Using rook1 for rocks/stones
+        this.stoneSprite.src = 'assets/rook1.png';
+
+        this.stone2Sprite = new Image();
+        this.stone2Sprite.src = 'assets/rook2.png';
     }
 
     clear(dt) {

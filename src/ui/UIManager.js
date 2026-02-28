@@ -66,7 +66,7 @@ export class UIManager {
     _setupTooltipListeners() {
         // Skill Slots
         ['q', 'w', 'e'].forEach(key => {
-            const el = document.querySelector(`.skill-slot.${key}`);
+            const el = document.getElementById(`skill-${key}`);
             if (el) {
                 el.addEventListener('mouseenter', () => { this.hoveredType = 'skill'; this.hoveredObjectId = key; });
                 el.addEventListener('mouseleave', () => { this.hoveredObjectId = null; });
@@ -126,12 +126,12 @@ export class UIManager {
     }
 
     render(ctx, rules, player, enemy, scene) {
-        this._lastPlayer = player;
-        if (!player) return;
-
         if (this.dom.gameUi.classList.contains('hidden')) {
             this.dom.gameUi.classList.remove('hidden');
         }
+
+        this._lastPlayer = player;
+        if (!player) return;
 
         this.dom.scoreRed.innerText = rules.scoreRed || 0;
         this.dom.scoreBlue.innerText = rules.scoreBlue || 0;
@@ -282,7 +282,7 @@ export class UIManager {
         if (isActive) activeGlow.classList.remove('hide'); else activeGlow.classList.add('hide');
     }
 
-    _renderInventory(player) {
+    _renderInventory(ctx, player) {
         if (!player) return;
         const icons = { 'burn': 'assets/flaming_hook.png', 'bounce': '🔄', 'rupture': '🩸', 'grapple': '🪢', 'lifesteal': '🦇', 'blink': '⚡', 'speed': '🐾', 'mine': 'assets/mine.png', 'heal': '💊', 'toss': '💪', 'lantern': '🏮' };
         for (let i = 0; i < 6; i++) {
@@ -294,8 +294,13 @@ export class UIManager {
             if (item) {
                 slotEl.classList.add('has-item');
                 const icon = icons[item.effect] || '📦';
-                if (icon.startsWith('assets/')) { iconEl.innerHTML = `<img src="${icon}" style="width:100%; height:100%; object-fit:cover;">`; iconEl.innerText = ''; }
-                else { iconEl.innerHTML = ''; iconEl.innerText = icon; }
+                if (icon.startsWith('assets/')) {
+                    iconEl.innerHTML = `<img src="${icon}" style="width:100%; height:100%; object-fit:cover;">`;
+                }
+                else {
+                    iconEl.innerHTML = '';
+                    iconEl.innerText = icon;
+                }
                 if (item.active && item.cooldown > 0) {
                     const ratio = item.cooldown / item.maxCooldown;
                     cdOverlay.style.height = `${ratio * 100}%`;
