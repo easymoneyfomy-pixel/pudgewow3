@@ -78,8 +78,14 @@ export class Hook {
             this.y += this.dirY * moveAmt;
             this.currentDist += moveAmt;
 
-            // Check distance
+            // Check distance - hook reached max range and starts returning
             if (this.currentDist >= this.maxDist) {
+                if (this.hasGrapple) {
+                    // Grapple: save position where hook landed for grapple
+                    this.isGrappling = true;
+                    this.grappleTargetX = this.x;
+                    this.grappleTargetY = this.y;
+                }
                 this.startReturning();
             }
 
