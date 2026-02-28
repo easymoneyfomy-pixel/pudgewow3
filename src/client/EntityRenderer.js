@@ -339,6 +339,9 @@ export class EntityRenderer {
                 break;
             case 'HOOK': {
                 const owner = characterMap && characterMap.get(eData.ownerId);
+                if (!owner) {
+                    console.warn('[EntityRenderer] Hook owner not found:', eData.ownerId, 'characterMap size:', characterMap?.size);
+                }
                 if (owner) {
                     EntityRenderer.drawHook(renderer, {
                         x: eData.x,

@@ -366,6 +366,11 @@ export class ServerGame {
         };
         this.recentExplosions = [];
 
+        const hookCount = this.entityManager.entities.filter(e => e.type === 'HOOK').length;
+        if (hookCount > 0) {
+            console.log(`[Server] Broadcasting ${hookCount} hook(s)`);
+        }
+
         for (const entity of this.entityManager.entities) {
             if (entity.serialize) {
                 state.entities.push(entity.serialize());
