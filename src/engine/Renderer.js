@@ -12,6 +12,8 @@ export class Renderer {
         // Load Sprites
         this.radiantSprite = this._loadImage('assets/player/1.png');
         this.direSprite = this._loadImage('assets/player/2.png');
+        this.radiantSprite5 = this._loadImage('assets/player/1_5.png');
+        this.direSprite5 = this._loadImage('assets/player/2_5.png');
         this.direFloorSprite = this._loadImage('assets/graund.png');
         this.hookSprite = this._loadImage('assets/hook.png');
         this.flamingHookSprite = this._loadImage('assets/shop/flaming_hook.png');

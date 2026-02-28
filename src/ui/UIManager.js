@@ -247,6 +247,17 @@ export class UIManager {
         this.dom.playerName.innerText = `Pudge (${player.team.toUpperCase()})`;
         this.dom.playerLevel.innerText = `Lv ${player.level}`;
         this.dom.playerGold.innerText = player.gold;
+        
+        // Update portrait based on level (Level 5+ uses upgraded sprite)
+        const portraitEl = document.getElementById('portrait-img');
+        if (portraitEl) {
+            if (player.level >= 5) {
+                portraitEl.style.backgroundImage = `url('assets/player/${player.team === 'red' ? '1_5' : '2_5'}.png')`;
+            } else {
+                portraitEl.style.backgroundImage = `url('assets/player/${player.team === 'red' ? '1' : '2'}.png')`;
+            }
+        }
+        
         const hpRatio = Math.max(0, Math.min(1, player.hp / player.maxHp));
         this.dom.hpBar.style.width = `${hpRatio * 100}%`;
         this.dom.hpText.innerText = `${Math.ceil(player.hp)} / ${player.maxHp}`;
