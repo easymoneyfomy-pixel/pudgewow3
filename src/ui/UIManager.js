@@ -284,7 +284,7 @@ export class UIManager {
 
     _renderInventory(ctx, player) {
         if (!player) return;
-        const icons = { 'burn': 'assets/flaming_hook.png', 'bounce': '🔄', 'rupture': '🩸', 'grapple': '🪢', 'lifesteal': '🦇', 'blink': '⚡', 'speed': '🐾', 'mine': 'assets/mine.png', 'heal': '💊', 'toss': '💪', 'lantern': '🏮' };
+        const icons = { 'burn': 'assets/shop/flaming_hook.png', 'bounce': '🔄', 'rupture': '🩸', 'grapple': '🪢', 'lifesteal': '🦇', 'blink': '⚡', 'speed': '🐾', 'mine': 'assets/shop/mine.png', 'heal': '💊', 'toss': '💪', 'lantern': '🏮' };
         for (let i = 0; i < 6; i++) {
             const item = player.items ? player.items[i] : null;
             const iconEl = document.getElementById(`inv-icon-${i}`);

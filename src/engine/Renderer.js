@@ -20,7 +20,7 @@ export class Renderer {
         this.hookSprite.src = 'assets/hook.png';
 
         this.flamingHookSprite = new Image();
-        this.flamingHookSprite.src = 'assets/flaming_hook.png';
+        this.flamingHookSprite.src = 'assets/shop/flaming_hook.png';
 
         this.hookTipSprite = new Image();
         this.hookTipSprite.src = 'assets/hook_body.png';
@@ -41,7 +41,7 @@ export class Renderer {
         this.shopBuildingSprite.src = 'assets/shop.png';
 
         this.landmineSprite = new Image();
-        this.landmineSprite.src = 'assets/mine.png';
+        this.landmineSprite.src = 'assets/shop/mine.png';
 
         this.stoneSprite = new Image();
         this.stoneSprite.src = 'assets/rook1.png';

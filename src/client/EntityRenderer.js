@@ -308,6 +308,15 @@ export class EntityRenderer {
         ctx.restore();
     }
 
+    // ─────────────────────── TOSSED UNIT ─────────────────────────────────────
+
+    static drawTossedUnit(renderer, tossed) {
+        // TossedUnit renders its own particles internally
+        if (tossed.render) {
+            tossed.render(renderer);
+        }
+    }
+
     // ─────────────────────── DISPATCHER ──────────────────────────────────────
 
     /**
@@ -343,6 +352,10 @@ export class EntityRenderer {
                 break;
             case 'RUNE':
                 EntityRenderer.drawRune(renderer, eData);
+                break;
+            case 'TOSSED_UNIT':
+                // TossedUnit is rendered via its own render method (particles)
+                // The targetUnit is drawn as a normal CHARACTER with z-offset
                 break;
         }
     }

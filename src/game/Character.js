@@ -366,7 +366,7 @@ export class Character {
         return {
             type: 'CHARACTER',
             id: this.id,
-            x: this.x, y: this.y,
+            x: this.x, y: this.y, z: this.z || 0,
             team: this.team,
             hp: this.hp, maxHp: this.maxHp,
             state: this.state,
