@@ -1,4 +1,5 @@
 import { State } from '../engine/State.js';
+import { TileType } from '../engine/Tile.js';
 import { GAME } from '../shared/GameConstants.js';
 
 export class Hook {
@@ -78,7 +79,10 @@ export class Hook {
 
             // 3. Tile Collision (Walls & Obstacles)
             const tile = map.getTileAt(this.x, this.y);
-            const isSolid = tile && (!tile.isHookable || tile.type === 'obstacle');
+            
+            // Grapple ignores water - only stops at real obstacles
+            const isWater = tile && tile.type === TileType.WATER;
+            const isSolid = tile && (!tile.isHookable || tile.type === 'obstacle') && !isWater;
 
             if (isSolid) {
                 if (this.hasGrapple || this.isGrappling) {
@@ -96,7 +100,7 @@ export class Hook {
         } else {
             // Retraction
             if (this.isGrappling) {
-                this.updateGrapple(moveAmt, entityManager);
+                this.updateGrapple(moveAmt, entityManager, map);
             } else {
                 this.updateRetraction(moveAmt, dt, entityManager);
             }
@@ -262,7 +266,7 @@ export class Hook {
         entityManager.remove(this);
     }
 
-    updateGrapple(moveAmt, entityManager) {
+    updateGrapple(moveAmt, entityManager, map) {
         const dx = this.x - this.owner.x;
         const dy = this.y - this.owner.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -270,8 +274,9 @@ export class Hook {
         // Grapple pulls at normal hook speed (x1)
         const grappleSpeed = moveAmt;
 
-        if (dist <= grappleSpeed) {
-            // Final snap - teleport owner to hook position
+        // Check if owner reached the hook position
+        if (dist <= grappleSpeed || dist < 5) {
+            // Owner reached hook - stop grappling
             this.owner.x = this.x;
             this.owner.y = this.y;
             this.owner.isPaused = false;
@@ -282,22 +287,36 @@ export class Hook {
 
             // Remove hook
             entityManager.remove(this);
-        } else {
-            const nextX = this.owner.x + (dx / dist) * grappleSpeed;
-            const nextY = this.owner.y + (dy / dist) * grappleSpeed;
-
-            // Move the owner directly (ignore collision for grapple pull to allow "jumping" over small corners)
-            this.owner.x = nextX;
-            this.owner.y = nextY;
-
-            // Safety timeout
-            this.grappleLifetime = (this.grappleLifetime || 0) + 1;
-            if (this.grappleLifetime > 300) { // Timeout 300 ticks (~10s)
+            return;
+        }
+        
+        // Check if owner is stuck in wall
+        if (map) {
+            const tile = map.getTileAt(this.owner.x, this.owner.y);
+            if (tile && !tile.isWalkable) {
+                // Owner hit wall - stop grappling
                 this.owner.isPaused = false;
                 this.hasGrapple = false;
                 this.isGrappling = false;
                 entityManager.remove(this);
+                return;
             }
+        }
+
+        const nextX = this.owner.x + (dx / dist) * grappleSpeed;
+        const nextY = this.owner.y + (dy / dist) * grappleSpeed;
+
+        // Move the owner directly (ignore collision for grapple pull to allow "jumping" over small corners)
+        this.owner.x = nextX;
+        this.owner.y = nextY;
+
+        // Safety timeout
+        this.grappleLifetime = (this.grappleLifetime || 0) + 1;
+        if (this.grappleLifetime > 300) { // Timeout 300 ticks (~10s)
+            this.owner.isPaused = false;
+            this.hasGrapple = false;
+            this.isGrappling = false;
+            entityManager.remove(this);
         }
     }
 
