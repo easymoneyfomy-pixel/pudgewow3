@@ -188,9 +188,7 @@ export class Hook {
                 if (item.id === 'fire_hook' || item.effect === 'burn') {
                     entity.burnTimer = 3; // Burn for 3 seconds
                 }
-                if (item.id === 'claws' || item.effect === 'rupture') {
-                    entity.ruptureTimer = 5; // Rupture for 5 seconds
-                }
+                // Rupture removed from here - now applied in updateRetraction while enemy is hooked
                 if (item.id === 'lifesteal' || item.effect === 'lifesteal') {
                     const heal = damage * 0.4; // 40% lifesteal
                     this.owner.hp = Math.min(this.owner.maxHp, this.owner.hp + heal);
@@ -204,6 +202,15 @@ export class Hook {
 
     updateRetraction(moveAmt, entityManager) {
         let remaining = moveAmt;
+
+        // Apply Rupture damage while enemy is hooked (Strygwyr's Claws logic)
+        if (this.hookedEntity && this.hookedEntity.state === State.HOOKED && this.hookedEntity.type !== 'LANDMINE') {
+            const hasRupture = (this.owner.items || []).some(i => i.id === 'claws' || i.effect === 'rupture');
+            if (hasRupture) {
+                // Deal small damage per tick while hooked
+                this.hookedEntity.takeDamage(10 * remaining, this.owner);
+            }
+        }
 
         while (remaining > 0) {
             const target = this.pathNodes.length > 0 ? this.pathNodes[this.pathNodes.length - 1] : this.owner;
