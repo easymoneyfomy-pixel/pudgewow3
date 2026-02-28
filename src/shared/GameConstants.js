@@ -12,10 +12,10 @@ export const GAME = {
     SPAWN_MID_Y: 12,
 
     // Balance: Economy
-    UPGRADE_COST: 50,
-    GOLD_ON_HIT: 10,
-    GOLD_ON_KILL: 50,
-    GOLD_ON_HEADSHOT: 50,
+    UPGRADE_COST: 100,
+    GOLD_ON_HIT: 20,
+    GOLD_ON_KILL: 100,
+    GOLD_ON_HEADSHOT: 100,
 
     // Balance: XP
     XP_ON_HIT: 25,
