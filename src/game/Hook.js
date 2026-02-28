@@ -238,8 +238,8 @@ export class Hook {
         // Enemy bleeds while flying on hook - ONLY while hook is returning with enemy
         if (this.hookedEntity && this.hookedEntity.state === State.HOOKED && this.hookedEntity.type !== 'LANDMINE') {
             if (this.hasRupture) {
-                // Deal damage per second while hooked (~2 DPS = ~2 total damage over ~1 sec flight)
-                const ruptureDamage = 2 * dt;
+                // Deal damage per second while hooked (~60 DPS = ~2 total damage over ~1 sec flight at 60 tickrate)
+                const ruptureDamage = 60 * dt;
                 this.hookedEntity.takeDamage(ruptureDamage, this.owner);
                 
                 // Set flag for visual feedback on client
