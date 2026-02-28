@@ -156,6 +156,13 @@ export class ServerGame {
         const itemDef = ITEM_MAP[itemId];
         if (!itemDef) return;
         if (character.gold < itemDef.cost) return;
+        
+        // Check if item is already in inventory (unique items, not consumables)
+        if (!itemDef.consumable && character.items && character.items.some(i => i.id === itemId)) {
+            console.log(`[SHOP] Player ${character.id} already has ${itemId}`);
+            return;
+        }
+        
         if (!itemDef.consumable && character.items.length >= character.maxItems) return;
 
         character.gold -= itemDef.cost;
