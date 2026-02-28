@@ -179,14 +179,7 @@ export class ParticleSystem {
             const life = Math.random() * 0.2 + 0.1;
             const size = Math.random() * 3 + 2;
             const color = `rgba(255, 0, 0, ${0.6 + Math.random() * 0.4})`;
-            this.particles.push({
-                x: px, y: py, z: 10,
-                speedX: 0, speedY: 0,
-                speedZ: Math.random() * 40 + 20,
-                life: life, maxLife: life,
-                size: size,
-                color: color
-            });
+            this.particles.push(new Particle(px, py, color, life, 0, 0, size));
         }
     }
 
@@ -202,14 +195,7 @@ export class ParticleSystem {
             const life = Math.random() * 0.2 + 0.1;
             const size = Math.random() * 3 + 2;
             const color = `rgba(0, 0, 255, ${0.6 + Math.random() * 0.4})`;
-            this.particles.push({
-                x: px, y: py, z: 10,
-                speedX: 0, speedY: 0,
-                speedZ: Math.random() * 40 + 20,
-                life: life, maxLife: life,
-                size: size,
-                color: color
-            });
+            this.particles.push(new Particle(px, py, color, life, 0, 0, size));
         }
     }
 

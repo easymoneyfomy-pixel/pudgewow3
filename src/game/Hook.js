@@ -314,9 +314,9 @@ export class Hook {
             return;
         }
 
-        // Timeout: if grapple lasts too long (>4 seconds), release player
+        // Timeout: if grapple lasts too long (>2.5 seconds), release player
         this.grappleTimer = (this.grappleTimer || 0) + 1;
-        if (this.grappleTimer > 240) { // 240 ticks = ~4 seconds at 60 tickrate
+        if (this.grappleTimer > 150) { // 150 ticks = ~2.5 seconds at 60 tickrate
             this.owner.isPaused = false;
             this.hasGrapple = false;
             this.isGrappling = false;
