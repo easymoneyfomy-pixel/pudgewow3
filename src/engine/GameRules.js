@@ -77,10 +77,8 @@ export class GameRules {
                 this._firstBloodDone = true;
                 console.log(`[FIRST BLOOD] Player ${killer.id} gets ${goldReward}g!`);
                 
-                // Announce First Blood to all players
-                if (this.onFirstBlood) {
-                    this.onFirstBlood(killer.team);
-                }
+                // Mark entity for First Blood announcement
+                entity.firstBloodJustHappened = true;
             }
             
             // Headshot bonus

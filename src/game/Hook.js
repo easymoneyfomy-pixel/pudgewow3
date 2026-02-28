@@ -295,22 +295,20 @@ export class Hook {
         const nextX = this.owner.x + (dx / dist) * grappleSpeed;
         const nextY = this.owner.y + (dy / dist) * grappleSpeed;
 
-        // Check if next position is in wall (not water) BEFORE moving
-        // Grapple allows flying over water and obstacles (trees)
-        if (map) {
-            const tile = map.getTileAt(nextX, nextY);
-            // Only stop at solid walls, allow water and hookable terrain
-            if (tile && tile.type === 'obstacle') {
-                // Owner would hit solid wall - stop grappling immediately
-                this.owner.isPaused = false;
-                this.hasGrapple = false;
-                this.isGrappling = false;
-                entityManager.remove(this);
-                return;
-            }
+        // Check if owner reached stop position (1 tile before hook)
+        if (dist <= stopDistance) {
+            // Release immediately at stop position
+            this.owner.isPaused = false;
+
+            // Reset grapple flag and remove hook
+            this.hasGrapple = false;
+            this.isGrappling = false;
+            entityManager.remove(this);
+            return;
         }
 
-        // Move the owner directly (can fly over water and trees)
+        // Move the owner directly towards hook - can fly over everything including water
+        // Grapple pulls player to hook regardless of terrain
         this.owner.x = nextX;
         this.owner.y = nextY;
     }
