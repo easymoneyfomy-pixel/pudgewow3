@@ -227,14 +227,19 @@ export class EntityRenderer {
         ctx.translate(hx, hy);
         ctx.rotate(headAngle);
 
-        // Simple procedural hook (Meat Hook style)
-        ctx.fillStyle = '#777';
-        ctx.fillRect(-2, -2, 10, 4);
-        ctx.beginPath();
-        ctx.strokeStyle = '#888';
-        ctx.lineWidth = 4;
-        ctx.arc(8, 0, 10, -Math.PI / 2, Math.PI / 2, false);
-        ctx.stroke();
+        if (renderer.hookSprite && renderer.hookSprite.complete) {
+            const size = (hook.radius || 24) * 2;
+            ctx.drawImage(renderer.hookSprite, -size / 2, -size / 2, size, size);
+        } else {
+            // Simple procedural hook (Meat Hook style)
+            ctx.fillStyle = '#777';
+            ctx.fillRect(-2, -2, 10, 4);
+            ctx.beginPath();
+            ctx.strokeStyle = '#888';
+            ctx.lineWidth = 4;
+            ctx.arc(8, 0, 10, -Math.PI / 2, Math.PI / 2, false);
+            ctx.stroke();
+        }
 
         ctx.restore();
     }

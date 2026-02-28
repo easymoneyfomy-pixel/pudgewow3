@@ -107,8 +107,11 @@ export class UIManager {
             el.dataset.id = item.id;
             el.dataset.cost = item.cost;
 
+            const isIconPath = item.icon.startsWith('assets/');
+            const iconHtml = isIconPath ? `<img src="${item.icon}" style="width:100%; height:100%; object-fit:cover;">` : item.icon;
+
             el.innerHTML = `
-                <div class="s-icon">${item.icon}</div>
+                <div class="s-icon">${iconHtml}</div>
                 <div class="s-name">${item.label}</div>
                 <div class="s-desc">${item.desc}</div>
                 <div class="s-cost">${item.cost}g</div>
@@ -286,8 +289,14 @@ export class UIManager {
     updateInventory(player) {
         if (!player) return;
         const icons = {
-            'burn': '🔥', 'bounce': '🔄', 'rupture': '🩸',
-            'grapple': '🪢', 'lifesteal': '🦇', 'blink': '⚡', 'speed': '🐾'
+            'burn': 'assets/flaming_hook.png',
+            'bounce': '🔄',
+            'rupture': '🩸',
+            'grapple': '🪢',
+            'lifesteal': '🦇',
+            'blink': '⚡',
+            'speed': '🐾',
+            'mine': 'assets/mine.png'
         };
 
         for (let i = 0; i < 6; i++) {
@@ -299,7 +308,15 @@ export class UIManager {
 
             if (item) {
                 slotEl.classList.add('has-item');
-                iconEl.innerText = icons[item.effect] || '📦';
+                const icon = icons[item.effect] || '📦';
+                const isIconPath = icon.startsWith('assets/');
+                if (isIconPath) {
+                    iconEl.innerHTML = `<img src="${icon}" style="width:100%; height:100%; object-fit:cover;">`;
+                    iconEl.innerText = '';
+                } else {
+                    iconEl.innerHTML = '';
+                    iconEl.innerText = icon;
+                }
 
                 if (item.active && item.cooldown > 0) {
                     const ratio = item.cooldown / item.maxCooldown;
