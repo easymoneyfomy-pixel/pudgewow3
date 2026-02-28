@@ -91,14 +91,8 @@ export class UIManager {
                 if (scene && scene.localPlayer) {
                     const item = scene.localPlayer.items[i];
                     if (item && item.active && item.cooldown <= 0) {
-                        if (item.effect === 'grapple') {
-                            // Grappling Hook: activate targeting mode
-                            scene.activeItemSlot = i;
-                            this.game.canvas.style.cursor = 'crosshair';
-                        } else {
-                            scene.activeItemSlot = i;
-                            this.game.canvas.style.cursor = 'crosshair';
-                        }
+                        scene.activeItemSlot = i;
+                        this.game.canvas.style.cursor = 'crosshair';
                     }
                 }
             });
