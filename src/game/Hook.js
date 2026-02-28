@@ -4,8 +4,6 @@ import { GAME } from '../shared/GameConstants.js';
 
 export class Hook {
     constructor(owner, targetX, targetY) {
-        this.id = 'hook_' + owner.id + '_' + Date.now();
-        this.type = 'HOOK';
         this.owner = owner;
         this.x = owner.x;
         this.y = owner.y;
@@ -41,11 +39,7 @@ export class Hook {
         // Position tracking for curving/delta movement
         this.ownerPrevX = owner.x;
         this.ownerPrevY = owner.y;
-        this.pathNodes = [{ x: owner.x, y: owner.y }]; // Start with owner position
-        
-        // One-frame flags for visual effects
-        this.clashJustHappened = false;
-        this.hitJustHappened = false;
+        this.pathNodes = []; // List of breadcrumbs {x, y} for polyline chain
     }
 
     update(dt, map, entityManager) {

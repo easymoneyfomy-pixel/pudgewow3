@@ -339,18 +339,19 @@ export class EntityRenderer {
                 break;
             case 'HOOK': {
                 const owner = characterMap && characterMap.get(eData.ownerId);
-                // Always draw hook, even if owner not found
-                EntityRenderer.drawHook(renderer, {
-                    x: eData.x,
-                    y: eData.y,
-                    ownerX: owner ? owner.x : eData.x,
-                    ownerY: owner ? owner.y : eData.y,
-                    radius: eData.radius,
-                    pathNodes: eData.pathNodes,
-                    dirX: eData.dirX,
-                    dirY: eData.dirY,
-                    isReturning: eData.isReturning
-                });
+                if (owner) {
+                    EntityRenderer.drawHook(renderer, {
+                        x: eData.x,
+                        y: eData.y,
+                        ownerX: owner.x,
+                        ownerY: owner.y,
+                        radius: eData.radius,
+                        pathNodes: eData.pathNodes,
+                        dirX: eData.dirX,
+                        dirY: eData.dirY,
+                        isReturning: eData.isReturning
+                    });
+                }
                 break;
             }
             case 'LANDMINE':

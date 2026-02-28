@@ -88,14 +88,9 @@ export class MainScene {
         this._targetEntities = new Map();
 
         // ── First pass: collect all eData objects ──
-        const hookIds = [];
         for (const eData of data.entities) {
             this.entities.push(eData);
             this._targetEntities.set(eData.id, eData);
-            
-            if (eData.type === 'HOOK') {
-                hookIds.push(eData.id);
-            }
 
             if (eData.type === 'CHARACTER') {
                 this.characterMap.set(eData.id, eData);
@@ -135,11 +130,6 @@ export class MainScene {
             }
 
             this._prevAliveStates.set(eData.id, !isDead);
-        }
-        
-        // Debug: log hooks received
-        if (hookIds.length > 0) {
-            console.log('[MainScene] Received hooks:', hookIds, 'Total:', hookIds.length);
         }
 
         // ── Hook events (Clashing & Hits) ──
@@ -378,12 +368,6 @@ export class MainScene {
 
         // Sort interpolated entities by Y
         const sorted = displayEntities.sort((a, b) => a.y - b.y);
-        
-        // Debug: log hooks being drawn
-        const hooksToDraw = sorted.filter(e => e.type === 'HOOK');
-        if (hooksToDraw.length > 0) {
-            console.log('[MainScene] Drawing hooks:', hooksToDraw.map(h => h.id));
-        }
 
         // Only allies (and self) see their mines — filter here client-side
         const myTeam = this.game.network.team;
