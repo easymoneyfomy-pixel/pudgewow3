@@ -39,7 +39,7 @@ export class Hook {
         // Position tracking for curving/delta movement
         this.ownerPrevX = owner.x;
         this.ownerPrevY = owner.y;
-        this.pathNodes = []; // List of breadcrumbs {x, y} for polyline chain
+        this.pathNodes = [{ x: owner.x, y: owner.y }]; // Start with owner position
         
         // One-frame flags for visual effects
         this.clashJustHappened = false;
