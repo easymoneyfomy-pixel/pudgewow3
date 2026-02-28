@@ -144,11 +144,27 @@ export class Hook {
 
             if (distSq < rSum * rSum) {
                 if (entity instanceof Hook) {
+                    // Hook clash - hooks bounce off each other
                     if (!entity.isReturning) {
-                        this.startReturning();
-                        entity.startReturning();
                         this.clashJustHappened = true;
                         entity.clashJustHappened = true;
+                        
+                        // Bounce logic - deflect hooks perpendicular to collision
+                        const collisionAngle = Math.atan2(dy, dx);
+                        const bounceForce = 150; // Bounce strength
+                        
+                        // Bounce this hook
+                        this.dirX = Math.cos(collisionAngle + Math.PI) * 0.5 + (Math.random() - 0.5) * 0.5;
+                        this.dirY = Math.sin(collisionAngle + Math.PI) * 0.5 + (Math.random() - 0.5) * 0.5;
+                        this.x += this.dirX * bounceForce;
+                        this.y += this.dirY * bounceForce;
+                        
+                        // Bounce other hook
+                        entity.dirX = Math.cos(collisionAngle) * 0.5 + (Math.random() - 0.5) * 0.5;
+                        entity.dirY = Math.sin(collisionAngle) * 0.5 + (Math.random() - 0.5) * 0.5;
+                        entity.x += entity.dirX * bounceForce;
+                        entity.y += entity.dirY * bounceForce;
+                        
                         return;
                     }
                 } else if (entity.takeDamage && entity.state !== State.DEAD) {
