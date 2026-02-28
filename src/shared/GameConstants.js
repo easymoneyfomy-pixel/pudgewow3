@@ -13,8 +13,8 @@ export const GAME = {
 
     // Balance: Economy
     UPGRADE_COST: 100,
-    GOLD_ON_HIT: 20,
-    GOLD_ON_KILL: 100,
+    GOLD_ON_HIT: 10,
+    GOLD_ON_KILL: 50,
     GOLD_ON_HEADSHOT: 100,
 
     // Balance: XP
