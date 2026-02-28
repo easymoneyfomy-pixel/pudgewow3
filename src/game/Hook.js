@@ -233,7 +233,7 @@ export class Hook {
 
         // Apply Rupture damage while enemy is hooked (Strygwyr's Claws logic)
         if (this.hookedEntity && this.hookedEntity.state === State.HOOKED && this.hookedEntity.type !== 'LANDMINE') {
-            const hasRupture = (this.owner.items || []).some(i => i.id === 'claws' || i.effect === 'rupture');
+            const hasRupture = (this.owner.items || []).some(i => i.id === 'strygwyr_claws' || i.effect === 'rupture');
             if (hasRupture) {
                 // Deal damage per second while hooked (5 DPS)
                 this.hookedEntity.takeDamage(5 * dt, this.owner);
