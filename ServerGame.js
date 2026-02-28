@@ -381,6 +381,8 @@ export class ServerGame {
                 entity.headshotJustHappened = false;
                 entity.deniedJustHappened = false;
                 entity.firstBloodJustHappened = false;
+            } else if (entity.type === 'HOOK') {
+                entity.ruptureJustHappened = false;
             } else if (entity.clashJustHappened !== undefined) {
                 entity.clashJustHappened = false;
                 entity.hitJustHappened = false;

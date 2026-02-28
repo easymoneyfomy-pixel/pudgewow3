@@ -48,6 +48,9 @@ export class Hook {
         this.grappleTargetY = null;
         this.grappleTimer = 0; // Timeout counter for grapple
         this.isGrappling = false; // Start as false, set to true when hook hits wall/ground
+        
+        // Rupture visual callback
+        this.ruptureJustHappened = false; // Flag for visual feedback on client
     }
 
     update(dt, map, entityManager) {
@@ -240,10 +243,11 @@ export class Hook {
                 const ruptureDamage = 2 * dt;
                 this.hookedEntity.takeDamage(ruptureDamage, this.owner);
                 
-                // Visual feedback: floating text and blood particles
-                if (this.onRuptureDamage) {
-                    this.onRuptureDamage(this.hookedEntity.x, this.hookedEntity.y, ruptureDamage);
-                }
+                // Set flag for visual feedback on client
+                this.ruptureJustHappened = true;
+                this.ruptureX = this.hookedEntity.x;
+                this.ruptureY = this.hookedEntity.y;
+                this.ruptureDamage = ruptureDamage;
             }
         }
 
@@ -355,7 +359,11 @@ export class Hook {
             pathNodes: this.pathNodes.map(p => ({ x: p.x, y: p.y })),
             clashJustHappened: this.clashJustHappened || false,
             hitJustHappened: this.hitJustHappened || false,
-            isFlaming: this.isFlaming || false
+            isFlaming: this.isFlaming || false,
+            ruptureJustHappened: this.ruptureJustHappened || false,
+            ruptureX: this.ruptureX || 0,
+            ruptureY: this.ruptureY || 0,
+            ruptureDamage: this.ruptureDamage || 0
         };
     }
 }

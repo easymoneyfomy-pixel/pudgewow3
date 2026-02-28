@@ -57,10 +57,10 @@ export class Rune {
         // Apply the relevant buff to the character
         switch (this.runeType) {
             case 'haste':
-                character.hasteTimer = 25; // 25 sec of max speed
+                character.hasteTimer = 12; // 12 sec of max speed
                 break;
             case 'dd':
-                character.ddTimer = 25; // 25 sec of double damage
+                character.ddTimer = 12; // 12 sec of double damage
                 break;
             case 'heal':
                 character.hp = Math.min(character.maxHp, character.hp + 100);

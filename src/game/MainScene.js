@@ -171,16 +171,12 @@ export class MainScene {
                     this.particles.spawnClash(eData.x, eData.y);
                     this.camera.shake(4);
                 }
-            }
-        }
-        
-        // Setup Rupture damage callback for visual feedback (Strygwyr's Claws)
-        for (const eData of data.entities) {
-            if (eData.type === 'HOOK' && eData.ownerId) {
-                eData.onRuptureDamage = (x, y, damage) => {
-                    this.floatingTexts.add(x, y, `-${Math.round(damage)}`, '#cc0000');
-                    this.particles.spawnBlood(x, y, 3);
-                };
+                
+                // Strygwyr's Claws: Rupture damage visual feedback
+                if (eData.ruptureJustHappened) {
+                    this.floatingTexts.add(eData.ruptureX, eData.ruptureY, `-${Math.round(eData.ruptureDamage)}`, '#cc0000');
+                    this.particles.spawnBlood(eData.ruptureX, eData.ruptureY, 3);
+                }
             }
         }
 
