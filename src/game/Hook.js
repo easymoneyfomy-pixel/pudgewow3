@@ -42,6 +42,10 @@ export class Hook {
         this.ownerPrevX = owner.x;
         this.ownerPrevY = owner.y;
         this.pathNodes = []; // List of breadcrumbs {x, y} for polyline chain
+        
+        // Grapple target position (where hook hit the wall)
+        this.grappleTargetX = null;
+        this.grappleTargetY = null;
     }
 
     update(dt, map, entityManager) {
@@ -81,7 +85,7 @@ export class Hook {
 
             // 3. Tile Collision (Walls & Obstacles)
             const tile = map.getTileAt(this.x, this.y);
-            
+
             // Grapple ignores water - only stops at real obstacles
             const isWater = tile && tile.type === TileType.WATER;
             const isSolid = tile && (!tile.isHookable || tile.type === 'obstacle') && !isWater;
@@ -89,6 +93,9 @@ export class Hook {
             if (isSolid) {
                 if (this.hasGrapple || this.isGrappling) {
                     this.isGrappling = true;
+                    // Save the position where hook hit the wall for grapple
+                    this.grappleTargetX = this.x;
+                    this.grappleTargetY = this.y;
                     this.startReturning();
                 } else if (this.bouncesLeft > 0) {
                     this.bounce(map);
@@ -269,17 +276,21 @@ export class Hook {
     }
 
     updateGrapple(moveAmt, entityManager, map) {
-        const dx = this.x - this.owner.x;
-        const dy = this.y - this.owner.y;
+        // Use grapple target position (where hook hit the wall)
+        const targetX = this.grappleTargetX || this.x;
+        const targetY = this.grappleTargetY || this.y;
+        
+        const dx = targetX - this.owner.x;
+        const dy = targetY - this.owner.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
 
         // Grapple pulls at normal hook speed (x1)
         const grappleSpeed = moveAmt;
 
-        // Stop 1 tile (64px) before hook position
+        // Stop 1 tile (64px) before grapple target position
         const stopDistance = GAME.TILE_SIZE;
 
-        // Check if owner reached stop position (1 tile before hook)
+        // Check if owner reached stop position (1 tile before grapple target)
         if (dist <= stopDistance) {
             // Release immediately at stop position
             this.owner.isPaused = false;
@@ -291,11 +302,11 @@ export class Hook {
             return;
         }
 
-        // Calculate next position and move owner towards hook
+        // Calculate next position and move owner towards grapple target
         const nextX = this.owner.x + (dx / dist) * grappleSpeed;
         const nextY = this.owner.y + (dy / dist) * grappleSpeed;
 
-        // Move the owner directly towards hook - can fly over everything including water
+        // Move the owner directly towards grapple target - can fly over everything including water
         this.owner.x = nextX;
         this.owner.y = nextY;
     }
