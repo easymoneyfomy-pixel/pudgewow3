@@ -101,17 +101,21 @@ export class GameMap {
                     }
                 }
                 else if (tile.type === TileType.WATER) {
-                    // Dark swampy/felwood water
-                    const waveOffset = Math.sin(this._animTime * 2 + y * 0.5) * 5;
-                    const grad = ctx.createLinearGradient(px, py, px + size, py + size);
-                    grad.addColorStop(0, '#0a1d1d');
-                    grad.addColorStop(1, '#113333');
-                    ctx.fillStyle = grad;
-                    ctx.fillRect(px, py, size, size);
+                    // Dark swampy/felwood water (Using assets/water.png)
+                    if (renderer.waterSprite && renderer.waterSprite.complete) {
+                        ctx.drawImage(renderer.waterSprite, px, py, size, size);
+                    } else {
+                        const waveOffset = Math.sin(this._animTime * 2 + y * 0.5) * 5;
+                        const grad = ctx.createLinearGradient(px, py, px + size, py + size);
+                        grad.addColorStop(0, '#0a1d1d');
+                        grad.addColorStop(1, '#113333');
+                        ctx.fillStyle = grad;
+                        ctx.fillRect(px, py, size, size);
 
-                    // Subtle highlights
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-                    ctx.fillRect(px + size / 2 + waveOffset, py + size / 2, size / 4, size / 8);
+                        // Subtle highlights
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+                        ctx.fillRect(px + size / 2 + waveOffset, py + size / 2, size / 4, size / 8);
+                    }
                 }
                 else if (tile.type === TileType.WALL) {
                     // Stone pillars/walls
@@ -131,38 +135,52 @@ export class GameMap {
                     ctx.fillStyle = '#141a14'; // Darker forest green floor
                     ctx.fillRect(px, py, size, size);
 
-                    // Draw a simple tree shape (triangle/cone)
-                    ctx.fillStyle = '#1c3624'; // Very subtle blueish-green
-                    ctx.beginPath();
-                    ctx.moveTo(px + size / 2, py + 5); // Peak
-                    ctx.lineTo(px + size - 5, py + size - 10);
-                    ctx.lineTo(px + 5, py + size - 10);
-                    ctx.closePath();
-                    ctx.fill();
+                    // Organic Tree Placement: Spaced out for beauty, but collision remains grid-square
+                    const seed = (x * 12.9898 + y * 78.233) * 43758.5453;
+                    const rand = seed - Math.floor(seed);
 
-                    // Tree shadow/depth
-                    ctx.fillStyle = 'rgba(0,0,0,0.5)';
-                    ctx.beginPath();
-                    ctx.moveTo(px + size / 2, py + 5);
-                    ctx.lineTo(px + size - 5, py + size - 10);
-                    ctx.lineTo(px + size / 2, py + size - 10);
-                    ctx.closePath();
-                    ctx.fill();
+                    // 55% chance to have a tree sprite on this obstacle tile
+                    if (rand > 0.45) {
+                        const treeSprite = rand > 0.82 ? renderer.treeRedSprite : renderer.treeSprite;
+                        if (treeSprite && treeSprite.complete) {
+                            ctx.save();
+                            ctx.translate(px + size / 2, py + size / 2);
+
+                            // Visual Jitter for organic look
+                            const scale = 1.3 + (rand * 0.5);
+                            const rotation = (rand - 0.5) * 0.4;
+                            ctx.rotate(rotation);
+
+                            ctx.drawImage(treeSprite, -size * scale / 2, -size * scale / 2, size * scale, size * scale);
+                            ctx.restore();
+                        } else {
+                            // Fallback tree shape
+                            ctx.fillStyle = '#1c3624';
+                            ctx.beginPath();
+                            ctx.moveTo(px + size / 2, py + 5);
+                            ctx.lineTo(px + size - 5, py + size - 10);
+                            ctx.lineTo(px + 5, py + size - 10);
+                            ctx.closePath();
+                            ctx.fill();
+                        }
+                    }
                 }
                 else if (tile.type === TileType.SHOP) {
-                    // Shop pad
-                    ctx.fillStyle = '#3a2a1a';
-                    ctx.fillRect(px, py, size, size);
-
-                    ctx.strokeStyle = '#c4a44a';
-                    ctx.lineWidth = 2;
-                    ctx.strokeRect(px + 4, py + 4, size - 8, size - 8);
-
-                    // Gold symbol
-                    ctx.fillStyle = '#f0d78c';
-                    ctx.font = '24px Georgia';
-                    ctx.textAlign = 'center';
-                    ctx.fillText('⚖', px + size / 2, py + size / 2 + 8);
+                    // Shop Pad with Buildings/Assets
+                    if (renderer.shopBuildingSprite && renderer.shopBuildingSprite.complete) {
+                        const scale = 1.2;
+                        ctx.drawImage(renderer.shopBuildingSprite, px - (size * (scale - 1)) / 2, py - (size * (scale - 1)) / 2, size * scale, size * scale);
+                    } else {
+                        ctx.fillStyle = '#3a2a1a';
+                        ctx.fillRect(px, py, size, size);
+                        ctx.strokeStyle = '#c4a44a';
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(px + 4, py + 4, size - 8, size - 8);
+                        ctx.fillStyle = '#f0d78c';
+                        ctx.font = '24px Georgia';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('⚖', px + size / 2, py + size / 2 + 8);
+                    }
                 }
                 else if (tile.type === TileType.RUNE) {
                     ctx.fillStyle = '#1a221a';

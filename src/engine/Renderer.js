@@ -28,6 +28,18 @@ export class Renderer {
         this.hookLinkSprite = new Image();
         this.hookLinkSprite.src = 'assets/hook.png';
 
+        this.treeSprite = new Image();
+        this.treeSprite.src = 'assets/tree.png';
+
+        this.treeRedSprite = new Image();
+        this.treeRedSprite.src = 'assets/tree_red.png';
+
+        this.waterSprite = new Image();
+        this.waterSprite.src = 'assets/water.png';
+
+        this.shopBuildingSprite = new Image();
+        this.shopBuildingSprite.src = 'assets/shop.png';
+
         this.landmineSprite = new Image();
         this.landmineSprite.src = 'assets/mine.png';
     }
