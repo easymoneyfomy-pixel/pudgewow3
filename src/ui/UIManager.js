@@ -200,71 +200,89 @@ export class UIManager {
         const mmCtx = mmCanvas.getContext('2d');
         const size = mmCanvas.width;
 
-        if (!this.mmCache) {
-            this.mmCache = document.createElement('canvas');
-            this.mmCache.width = size;
-            this.mmCache.height = size;
-            const cCtx = this.mmCache.getContext('2d');
-            cCtx.fillStyle = '#090909';
-            cCtx.fillRect(0, 0, size, size);
-            const tileSize = size / GAME.MAP_WIDTH;
-            for (let gx = 0; gx < GAME.MAP_WIDTH; gx++) {
-                for (let gy = 0; gy < GAME.MAP_HEIGHT; gy++) {
-                    const tx = gx * tileSize;
-                    const ty = gy * tileSize;
-                    if (gx < 2 || gy < 2 || gx >= GAME.MAP_WIDTH - 2 || gy >= GAME.MAP_HEIGHT - 2) {
-                        cCtx.fillStyle = '#333';
-                        cCtx.fillRect(tx, ty, tileSize, tileSize);
-                    } else if (gx >= 10 && gx <= 13) {
-                        cCtx.fillStyle = '#003366';
-                        cCtx.fillRect(tx, ty, tileSize, tileSize);
-                    } else {
-                        cCtx.fillStyle = gx < 10 ? '#1a2a16' : '#16192a';
-                        cCtx.fillRect(tx, ty, tileSize, tileSize);
-                    }
+        // Clear minimap
+        mmCtx.fillStyle = '#090909';
+        mmCtx.fillRect(0, 0, size, size);
+
+        const tileSize = size / GAME.MAP_WIDTH;
+        const mapWorldSize = GAME.MAP_WIDTH * GAME.TILE_SIZE;
+
+        // Draw terrain
+        for (let gx = 0; gx < GAME.MAP_WIDTH; gx++) {
+            for (let gy = 0; gy < GAME.MAP_HEIGHT; gy++) {
+                const tx = gx * tileSize;
+                const ty = gy * tileSize;
+                if (gx < 2 || gy < 2 || gx >= GAME.MAP_WIDTH - 2 || gy >= GAME.MAP_HEIGHT - 2) {
+                    mmCtx.fillStyle = '#333';
+                    mmCtx.fillRect(tx, ty, tileSize, tileSize);
+                } else if (gx >= 10 && gx <= 13) {
+                    mmCtx.fillStyle = '#003366';
+                    mmCtx.fillRect(tx, ty, tileSize, tileSize);
+                } else {
+                    mmCtx.fillStyle = gx < 10 ? '#1a2a16' : '#16192a';
+                    mmCtx.fillRect(tx, ty, tileSize, tileSize);
                 }
             }
         }
 
-        mmCtx.drawImage(this.mmCache, 0, 0);
-        const mapWorldSize = GAME.MAP_WIDTH * GAME.TILE_SIZE;
-
-        // Phase 31: Draw Shops
+        // Draw Shops
         mmCtx.fillStyle = '#ffcc00';
-        mmCtx.fillRect((1 * GAME.TILE_SIZE / mapWorldSize) * size, (1 * GAME.TILE_SIZE / mapWorldSize) * size, 4, 4);
-        mmCtx.fillRect(((GAME.MAP_WIDTH - 2) * GAME.TILE_SIZE / mapWorldSize) * size, ((GAME.MAP_HEIGHT - 2) * GAME.TILE_SIZE / mapWorldSize) * size, 4, 4);
+        mmCtx.fillRect((2 * tileSize), (2 * tileSize), 5, 5);
+        mmCtx.fillRect(((GAME.MAP_WIDTH - 3) * tileSize), (2 * tileSize), 5, 5);
+        mmCtx.fillRect((2 * tileSize), ((GAME.MAP_HEIGHT - 3) * tileSize), 5, 5);
+        mmCtx.fillRect(((GAME.MAP_WIDTH - 3) * tileSize), ((GAME.MAP_HEIGHT - 3) * tileSize), 5, 5);
 
-        // Runes
-        if (scene && scene.runes) {
-            mmCtx.fillStyle = '#00ff00';
-            scene.runes.forEach(rune => {
-                const rx = (rune.x / mapWorldSize) * size;
-                const ry = (rune.y / mapWorldSize) * size;
-                mmCtx.beginPath(); mmCtx.arc(rx, ry, 2, 0, Math.PI * 2); mmCtx.fill();
-            });
-        }
+        // Draw Runes
+        mmCtx.fillStyle = '#00ff00';
+        mmCtx.beginPath();
+        mmCtx.arc((11.5 * tileSize), (11.5 * tileSize), 4, 0, Math.PI * 2);
+        mmCtx.fill();
+        mmCtx.beginPath();
+        mmCtx.arc((12.5 * tileSize), (12.5 * tileSize), 4, 0, Math.PI * 2);
+        mmCtx.fill();
 
-        // Radar visibility logic
+        // Draw entities (allies always visible, enemies only on your side)
         if (scene && scene.entities) {
             scene.entities.forEach(ent => {
-                if (ent.type === 'character' && ent.id !== player.id && ent.hp > 0) {
-                    const isEnemyOnMySide = (player.team === 'red' && ent.x < 10 * GAME.TILE_SIZE) ||
-                        (player.team === 'blue' && ent.x > 14 * GAME.TILE_SIZE);
-                    if (isEnemyOnMySide) {
-                        const ex = (ent.x / mapWorldSize) * size;
-                        const ey = (ent.y / mapWorldSize) * size;
+                if (ent.type === 'CHARACTER' && ent.hp > 0) {
+                    const ex = (ent.x / mapWorldSize) * size;
+                    const ey = (ent.y / mapWorldSize) * size;
+                    
+                    // Check if enemy is on your side of the map
+                    const isEnemy = ent.team !== player.team;
+                    const isEnemyOnMySide = isEnemy && (
+                        (player.team === 'red' && ent.x < 12 * GAME.TILE_SIZE) ||
+                        (player.team === 'blue' && ent.x > 12 * GAME.TILE_SIZE)
+                    );
+                    
+                    // Show allies always, enemies only on your side
+                    if (!isEnemy || isEnemyOnMySide) {
                         mmCtx.fillStyle = ent.team === 'red' ? '#ff4444' : '#4488ff';
-                        mmCtx.beginPath(); mmCtx.arc(ex, ey, 2.5, 0, Math.PI * 2); mmCtx.fill();
+                        mmCtx.beginPath();
+                        mmCtx.arc(ex, ey, 3, 0, Math.PI * 2);
+                        mmCtx.fill();
+                        
+                        // Highlight local player
+                        if (ent.id === player.id) {
+                            mmCtx.strokeStyle = '#fff';
+                            mmCtx.lineWidth = 2;
+                            mmCtx.stroke();
+                        }
                     }
                 }
             });
         }
 
+        // Draw player position (again, on top)
         const px = (player.x / mapWorldSize) * size;
         const py = (player.y / mapWorldSize) * size;
         mmCtx.fillStyle = player.team === 'red' ? '#ff4444' : '#4488ff';
-        mmCtx.beginPath(); mmCtx.arc(px, py, 3, 0, Math.PI * 2); mmCtx.fill();
-        mmCtx.strokeStyle = '#fff'; mmCtx.lineWidth = 1; mmCtx.stroke();
+        mmCtx.beginPath();
+        mmCtx.arc(px, py, 4, 0, Math.PI * 2);
+        mmCtx.fill();
+        mmCtx.strokeStyle = '#fff';
+        mmCtx.lineWidth = 2;
+        mmCtx.stroke();
     }
 
     _renderStats(ctx, player) {
