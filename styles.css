@@ -571,6 +571,21 @@ canvas#gameCanvas {
     transition: height 0.1s linear;
 }
 
+.sell-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 0%;
+    background: rgba(255, 100, 100, 0.6);
+    transition: height 0.15s ease-out;
+    pointer-events: none;
+}
+
+.inv-slot:hover .sell-overlay {
+    height: 100%;
+}
+
 .cooldown-text {
     position: absolute;
     color: #ff0;

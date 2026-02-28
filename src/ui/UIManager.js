@@ -84,6 +84,7 @@ export class UIManager {
                 <div class="hotkey">${['Z', 'X', 'C', 'V', 'D', 'F'][i]}</div>
                 <div class="cooldown-overlay" id="inv-cd-${i}"></div>
                 <div class="cooldown-text" id="inv-text-${i}"></div>
+                <div class="sell-overlay" id="inv-sell-${i}"></div>
             `;
             slot.addEventListener('click', () => {
                 const scene = this.game.sceneManager.currentScene;
@@ -92,6 +93,18 @@ export class UIManager {
                     if (item && item.active && item.cooldown <= 0) {
                         scene.activeItemSlot = i;
                         this.game.canvas.style.cursor = 'crosshair';
+                    }
+                }
+            });
+            // Right-click to sell
+            slot.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                const scene = this.game.sceneManager.currentScene;
+                if (scene && scene.localPlayer && scene.localPlayer.items && scene.localPlayer.items[i]) {
+                    const item = scene.localPlayer.items[i];
+                    const sellPrice = Math.floor(this._getItemCost(item.id) * 0.5);
+                    if (confirm(`Продать ${item.label} за ${sellPrice}g? (50% стоимости)`)) {
+                        this.game.network.sendInput({ type: 'SELL_ITEM', slot: i });
                     }
                 }
             });
@@ -381,6 +394,12 @@ export class UIManager {
             lines.forEach((line, i) => { ctx.fillText(line, tx + 10, ty + 45 + i * 20); });
             ctx.restore();
         }
+    }
+
+    /** Get item cost by ID from SHOP_ITEMS */
+    _getItemCost(itemId) {
+        const itemDef = SHOP_ITEMS.find(item => item.id === itemId);
+        return itemDef ? itemDef.cost : 0;
     }
 
     _updatePing(scene) {

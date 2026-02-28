@@ -5,7 +5,7 @@ import { Character } from './src/game/Character.js';
 import { Hook } from './src/game/Hook.js';
 import { TossedUnit } from './src/game/TossedUnit.js';
 import { Landmine } from './src/game/Landmine.js';
-import { ITEM_MAP } from './src/shared/ItemDefs.js';
+import { ITEM_MAP, SHOP_ITEMS } from './src/shared/ItemDefs.js';
 import { GAME } from './src/shared/GameConstants.js';
 
 export class ServerGame {
@@ -74,6 +74,8 @@ export class ServerGame {
             console.log(`[GOLD] Cheat: Player ${playerId} now has ${character.gold}`);
         } else if (input.type === 'BUY_ITEM') {
             this.handleBuyItem(character, input.itemId);
+        } else if (input.type === 'SELL_ITEM') {
+            this.handleSellItem(character, input.slot);
         } else if (input.type === 'USE_ITEM') {
             this.handleUseItem(character, input.slot, input.x, input.y);
         } else if (input.type === 'PICKUP') {
@@ -180,6 +182,27 @@ export class ServerGame {
                 // Handled in Hook.js via recalculateStats -> hasLantern
                 break;
         }
+    }
+
+    handleSellItem(character, slot) {
+        if (!character.items || slot < 0 || slot >= character.items.length) return;
+        
+        const item = character.items[slot];
+        if (!item) return;
+        
+        // Get item cost and calculate sell price (50%)
+        const itemDef = SHOP_ITEMS.find(i => i.id === item.id);
+        if (!itemDef) return;
+        
+        const sellPrice = Math.floor(itemDef.cost * 0.5);
+        
+        // Remove item and give gold
+        character.items.splice(slot, 1);
+        character.gold += sellPrice;
+        
+        console.log(`[SELL] Player ${character.id} sold ${item.label} for ${sellPrice}g`);
+        
+        character.recalculateStats();
     }
 
     handleUseItem(character, slot, x, y) {
