@@ -235,8 +235,8 @@ export class Hook {
         if (this.hookedEntity && this.hookedEntity.state === State.HOOKED && this.hookedEntity.type !== 'LANDMINE') {
             const hasRupture = (this.owner.items || []).some(i => i.id === 'strygwyr_claws' || i.effect === 'rupture');
             if (hasRupture) {
-                // Deal damage per second while hooked (2 DPS)
-                this.hookedEntity.takeDamage(2 * dt, this.owner);
+                // Deal damage per second while hooked (5 DPS)
+                this.hookedEntity.takeDamage(5 * dt, this.owner);
             }
         }
 
