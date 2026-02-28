@@ -71,11 +71,16 @@ export class GameRules {
             // Base gold for kill
             let goldReward = 65;
             
-            // First Blood bonus (x2)
+            // First Blood bonus (x2) + announcement
             if (!this._firstBloodDone) {
                 goldReward = 130;
                 this._firstBloodDone = true;
                 console.log(`[FIRST BLOOD] Player ${killer.id} gets ${goldReward}g!`);
+                
+                // Announce First Blood to all players
+                if (this.onFirstBlood) {
+                    this.onFirstBlood(killer.team);
+                }
             }
             
             // Headshot bonus

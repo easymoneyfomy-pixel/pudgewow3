@@ -16,6 +16,11 @@ export class ServerGame {
         this.map = new GameMap(GAME.MAP_WIDTH, GAME.MAP_HEIGHT, GAME.TILE_SIZE);
         this.entityManager = new EntityManager();
         this.rules = new GameRules();
+        
+        // Setup First Blood callback
+        this.rules.onFirstBlood = (team) => {
+            console.log(`[GAME] First Blood for ${team.toUpperCase()} team!`);
+        };
 
         this.players = new Map();
         this.running = false;
