@@ -275,7 +275,7 @@ export class Hook {
 
         // Grapple pulls at normal hook speed (x1)
         const grappleSpeed = moveAmt;
-        
+
         // Stop 1 tile (64px) before hook position
         const stopDistance = GAME.TILE_SIZE;
 
@@ -291,24 +291,11 @@ export class Hook {
             return;
         }
 
-        // Calculate next position
+        // Calculate next position and move owner towards hook
         const nextX = this.owner.x + (dx / dist) * grappleSpeed;
         const nextY = this.owner.y + (dy / dist) * grappleSpeed;
 
-        // Check if owner reached stop position (1 tile before hook)
-        if (dist <= stopDistance) {
-            // Release immediately at stop position
-            this.owner.isPaused = false;
-
-            // Reset grapple flag and remove hook
-            this.hasGrapple = false;
-            this.isGrappling = false;
-            entityManager.remove(this);
-            return;
-        }
-
         // Move the owner directly towards hook - can fly over everything including water
-        // Grapple pulls player to hook regardless of terrain
         this.owner.x = nextX;
         this.owner.y = nextY;
     }

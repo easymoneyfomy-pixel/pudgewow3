@@ -275,10 +275,10 @@ export class ServerGame {
             character.salveTimer = 10;
             item.cooldown = item.maxCooldown;
         } else if (item.effect === 'grapple') {
-            // Grappling Hook: Shoot hook immediately to target position
+            // Grappling Hook: Shoot hook to target position
             const hook = new Hook(character, x, y);
             hook.hasGrapple = true;
-            hook.isGrappling = true;
+            // isGrappling will be set to true when hook hits a wall
             this.entityManager.add(hook);
             item.cooldown = item.maxCooldown;
         }
