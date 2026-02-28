@@ -263,11 +263,22 @@ export class MainScene {
             }
         }
 
-        // Shop proximity & toggle (B)
+        // Shop proximity & prompt
         const nearShop = this._isNearShop();
-        if (this.game.input.isKeyPressed('KeyB')) {
-            this.ui.shopOpen = nearShop ? !this.ui.shopOpen : false;
+        const promptEl = document.getElementById('shop-prompt');
+        if (promptEl) {
+            if (nearShop) promptEl.classList.remove('hidden');
+            else promptEl.classList.add('hidden');
         }
+
+        // Toggle (B)
+        if (this.game.input.isKeyPressed('KeyB')) {
+            if (nearShop) {
+                this.ui.shopOpen = !this.ui.shopOpen;
+            }
+        }
+
+        // Force close if too far
         if (this.ui.shopOpen && !nearShop) {
             this.ui.shopOpen = false;
         }

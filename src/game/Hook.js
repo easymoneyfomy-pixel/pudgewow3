@@ -198,6 +198,7 @@ export class Hook {
             }
 
             this.owner.gold += GAME.GOLD_ON_HIT;
+            console.log(`[GOLD] Hit reward: Player ${this.owner.id} +${GAME.GOLD_ON_HIT} (Total: ${this.owner.gold})`);
         }
     }
 

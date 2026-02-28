@@ -6,7 +6,8 @@ export const TileType = {
     SPAWN_RED: 'spawn_red',
     SPAWN_BLUE: 'spawn_blue',
     SHOP: 'shop',
-    RUNE: 'rune'
+    RUNE: 'rune',
+    STONE: 'stone'
 };
 
 export class Tile {
@@ -32,6 +33,10 @@ export class Tile {
             case TileType.SHOP:
                 this.isWalkable = false;
                 this.isHookable = false;
+                break;
+            case TileType.STONE:
+                this.isWalkable = false;
+                this.isHookable = true; // Hooks fly over stones
                 break;
         }
     }

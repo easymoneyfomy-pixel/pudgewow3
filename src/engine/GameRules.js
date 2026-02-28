@@ -65,6 +65,7 @@ export class GameRules {
             if (entity.lastAttacker.gainFleshHeap) entity.lastAttacker.gainFleshHeap();
             if (entity.lastAttacker.gainXp) entity.lastAttacker.gainXp(50); // XP for kill
             entity.lastAttacker.gold += 100; // Gold for kill
+            console.log(`[GOLD] Kill reward: Player ${entity.lastAttacker.id} +100 (Total: ${entity.lastAttacker.gold})`);
         }
 
         this.checkWinCondition();

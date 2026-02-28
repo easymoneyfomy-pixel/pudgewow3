@@ -69,6 +69,9 @@ export class ServerGame {
             this.handleUpgrade(character, input.upgradeType);
         } else if (input.type === 'ROT') {
             character.toggleRot();
+        } else if (input.type === 'CHAT' && input.message === '-testgold') {
+            character.gold += 1000;
+            console.log(`[GOLD] Cheat: Player ${playerId} now has ${character.gold}`);
         } else if (input.type === 'BUY_ITEM') {
             this.handleBuyItem(character, input.itemId);
         } else if (input.type === 'USE_ITEM') {
