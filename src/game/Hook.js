@@ -168,7 +168,11 @@ export class Hook {
 
         const isAlly = entity.team === this.owner.team;
         let damage = this.owner.hookDamage;
-        if (this.hasLantern) damage += this.speed * 0.1;
+        // Barathrum's Lantern: +Damage based on speed exceeding base 750 (10% of speed bonus)
+        if (this.hasLantern) {
+            const speedBonus = Math.max(0, this.speed - 750);
+            damage += speedBonus * 0.1;
+        }
         if (this.owner.ddTimer > 0) damage *= 2;
 
         if (entity.type === 'LANDMINE') {

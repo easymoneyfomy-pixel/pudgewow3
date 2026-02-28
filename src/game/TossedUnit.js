@@ -1,4 +1,5 @@
 import { State } from '../engine/State.js';
+import { GAME } from '../shared/GameConstants.js';
 
 export class TossedUnit {
     constructor(owner, targetUnit, targetX, targetY) {

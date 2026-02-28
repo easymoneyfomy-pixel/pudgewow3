@@ -169,6 +169,9 @@ export class ServerGame {
             case 'bounce':
                 character.hookBounces = (character.hookBounces || 0) + 1;
                 break;
+            case 'lantern':
+                // Handled in Hook.js via recalculateStats -> hasLantern
+                break;
         }
     }
 
