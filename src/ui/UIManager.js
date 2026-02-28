@@ -284,7 +284,19 @@ export class UIManager {
 
     _renderInventory(ctx, player) {
         if (!player) return;
-        const icons = { 'burn': 'assets/shop/flaming_hook.png', 'bounce': '🔄', 'rupture': '🩸', 'grapple': '🪢', 'lifesteal': '🦇', 'blink': '⚡', 'speed': '🐾', 'mine': 'assets/shop/mine.png', 'heal': '💊', 'toss': 'assets/shop/Tini\'s_Arm.png', 'lantern': '🏮' };
+        const icons = { 
+            'burn': 'assets/shop/flaming_hook.png', 
+            'bounce': 'assets/shop/Ricochet_Turbline.png', 
+            'rupture': 'assets/shop/Stragwyr\'s_Claws.png', 
+            'grapple': '🪢', 
+            'lifesteal': '🦇', 
+            'blink': 'assets/shop/Blink_Dagger.png', 
+            'speed': '🐾', 
+            'mine': 'assets/shop/mine.png', 
+            'heal': 'assets/shop/Healling_salve.png', 
+            'toss': 'assets/shop/Tini\'s_Arm.png', 
+            'lantern': '🏮' 
+        };
         
         // Check if player has Flaming Hook (for skill Q icon update)
         const hasFlamingHook = player.items && player.items.some(item => item.effect === 'burn');
