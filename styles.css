@@ -617,7 +617,27 @@ canvas#gameCanvas {
 }
 
 .inv-slot .item-icon {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     font-size: 1.2rem;
+}
+
+.inv-slot .item-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+}
+
+.inv-slot .cooldown-overlay {
+    z-index: 2;
+}
+
+.inv-slot .cooldown-text {
+    z-index: 3;
 }
 
 .shop-hint {

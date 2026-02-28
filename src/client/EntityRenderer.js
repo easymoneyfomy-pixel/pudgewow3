@@ -183,7 +183,7 @@ export class EntityRenderer {
         }
         points.push({ x: ox, y: oy });
 
-        // Draw segmented chain along the polyline
+        // Draw segmented chain along the polyline using hookLinkSprite
         for (let i = 0; i < points.length - 1; i++) {
             const p1 = points[i];
             const p2 = points[i + 1];
@@ -193,12 +193,13 @@ export class EntityRenderer {
             const dist = Math.sqrt(dx * dx + dy * dy);
 
             if (dist > 2) {
+                const linkSize = 12; // Adjust size for meat-links look
                 const linkCount = Math.floor(dist / segmentDist);
                 const linkAngle = Math.atan2(dy, dx);
-                const actualCount = Math.max(1, linkCount);
+                const linkSprite = renderer.hookLinkSprite;
 
-                for (let j = 0; j <= actualCount; j++) {
-                    const t = j / actualCount;
+                for (let j = 0; j <= linkCount; j++) {
+                    const t = j / (linkCount || 1);
                     const lx = p1.x + dx * t;
                     const ly = p1.y + dy * t;
 
@@ -206,18 +207,25 @@ export class EntityRenderer {
                     ctx.translate(lx, ly);
                     ctx.rotate(linkAngle);
 
-                    ctx.beginPath();
-                    ctx.roundRect(-6, -3, 12, 6, 3);
-                    ctx.fill();
-                    ctx.stroke();
+                    if (linkSprite && linkSprite.complete) {
+                        ctx.drawImage(linkSprite, -linkSize / 2, -linkSize / 4, linkSize, linkSize / 2);
+                    } else {
+                        // Procedural fallback (Meat Links)
+                        ctx.fillStyle = '#654321';
+                        ctx.beginPath();
+                        ctx.roundRect(-6, -3, 12, 6, 3);
+                        ctx.fill();
+                        ctx.stroke();
+                    }
                     ctx.restore();
                 }
             }
         }
 
-        // 2. Hook blade (The Head) - Procedural "Meat Hook" they liked
+        // 2. Hook blade (The Head)
         let headAngle = Math.atan2(dirY, dirX);
         if (isReturning && points.length > 1) {
+            // When returning, head faces the direction of travel (inverse of forward)
             const headDx = points[1].x - hx;
             const headDy = points[1].y - hy;
             headAngle = Math.atan2(headDy, headDx) + Math.PI;
@@ -227,12 +235,13 @@ export class EntityRenderer {
         ctx.translate(hx, hy);
         ctx.rotate(headAngle);
 
-        const currentSprite = hook.isFlaming ? renderer.flamingHookSprite : renderer.hookSprite;
-        if (currentSprite && currentSprite.complete) {
-            const size = (hook.radius || 24) * 2;
-            ctx.drawImage(currentSprite, -size / 2, -size / 2, size, size);
+        const tipSprite = hook.isFlaming ? renderer.flamingHookSprite : renderer.hookTipSprite;
+
+        if (tipSprite && tipSprite.complete) {
+            const size = (hook.radius || 20) * 2.5;
+            ctx.drawImage(tipSprite, -size / 2, -size / 2, size, size);
         } else {
-            // Simple procedural hook (Meat Hook style)
+            // Simple procedural hook (Meat Hook style) - Fallback
             ctx.fillStyle = '#777';
             ctx.fillRect(-2, -2, 10, 4);
             ctx.beginPath();

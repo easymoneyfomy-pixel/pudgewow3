@@ -22,8 +22,14 @@ export class Renderer {
         this.flamingHookSprite = new Image();
         this.flamingHookSprite.src = 'assets/flaming_hook.png';
 
+        this.hookTipSprite = new Image();
+        this.hookTipSprite.src = 'assets/hook_body.png';
+
+        this.hookLinkSprite = new Image();
+        this.hookLinkSprite.src = 'assets/hook.png';
+
         this.landmineSprite = new Image();
-        this.landmineSprite.src = 'assets/mine.png'; // Handled by generic assets
+        this.landmineSprite.src = 'assets/mine.png';
     }
 
     clear() {

@@ -76,9 +76,11 @@ export class Hook {
                 this.startReturning();
             }
 
-            // Check walls
+            // 3. Tile Collision (Walls & Obstacles)
             const tile = map.getTileAt(this.x, this.y);
-            if (tile && !tile.isHookable) {
+            const isSolid = tile && (!tile.isHookable || tile.type === 'obstacle');
+
+            if (isSolid) {
                 if (this.hasGrapple) {
                     this.isGrappling = true;
                     this.startReturning();
@@ -87,11 +89,6 @@ export class Hook {
                 } else {
                     this.startReturning();
                 }
-            }
-
-            // Check collisions with obstacles (trees) for bouncing
-            if (tile && tile.type === 'obstacle' && this.bouncesLeft > 0 && !this.isReturning) {
-                this.bounce(map);
             }
 
             // Check collisions with entities (unless already returning)

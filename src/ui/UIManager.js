@@ -307,7 +307,10 @@ export class UIManager {
             'lifesteal': '🦇',
             'blink': '⚡',
             'speed': '🐾',
-            'mine': 'assets/mine.png'
+            'mine': 'assets/mine.png',
+            'heal': '💊',
+            'toss': '💪',
+            'lantern': '🏮'
         };
 
         for (let i = 0; i < 6; i++) {

@@ -403,6 +403,12 @@ export class Character {
         this.hookMaxDist = GAME.HOOK_MAX_DIST + (this.level - 1) * 100;
         this.hookRadius = GAME.HOOK_RADIUS + (this.level - 1) * 2;
 
+        // Reset Item/Upgrade stats before re-applying
+        this.hookBounces = 0;
+        this.hasBurn = false;
+        this.hasRupture = false;
+        this.hasLifesteal = false;
+
         this.hookDamage += (this.dmgUpgrades || 0) * 10;
         this.hookSpeed += (this.spdUpgrades || 0) * 50;
         this.hookMaxDist += (this.distUpgrades || 0) * 100;
@@ -412,6 +418,10 @@ export class Character {
 
         for (const item of this.items || []) {
             if (item.effect === 'speed') this.speed += 40;
+            if (item.effect === 'bounce') this.hookBounces++;
+            if (item.effect === 'burn') this.hasBurn = true;
+            if (item.effect === 'rupture') this.hasRupture = true;
+            if (item.effect === 'lifesteal') this.hasLifesteal = true;
         }
     }
 }
