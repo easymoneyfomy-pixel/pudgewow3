@@ -169,6 +169,10 @@ export class Hook {
                         this.currentDist = Math.min(this.currentDist, this.maxDist * 0.5);
                         entity.currentDist = Math.min(entity.currentDist, entity.maxDist * 0.5);
                         
+                        // Clear path nodes and rebuild from new position for proper chain rendering
+                        this.pathNodes = [{ x: this.owner.x, y: this.owner.y }, { x: this.x, y: this.y }];
+                        entity.pathNodes = [{ x: entity.owner.x, y: entity.owner.y }, { x: entity.x, y: entity.y }];
+                        
                         return;
                     }
                 } else if (entity.takeDamage && entity.state !== State.DEAD) {
