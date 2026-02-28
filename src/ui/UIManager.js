@@ -249,6 +249,7 @@ export class UIManager {
         this.dom.playerGold.innerText = player.gold;
         
         // Update portrait based on level (Level 5+ uses pudge_5lvl.png)
+        // In-game uses 1.png/2.png, HUD portrait uses pudge.png
         const portraitEl = document.getElementById('portrait-img');
         if (portraitEl) {
             if (player.level >= 5) {

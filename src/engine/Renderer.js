@@ -10,6 +10,8 @@ export class Renderer {
         this.assetsLoadedCount = 0;
 
         // Load Sprites
+        this.radiantSprite = this._loadImage('assets/player/1.png');
+        this.direSprite = this._loadImage('assets/player/2.png');
         this.pudgeSprite = this._loadImage('assets/pudge.png');
         this.pudgeSprite5 = this._loadImage('assets/pudge_5lvl.png');
         this.direFloorSprite = this._loadImage('assets/graund.png');
