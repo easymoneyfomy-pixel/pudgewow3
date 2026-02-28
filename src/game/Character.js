@@ -126,11 +126,6 @@ export class Character {
         this.fleshHeapStacks++;
         this.recalculateStats();
         this.hp = Math.min(this.hp + this.fleshHeapHpPerStack, this.maxHp);
-        
-        // Spawn Flesh Heap particles
-        if (this.onSpawnFleshHeapParticles) {
-            this.onSpawnFleshHeapParticles(this.x, this.y);
-        }
     }
 
     castHook(targetX, targetY, entityManager) {
@@ -266,11 +261,6 @@ export class Character {
             this.deniedJustHappened = true;
         }
         this.takeDamage(rotDamage);
-
-        // Spawn Rot particles
-        if (this.onSpawnRotParticles) {
-            this.onSpawnRotParticles(this.x, this.y, this.rotRadius);
-        }
 
         for (const entity of entityManager.entities) {
             if (entity === this || !entity.takeDamage || entity.state === State.DEAD || entity.team === this.team) continue;

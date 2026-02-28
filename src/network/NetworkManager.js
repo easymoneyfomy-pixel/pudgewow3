@@ -10,10 +10,6 @@ export class NetworkManager {
 
         // Remote state
         this.serverState = null;
-        
-        // Delta compression
-        this._lastEntityState = new Map(); // For delta compression
-        this._lastServerTime = 0;
     }
 
     connect() {
@@ -31,12 +27,6 @@ export class NetworkManager {
             try {
                 const data = JSON.parse(event.data);
                 console.log('Client received:', data.type);
-                
-                // Apply delta decompression for GAME_STATE
-                if (data.type === 'GAME_STATE' && data.entities) {
-                    this._decompressEntities(data.entities);
-                }
-                
                 this.handleMessage(data);
             } catch (e) {
                 console.error('Failed to parse WebSocket message', e);
@@ -47,32 +37,6 @@ export class NetworkManager {
             console.log('Disconnected from server');
             this.connected = false;
         };
-    }
-
-    /**
-     * Decompress delta-encoded entities
-     * Server sends only changed values, client reconstructs full state
-     */
-    _decompressEntities(entities) {
-        for (const entity of entities) {
-            const id = entity.id;
-            if (this._lastEntityState.has(id)) {
-                const last = this._lastEntityState.get(id);
-                // Merge delta with last known state
-                Object.assign(last, entity);
-                this._lastEntityState.set(id, last);
-            } else {
-                // First time seeing this entity
-                this._lastEntityState.set(id, { ...entity });
-            }
-        }
-        
-        // Remove entities that no longer exist (marked with _deleted)
-        for (const [id, data] of this._lastEntityState.entries()) {
-            if (data._deleted) {
-                this._lastEntityState.delete(id);
-            }
-        }
     }
 
     send(type, payload) {
