@@ -22,13 +22,23 @@ export class EntityRenderer {
         const z = char.z || 0;
         ctx.translate(sx, sy - z);
 
-        // Rot AOE visual (green toxic cloud)
+        // Rot AOE visual - use rot.png sprite if available
         if (char.rotActive) {
-            const rotPulse = Math.sin(Date.now() / 200) * 0.15 + 0.25;
-            ctx.fillStyle = `rgba(0, 180, 0, ${rotPulse})`;
-            ctx.beginPath();
-            ctx.arc(0, 0, 60, 0, Math.PI * 2);
-            ctx.fill();
+            if (renderer.rotSprite && renderer.rotSprite.complete && renderer.rotSprite.naturalWidth > 0) {
+                const rotScale = (Math.sin(Date.now() / 200) * 0.1 + 0.9) * 2.5;
+                ctx.save();
+                ctx.rotate(Date.now() / 500);
+                ctx.globalAlpha = 0.6;
+                ctx.drawImage(renderer.rotSprite, -60 * rotScale / 2, -60 * rotScale / 2, 60 * rotScale, 60 * rotScale);
+                ctx.restore();
+            } else {
+                // Fallback procedural rot
+                const rotPulse = Math.sin(Date.now() / 200) * 0.15 + 0.25;
+                ctx.fillStyle = `rgba(0, 180, 0, ${rotPulse})`;
+                ctx.beginPath();
+                ctx.arc(0, 0, 60, 0, Math.PI * 2);
+                ctx.fill();
+            }
         }
 
         // Selection circle (team color)
@@ -39,8 +49,13 @@ export class EntityRenderer {
         ctx.stroke();
 
         // HP Bar and other UI handled below
-        // Pudge Sprite (Phase 20: Team-specific skins)
-        const teamSprite = (char.team === 'red') ? renderer.radiantSprite : renderer.direSprite;
+        // Pudge Sprite - use dedicated pudge.png sprite if available, otherwise team sprites
+        let teamSprite = renderer.pudgeSprite;
+        
+        // Fallback to team-specific sprites if pudge.png not loaded
+        if (!teamSprite || !teamSprite.complete || teamSprite.naturalWidth === 0) {
+            teamSprite = (char.team === 'red') ? renderer.radiantSprite : renderer.direSprite;
+        }
 
         if (teamSprite && teamSprite.complete && teamSprite.naturalWidth > 0) {
             ctx.save();

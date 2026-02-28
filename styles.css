@@ -537,7 +537,7 @@ canvas#gameCanvas {
 }
 
 .icon-hook.flaming {
-    background-image: url('assets/flaming_hook.png');
+    background-image: url('assets/shop/flaming_hook.png');
 }
 
 .icon-rot {
@@ -547,6 +547,8 @@ canvas#gameCanvas {
 /* Fallback icon if no image */
 .icon-fleshheap {
     background-image: url('assets/Flesh_Heap.png');
+    background-size: cover;
+    background-position: center;
 }
 
 .hotkey {

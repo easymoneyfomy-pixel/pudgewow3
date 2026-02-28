@@ -5,49 +5,53 @@ export class Renderer {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         this.tileSize = GAME.TILE_SIZE; // WC3-style tile size (64)
+        this.assetsLoaded = false;
+        this.assetsToLoad = 0;
+        this.assetsLoadedCount = 0;
 
         // Load Sprites
-        this.radiantSprite = new Image();
-        this.radiantSprite.src = 'assets/player/1.png';
+        this.radiantSprite = this._loadImage('assets/player/1.png');
+        this.direSprite = this._loadImage('assets/player/2.png');
+        this.direFloorSprite = this._loadImage('assets/graund.png');
+        this.hookSprite = this._loadImage('assets/hook.png');
+        this.flamingHookSprite = this._loadImage('assets/shop/flaming_hook.png');
+        this.hookTipSprite = this._loadImage('assets/hook_body.png');
+        this.hookLinkSprite = this._loadImage('assets/hook.png');
+        this.treeSprite = this._loadImage('assets/tree.png');
+        this.treeRedSprite = this._loadImage('assets/tree_red.png');
+        this.waterSprite = this._loadImage('assets/water.png');
+        this.shopBuildingSprite = this._loadImage('assets/shop.png');
+        this.landmineSprite = this._loadImage('assets/shop/mine.png');
+        this.stoneSprite = this._loadImage('assets/rook1.png');
+        this.stone2Sprite = this._loadImage('assets/rook2.png');
+        
+        // Additional sprites (unused but available)
+        this.pudgeSprite = this._loadImage('assets/pudge.png');
+        this.rotSprite = this._loadImage('assets/rot.png');
+        this.fleshHeapSprite = this._loadImage('assets/Flesh_Heap.png');
+        this.tinysArmSprite = this._loadImage("assets/shop/Tini's_Arm.png");
+    }
 
-        this.direSprite = new Image();
-        this.direSprite.src = 'assets/player/2.png';
-
-        this.direFloorSprite = new Image();
-        this.direFloorSprite.src = 'assets/graund.png';
-
-        this.hookSprite = new Image();
-        this.hookSprite.src = 'assets/hook.png';
-
-        this.flamingHookSprite = new Image();
-        this.flamingHookSprite.src = 'assets/shop/flaming_hook.png';
-
-        this.hookTipSprite = new Image();
-        this.hookTipSprite.src = 'assets/hook_body.png';
-
-        this.hookLinkSprite = new Image();
-        this.hookLinkSprite.src = 'assets/hook.png';
-
-        this.treeSprite = new Image();
-        this.treeSprite.src = 'assets/tree.png';
-
-        this.treeRedSprite = new Image();
-        this.treeRedSprite.src = 'assets/tree_red.png';
-
-        this.waterSprite = new Image();
-        this.waterSprite.src = 'assets/water.png';
-
-        this.shopBuildingSprite = new Image();
-        this.shopBuildingSprite.src = 'assets/shop.png';
-
-        this.landmineSprite = new Image();
-        this.landmineSprite.src = 'assets/shop/mine.png';
-
-        this.stoneSprite = new Image();
-        this.stoneSprite.src = 'assets/rook1.png';
-
-        this.stone2Sprite = new Image();
-        this.stone2Sprite.src = 'assets/rook2.png';
+    _loadImage(src) {
+        const img = new Image();
+        img.src = src;
+        this.assetsToLoad++;
+        img.onload = () => {
+            this.assetsLoadedCount++;
+            console.log('[Renderer] Loaded:', src, `(${this.assetsLoadedCount}/${this.assetsToLoad})`);
+            if (this.assetsLoadedCount >= this.assetsToLoad) {
+                this.assetsLoaded = true;
+                console.log('[Renderer] All assets loaded:', this.assetsLoadedCount);
+            }
+        };
+        img.onerror = (err) => {
+            console.error('[Renderer] FAILED to load image:', src, err);
+            this.assetsLoadedCount++;
+            if (this.assetsLoadedCount >= this.assetsToLoad) {
+                this.assetsLoaded = true;
+            }
+        };
+        return img;
     }
 
     clear(dt) {
