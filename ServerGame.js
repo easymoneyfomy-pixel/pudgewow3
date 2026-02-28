@@ -278,7 +278,7 @@ export class ServerGame {
             // Grappling Hook: Shoot hook to target position
             const hook = new Hook(character, x, y);
             hook.hasGrapple = true;
-            // isGrappling will be set to true when hook hits a wall
+            // isGrappling will be set to true when hook hits a wall/ground
             this.entityManager.add(hook);
             item.cooldown = item.maxCooldown;
         }

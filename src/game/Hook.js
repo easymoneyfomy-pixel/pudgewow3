@@ -47,6 +47,7 @@ export class Hook {
         this.grappleTargetX = null;
         this.grappleTargetY = null;
         this.grappleTimer = 0; // Timeout counter for grapple
+        this.isGrappling = false; // Start as false, set to true when hook hits wall/ground
     }
 
     update(dt, map, entityManager) {
@@ -86,6 +87,8 @@ export class Hook {
                     this.isGrappling = true;
                     this.grappleTargetX = this.x;
                     this.grappleTargetY = this.y;
+                    // Reset grapple timer when grapple starts
+                    this.grappleTimer = 0;
                 }
                 this.startReturning();
             }
@@ -103,6 +106,8 @@ export class Hook {
                     // Save the position where hook hit the wall for grapple
                     this.grappleTargetX = this.x;
                     this.grappleTargetY = this.y;
+                    // Reset grapple timer when grapple starts
+                    this.grappleTimer = 0;
                     this.startReturning();
                 } else if (this.bouncesLeft > 0) {
                     this.bounce(map);
