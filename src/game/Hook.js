@@ -275,12 +275,13 @@ export class Hook {
 
         // Grapple pulls at normal hook speed (x1)
         const grappleSpeed = moveAmt;
+        
+        // Stop 1 tile (64px) before hook position
+        const stopDistance = GAME.TILE_SIZE;
 
-        // Check if owner reached the hook position (immediate release)
-        if (dist <= grappleSpeed) {
-            // Snap to hook position and release immediately
-            this.owner.x = this.x;
-            this.owner.y = this.y;
+        // Check if owner reached stop position (1 tile before hook)
+        if (dist <= stopDistance) {
+            // Release immediately at stop position
             this.owner.isPaused = false;
 
             // Reset grapple flag and remove hook
@@ -294,9 +295,10 @@ export class Hook {
         const nextX = this.owner.x + (dx / dist) * grappleSpeed;
         const nextY = this.owner.y + (dy / dist) * grappleSpeed;
 
-        // Check if next position is in wall BEFORE moving
+        // Check if next position is in wall (not water) BEFORE moving
         if (map) {
             const tile = map.getTileAt(nextX, nextY);
+            // Allow flying over water, stop only at real obstacles
             if (tile && !tile.isWalkable && tile.type !== 'water') {
                 // Owner would hit wall - stop grappling immediately
                 this.owner.isPaused = false;
@@ -307,11 +309,9 @@ export class Hook {
             }
         }
 
-        // Move the owner directly
+        // Move the owner directly (can fly over water)
         this.owner.x = nextX;
         this.owner.y = nextY;
-
-        // No safety timeout - grapple should be instant
     }
 
     /** Returns a plain-data snapshot for server→client broadcast. */
