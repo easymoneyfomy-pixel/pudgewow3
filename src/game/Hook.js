@@ -237,7 +237,13 @@ export class Hook {
             const hasRupture = (this.owner.items || []).some(i => i.id === 'strygwyr_claws' || i.effect === 'rupture');
             if (hasRupture) {
                 // Deal damage per second while hooked (~2 DPS = ~2 total damage over ~1 sec flight)
-                this.hookedEntity.takeDamage(2 * dt, this.owner);
+                const ruptureDamage = 2 * dt;
+                this.hookedEntity.takeDamage(ruptureDamage, this.owner);
+                
+                // Visual feedback: floating text and blood particles
+                if (this.onRuptureDamage) {
+                    this.onRuptureDamage(this.hookedEntity.x, this.hookedEntity.y, ruptureDamage);
+                }
             }
         }
 
