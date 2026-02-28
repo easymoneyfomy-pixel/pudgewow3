@@ -40,6 +40,10 @@ export class Hook {
         this.ownerPrevX = owner.x;
         this.ownerPrevY = owner.y;
         this.pathNodes = []; // List of breadcrumbs {x, y} for polyline chain
+        
+        // One-frame flags for visual effects
+        this.clashJustHappened = false;
+        this.hitJustHappened = false;
     }
 
     update(dt, map, entityManager) {
