@@ -248,13 +248,13 @@ export class UIManager {
         this.dom.playerLevel.innerText = `Lv ${player.level}`;
         this.dom.playerGold.innerText = player.gold;
         
-        // Update portrait based on level (Level 5+ uses upgraded sprite)
+        // Update portrait based on level (Level 5+ uses pudge_5lvl.png)
         const portraitEl = document.getElementById('portrait-img');
         if (portraitEl) {
             if (player.level >= 5) {
-                portraitEl.style.backgroundImage = `url('assets/player/${player.team === 'red' ? '1_5' : '2_5'}.png')`;
+                portraitEl.style.backgroundImage = "url('assets/pudge_5lvl.png')";
             } else {
-                portraitEl.style.backgroundImage = `url('assets/player/${player.team === 'red' ? '1' : '2'}.png')`;
+                portraitEl.style.backgroundImage = "url('assets/pudge.png')";
             }
         }
         

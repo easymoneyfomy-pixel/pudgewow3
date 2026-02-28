@@ -39,14 +39,14 @@ export class EntityRenderer {
         ctx.stroke();
 
         // HP Bar and other UI handled below
-        // Pudge Sprite (Phase 20: Team-specific skins + Level 5+ upgrade)
+        // Pudge Sprite - uses pudge.png for all, pudge_5lvl.png for level 5+
         let teamSprite;
         const isLevel5Plus = char.level >= 5;
         
-        if (char.team === 'red') {
-            teamSprite = isLevel5Plus ? renderer.radiantSprite5 : renderer.radiantSprite;
+        if (isLevel5Plus) {
+            teamSprite = renderer.pudgeSprite5;
         } else {
-            teamSprite = isLevel5Plus ? renderer.direSprite5 : renderer.direSprite;
+            teamSprite = renderer.pudgeSprite;
         }
 
         if (teamSprite && teamSprite.complete && teamSprite.naturalWidth > 0) {
