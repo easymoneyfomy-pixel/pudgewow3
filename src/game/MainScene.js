@@ -242,11 +242,12 @@ export class MainScene {
             this.game.network.sendInput({ type: 'ROT' });
         }
 
-        // Stat upgrades (1-4)
+        // Stat upgrades (1-5)
         if (this.game.input.isKeyPressed('Digit1')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'DAMAGE' });
         if (this.game.input.isKeyPressed('Digit2')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'SPEED' });
         if (this.game.input.isKeyPressed('Digit3')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'DISTANCE' });
         if (this.game.input.isKeyPressed('Digit4')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'RADIUS' });
+        if (this.game.input.isKeyPressed('Digit5')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'MOVE_SPEED' });
 
         // Active items (Z,X,C,V,D,F → slots 0-5)
         const itemKeys = ['KeyZ', 'KeyX', 'KeyC', 'KeyV', 'KeyD', 'KeyF'];

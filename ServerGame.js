@@ -121,6 +121,10 @@ export class ServerGame {
                     character.radUpgrades = (character.radUpgrades || 0) + 1;
                     character.gold -= cost;
                     break;
+                case 'MOVE_SPEED':
+                    character.moveSpeedUpgrades = (character.moveSpeedUpgrades || 0) + 1;
+                    character.gold -= cost;
+                    break;
             }
             character.recalculateStats();
         }

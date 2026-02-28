@@ -411,8 +411,11 @@ export class Character {
 
         this.hookDamage += (this.dmgUpgrades || 0) * 10;
         this.hookSpeed += (this.spdUpgrades || 0) * 50;
-        this.hookMaxDist += (this.distUpgrades || 0) * 100;
-        this.hookRadius += (this.radUpgrades || 0) * 4;
+        this.hookMaxDist += (this.distUpgrades || 0) * 50;
+        this.hookRadius += (this.radUpgrades || 0) * 5;
+        
+        // Move Speed upgrades
+        this.speed += (this.moveSpeedUpgrades || 0) * 10;
 
         this.maxHp += (this.fleshHeapStacks || 0) * (this.fleshHeapHpPerStack || 8);
 
