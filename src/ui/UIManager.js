@@ -254,6 +254,17 @@ export class UIManager {
             player.hookCooldown, player.maxHookCooldown, false
         );
 
+        // Phase 25: Dynamic Icon toggle
+        const skillSlotQ = document.querySelector('.skill-slot .icon-hook');
+        if (skillSlotQ) {
+            const hasFlamingItem = (player.items || []).some(i => i.effect === 'burn');
+            if (hasFlamingItem) {
+                skillSlotQ.classList.add('flaming');
+            } else {
+                skillSlotQ.classList.remove('flaming');
+            }
+        }
+
         // Rot (W)
         this._updateSkillSlot(
             this.dom.cdW, this.dom.cdTextW, this.dom.activeW,

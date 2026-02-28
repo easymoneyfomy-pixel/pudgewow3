@@ -17,7 +17,10 @@ export class Renderer {
         this.direFloorSprite.src = 'assets/graund.png';
 
         this.hookSprite = new Image();
-        this.hookSprite.src = 'assets/flaming_hook.png';
+        this.hookSprite.src = 'assets/hook.png';
+
+        this.flamingHookSprite = new Image();
+        this.flamingHookSprite.src = 'assets/flaming_hook.png';
 
         this.landmineSprite = new Image();
         this.landmineSprite.src = 'assets/mine.png'; // Handled by generic assets

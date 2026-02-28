@@ -27,6 +27,7 @@ export class Hook {
         this.hasGrapple = false; // Set explicitly by castHook
         this.hasLifesteal = (owner.items || []).some(i => i.effect === 'lifesteal');
         this.hasLantern = (owner.items || []).some(i => i.effect === 'lantern');
+        this.isFlaming = this.hasBurn; // Phase 25: Visual synchronization
 
         this.currentDist = 0;
         this.isReturning = false;
@@ -88,10 +89,13 @@ export class Hook {
                 }
             }
 
-            // Check collisions with entities (unless already returning)
-            if (!this.isReturning) {
-                this.checkEntityCollisions(entityManager);
+            // Check collisions with obstacles (trees) for bouncing
+            if (tile && tile.type === 'obstacle' && this.bouncesLeft > 0 && !this.isReturning) {
+                this.bounce(map);
             }
+
+            // Check collisions with entities (unless already returning)
+            this.checkEntityCollisions(entityManager);
         } else {
             // Retraction
             if (this.isGrappling) {
@@ -116,8 +120,10 @@ export class Hook {
         const up = map.getTileAt(this.x, this.y - checkDist);
         const down = map.getTileAt(this.x, this.y + checkDist);
 
-        if ((left && !left.isHookable) || (right && !right.isHookable)) this.dirX *= -1;
-        if ((up && !up.isHookable) || (down && !down.isHookable)) this.dirY *= -1;
+        const isSolid = (t) => t && (!t.isHookable || t.type === 'obstacle');
+
+        if (isSolid(left) || isSolid(right)) this.dirX *= -1;
+        if (isSolid(up) || isSolid(down)) this.dirY *= -1;
 
         this.x += this.dirX * 10;
         this.y += this.dirY * 10;
@@ -289,7 +295,8 @@ export class Hook {
             radius: this.radius,
             pathNodes: this.pathNodes.map(p => ({ x: p.x, y: p.y })),
             clashJustHappened: this.clashJustHappened || false,
-            hitJustHappened: this.hitJustHappened || false
+            hitJustHappened: this.hitJustHappened || false,
+            isFlaming: this.isFlaming || false
         };
     }
 }

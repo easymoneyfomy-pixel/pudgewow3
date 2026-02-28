@@ -532,6 +532,11 @@ canvas#gameCanvas {
 }
 
 .icon-hook {
+    background-image: url('assets/hook.png');
+    /* Phase 25: Conditional default */
+}
+
+.icon-hook.flaming {
     background-image: url('assets/flaming_hook.png');
 }
 
