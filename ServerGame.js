@@ -25,6 +25,9 @@ export class ServerGame {
         this.tickRate = GAME.TICK_RATE;
         this.tickTimeout = null; // Changed from tickInterval
         this.expectedNextTick = 0; // Added for drift compensation
+        
+        // Delta compression for network optimization
+        this._lastEntityStates = new Map(); // id -> serialized state
     }
 
     addPlayer(playerId, team) {
@@ -340,9 +343,39 @@ export class ServerGame {
         };
         this.recentExplosions = [];
 
+        const entitiesToRemove = new Set(this._lastEntityStates.keys());
+
         for (const entity of this.entityManager.entities) {
             if (entity.serialize) {
-                state.entities.push(entity.serialize());
+                const currentState = entity.serialize();
+                const lastState = this._lastEntityStates.get(entity.id);
+                
+                if (lastState) {
+                    // Delta compression: send only changed fields
+                    const delta = {};
+                    let hasChanges = false;
+                    
+                    for (const key in currentState) {
+                        if (currentState[key] !== lastState[key]) {
+                            delta[key] = currentState[key];
+                            hasChanges = true;
+                        }
+                    }
+                    
+                    if (hasChanges) {
+                        state.entities.push(delta);
+                        this._lastEntityStates.set(entity.id, currentState);
+                    } else {
+                        // Send minimal update (just id to keep entity alive)
+                        state.entities.push({ id: entity.id });
+                    }
+                } else {
+                    // First time sending this entity - send full state
+                    state.entities.push(currentState);
+                    this._lastEntityStates.set(entity.id, currentState);
+                }
+                
+                entitiesToRemove.delete(entity.id);
             }
 
             // Reset one-frame flags after serialization
@@ -353,6 +386,12 @@ export class ServerGame {
                 entity.clashJustHappened = false;
                 entity.hitJustHappened = false;
             }
+        }
+        
+        // Mark deleted entities
+        for (const id of entitiesToRemove) {
+            state.entities.push({ id: id, _deleted: true });
+            this._lastEntityStates.delete(id);
         }
 
         this.roomManager.broadcastToRoom(this.roomId, state);

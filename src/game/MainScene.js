@@ -51,6 +51,7 @@ export class MainScene {
         // One-frame tracking for camera shake and kill feed
         this._prevHp = new Map();
         this._prevAliveStates = new Map();
+        this._prevFleshHeapStacks = new Map(); // Track Flesh Heap stack changes
         this._firstBloodDone = false;
         this._cameraInitialized = false;
 
@@ -147,6 +148,23 @@ export class MainScene {
                     this.camera.shake(4);
                 }
             }
+        }
+
+        // ── Character events (Rot & Flesh Heap) ──
+        for (const eData of data.entities) {
+            if (eData.type !== 'CHARACTER') continue;
+
+            // Rot particles
+            if (eData.rotActive) {
+                this.particles.spawnRot(eData.x, eData.y, eData.rotRadius || 120);
+            }
+
+            // Flesh Heap stack gain detection
+            const prevStacks = this._prevFleshHeapStacks.get(eData.id) || 0;
+            if (eData.fleshHeapStacks > prevStacks && eData.fleshHeapStacks > 0) {
+                this.particles.spawnFleshHeap(eData.x, eData.y);
+            }
+            this._prevFleshHeapStacks.set(eData.id, eData.fleshHeapStacks || 0);
         }
 
         // ── Explosion events (Mines & Toss) ──

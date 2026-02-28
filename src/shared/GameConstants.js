@@ -53,4 +53,8 @@ export const GAME = {
     MINE_DAMAGE: 200,
     MINE_EXPLOSION_RADIUS: 120,
     MINE_ARM_TIME: 1.5,
+    
+    // Performance
+    MAX_PARTICLES: 500,
+    PARTICLE_LIFETIME: 1.0,
 };

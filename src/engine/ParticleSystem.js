@@ -1,3 +1,5 @@
+import { GAME } from '../shared/GameConstants.js';
+
 export class Particle {
     constructor(x, y, color, life, speedX, speedY, size) {
         this.x = x;
@@ -45,10 +47,13 @@ export class Particle {
 export class ParticleSystem {
     constructor() {
         this.particles = [];
+        this.maxParticles = GAME.MAX_PARTICLES || 500;
     }
 
     spawnBlood(x, y, amount) {
-        for (let i = 0; i < amount; i++) {
+        if (this.particles.length >= this.maxParticles) return;
+        const available = Math.min(amount, this.maxParticles - this.particles.length);
+        for (let i = 0; i < available; i++) {
             const angle = Math.random() * Math.PI * 2;
             const speed = Math.random() * 100;
             const size = Math.random() * 3 + 2;
@@ -58,8 +63,10 @@ export class ParticleSystem {
     }
 
     spawnExplosion(x, y) {
+        if (this.particles.length >= this.maxParticles) return;
+        const available = Math.min(35, this.maxParticles - this.particles.length);
         // Fire particles
-        for (let i = 0; i < 20; i++) {
+        for (let i = 0; i < available * 0.6; i++) {
             const angle = Math.random() * Math.PI * 2;
             const speed = Math.random() * 200 + 50;
             const life = Math.random() * 0.4 + 0.3;
@@ -67,7 +74,7 @@ export class ParticleSystem {
             this.particles.push(new Particle(x, y, color, life, Math.cos(angle) * speed, Math.sin(angle) * speed, Math.random() * 6 + 4));
         }
         // Smoke particles
-        for (let i = 0; i < 15; i++) {
+        for (let i = 0; i < available * 0.4; i++) {
             const angle = Math.random() * Math.PI * 2;
             const speed = Math.random() * 80 + 20;
             const life = Math.random() * 1.0 + 0.5;
@@ -76,8 +83,10 @@ export class ParticleSystem {
     }
 
     spawnClash(x, y) {
+        if (this.particles.length >= this.maxParticles) return;
+        const available = Math.min(12, this.maxParticles - this.particles.length);
         // Bright sparks for hook vs hook
-        for (let i = 0; i < 12; i++) {
+        for (let i = 0; i < available; i++) {
             const angle = Math.random() * Math.PI * 2;
             const speed = Math.random() * 250 + 100;
             const life = Math.random() * 0.2 + 0.1;
@@ -86,12 +95,60 @@ export class ParticleSystem {
     }
 
     spawnDebris(x, y) {
+        if (this.particles.length >= this.maxParticles) return;
+        const available = Math.min(10, this.maxParticles - this.particles.length);
         // Brown wood chunks
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < available; i++) {
             const angle = Math.random() * Math.PI * 2;
             const speed = Math.random() * 120 + 40;
             const life = Math.random() * 0.8 + 0.4;
             this.particles.push(new Particle(x, y, '#5d4037', life, Math.cos(angle) * speed, Math.sin(angle) * speed, Math.random() * 4 + 2));
+        }
+    }
+
+    spawnRot(x, y, radius) {
+        // Toxic green cloud for Rot ability
+        if (this.particles.length >= this.maxParticles) return;
+        const available = Math.min(8, this.maxParticles - this.particles.length);
+        for (let i = 0; i < available; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = Math.random() * radius * 0.8;
+            const px = x + Math.cos(angle) * dist;
+            const py = y + Math.sin(angle) * dist;
+            const speed = Math.random() * 30 + 10;
+            const life = Math.random() * 0.3 + 0.2;
+            const color = `rgba(0, ${150 + Math.random() * 100}, 0, ${0.3 + Math.random() * 0.3})`;
+            this.particles.push({
+                x: px, y: py, z: 5,
+                speedX: (Math.random() - 0.5) * speed,
+                speedY: (Math.random() - 0.5) * speed,
+                speedZ: Math.random() * 20,
+                life: life, maxLife: life,
+                size: Math.random() * 8 + 4,
+                color: color
+            });
+        }
+    }
+
+    spawnFleshHeap(x, y) {
+        // Visual growth effect for Flesh Heap stacks
+        if (this.particles.length >= this.maxParticles) return;
+        const available = Math.min(5, this.maxParticles - this.particles.length);
+        for (let i = 0; i < available; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = Math.random() * 30;
+            const px = x + Math.cos(angle) * dist;
+            const py = y + Math.sin(angle) * dist;
+            const life = Math.random() * 0.4 + 0.3;
+            const color = `rgba(139, 0, 0, ${0.4 + Math.random() * 0.3})`;
+            this.particles.push({
+                x: px, y: py, z: 10,
+                speedX: 0, speedY: 0,
+                speedZ: Math.random() * 30 + 20,
+                life: life, maxLife: life,
+                size: Math.random() * 4 + 2,
+                color: color
+            });
         }
     }
 
