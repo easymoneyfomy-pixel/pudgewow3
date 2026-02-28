@@ -113,6 +113,7 @@ export class MainScene {
                 const prevLevel = this._prevLevels.get(eData.id) || 1;
                 if (eData.level > prevLevel && eData.level > 1) {
                     this.particles.spawnLevelUp(eData.x, eData.y);
+                    this.floatingTexts.addText(eData.x, eData.y - 60, `+${eData.level} LVL UP!`, '#ffffff', true);
                 }
                 this._prevLevels.set(eData.id, eData.level);
 

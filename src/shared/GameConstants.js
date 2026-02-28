@@ -38,8 +38,8 @@ export const GAME = {
     FLESH_HEAP_HP: 8,
 
     // Balance: Hook (Q)
-    HOOK_SPEED: 500,
-    HOOK_MAX_DIST: 500,
+    HOOK_SPEED: 600,
+    HOOK_MAX_DIST: 600,
     HOOK_RADIUS: 20,
     HOOK_COOLDOWN: 3,
     HOOK_CURVE_POWER: 0.5,

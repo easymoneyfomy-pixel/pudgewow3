@@ -140,16 +140,18 @@ export class ParticleSystem {
     }
 
     spawnLevelUp(x, y) {
-        // Golden sparkles for level up
+        // White sparkles for level up (like DD rune but shorter duration)
         if (this.particles.length >= this.maxParticles) return;
-        const available = Math.min(20, this.maxParticles - this.particles.length);
+        const available = Math.min(15, this.maxParticles - this.particles.length);
         for (let i = 0; i < available; i++) {
             const angle = Math.random() * Math.PI * 2;
-            const speed = Math.random() * 80 + 40;
-            const life = Math.random() * 0.6 + 0.4;
-            const size = Math.random() * 4 + 2;
-            const color = ['#ffd700', '#ffff00', '#ffcc00'][Math.floor(Math.random() * 3)];
-            this.particles.push(new Particle(x, y, color, life, Math.cos(angle) * speed, Math.sin(angle) * speed - 50, size));
+            const dist = Math.random() * 40;
+            const px = x + Math.cos(angle) * dist;
+            const py = y + Math.sin(angle) * dist;
+            const life = Math.random() * 0.3 + 0.2; // Shorter duration
+            const size = Math.random() * 3 + 2;
+            const color = `rgba(255, 255, 255, ${0.7 + Math.random() * 0.3})`;
+            this.particles.push(new Particle(px, py, color, life, 0, 0, size));
         }
     }
 
