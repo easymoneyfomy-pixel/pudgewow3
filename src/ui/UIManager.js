@@ -284,7 +284,21 @@ export class UIManager {
 
     _renderInventory(ctx, player) {
         if (!player) return;
-        const icons = { 'burn': 'assets/shop/flaming_hook.png', 'bounce': '🔄', 'rupture': '🩸', 'grapple': '🪢', 'lifesteal': '🦇', 'blink': '⚡', 'speed': '🐾', 'mine': 'assets/shop/mine.png', 'heal': '💊', 'toss': '💪', 'lantern': '🏮' };
+        const icons = { 'burn': 'assets/shop/flaming_hook.png', 'bounce': '🔄', 'rupture': '🩸', 'grapple': '🪢', 'lifesteal': '🦇', 'blink': '⚡', 'speed': '🐾', 'mine': 'assets/shop/mine.png', 'heal': '💊', 'toss': 'assets/shop/Tini\'s_Arm.png', 'lantern': '🏮' };
+        
+        // Check if player has Flaming Hook (for skill Q icon update)
+        const hasFlamingHook = player.items && player.items.some(item => item.effect === 'burn');
+        const hookIconEl = document.querySelector('.icon-hook');
+        if (hookIconEl) {
+            if (hasFlamingHook) {
+                hookIconEl.style.backgroundImage = "url('assets/shop/flaming_hook.png')";
+                hookIconEl.classList.add('flaming');
+            } else {
+                hookIconEl.style.backgroundImage = "url('assets/hook.png')";
+                hookIconEl.classList.remove('flaming');
+            }
+        }
+        
         for (let i = 0; i < 6; i++) {
             const item = player.items ? player.items[i] : null;
             const iconEl = document.getElementById(`inv-icon-${i}`);

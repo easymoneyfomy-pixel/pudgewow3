@@ -532,12 +532,12 @@ canvas#gameCanvas {
 }
 
 .icon-hook {
-    background-image: url('assets/hook.png');
+    background-image: url('assets/hook.png') !important;
     /* Phase 25: Conditional default */
 }
 
 .icon-hook.flaming {
-    background-image: url('assets/shop/flaming_hook.png');
+    background-image: url('assets/shop/flaming_hook.png') !important;
 }
 
 .icon-rot {
