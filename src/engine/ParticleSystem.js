@@ -117,16 +117,9 @@ export class ParticleSystem {
             const py = y + Math.sin(angle) * dist;
             const speed = Math.random() * 30 + 10;
             const life = Math.random() * 0.3 + 0.2;
+            const size = Math.random() * 8 + 4;
             const color = `rgba(0, ${150 + Math.random() * 100}, 0, ${0.3 + Math.random() * 0.3})`;
-            this.particles.push({
-                x: px, y: py, z: 5,
-                speedX: (Math.random() - 0.5) * speed,
-                speedY: (Math.random() - 0.5) * speed,
-                speedZ: Math.random() * 20,
-                life: life, maxLife: life,
-                size: Math.random() * 8 + 4,
-                color: color
-            });
+            this.particles.push(new Particle(px, py, color, life, (Math.random() - 0.5) * speed, (Math.random() - 0.5) * speed, size));
         }
     }
 
@@ -140,15 +133,9 @@ export class ParticleSystem {
             const px = x + Math.cos(angle) * dist;
             const py = y + Math.sin(angle) * dist;
             const life = Math.random() * 0.4 + 0.3;
+            const size = Math.random() * 4 + 2;
             const color = `rgba(139, 0, 0, ${0.4 + Math.random() * 0.3})`;
-            this.particles.push({
-                x: px, y: py, z: 10,
-                speedX: 0, speedY: 0,
-                speedZ: Math.random() * 30 + 20,
-                life: life, maxLife: life,
-                size: Math.random() * 4 + 2,
-                color: color
-            });
+            this.particles.push(new Particle(px, py, color, life, 0, 0, size));
         }
     }
 
