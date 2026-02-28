@@ -14,6 +14,10 @@ export class GameRules {
 
         // Runes spawn every 2 minutes
         this.runeSpawnTimer = 120;
+        
+        // Multi-kill tracking
+        this._killStreaks = new Map(); // playerId -> { count, lastKillTime }
+        this._firstBloodDone = false;
     }
 
     update(dt, entityManager) {
@@ -62,13 +66,61 @@ export class GameRules {
 
         // FLESH HEAP & Rewards: If there's an attacker (killer), give them rewards
         if (entity.lastAttacker) {
-            if (entity.lastAttacker.gainFleshHeap) entity.lastAttacker.gainFleshHeap();
-            if (entity.lastAttacker.gainXp) entity.lastAttacker.gainXp(50); // XP for kill
-            entity.lastAttacker.gold += 100; // Gold for kill
-            console.log(`[GOLD] Kill reward: Player ${entity.lastAttacker.id} +100 (Total: ${entity.lastAttacker.gold})`);
+            const killer = entity.lastAttacker;
+            
+            // Base gold for kill
+            let goldReward = 65;
+            
+            // First Blood bonus (x2)
+            if (!this._firstBloodDone) {
+                goldReward = 130;
+                this._firstBloodDone = true;
+                console.log(`[FIRST BLOOD] Player ${killer.id} gets ${goldReward}g!`);
+            }
+            
+            // Headshot bonus
+            if (entity.headshotJustHappened) {
+                goldReward = 150;
+                console.log(`[HEADSHOT] Player ${killer.id} gets ${goldReward}g!`);
+            }
+            
+            // Multi-kill tracking (notifications only)
+            this._trackMultiKill(killer);
+            
+            // Apply rewards
+            if (killer.gainFleshHeap) killer.gainFleshHeap();
+            if (killer.gainXp) killer.gainXp(50); // XP for kill
+            killer.gold += goldReward;
+            console.log(`[GOLD] Kill reward: Player ${killer.id} +${goldReward}g (Total: ${killer.gold})`);
         }
 
         this.checkWinCondition();
+    }
+
+    _trackMultiKill(killer) {
+        const now = Date.now();
+        const streak = this._killStreaks.get(killer.id) || { count: 0, lastKillTime: now };
+        
+        // Reset if more than 30 seconds since last kill
+        if (now - streak.lastKillTime > 30000) {
+            streak.count = 1;
+        } else {
+            streak.count++;
+        }
+        streak.lastKillTime = now;
+        
+        this._killStreaks.set(killer.id, streak);
+        
+        // Multi-kill notifications only (no gold bonuses)
+        if (streak.count === 2) {
+            console.log(`[DOUBLE KILL] Player ${killer.id}!`);
+        } else if (streak.count === 3) {
+            console.log(`[TRIPLE KILL] Player ${killer.id}!`);
+        } else if (streak.count === 4) {
+            console.log(`[ULTRA KILL] Player ${killer.id}!`);
+        } else if (streak.count >= 5) {
+            console.log(`[RAMPAGE] Player ${killer.id}!`);
+        }
     }
 
     checkWinCondition() {

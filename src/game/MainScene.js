@@ -52,7 +52,6 @@ export class MainScene {
         this._prevHp = new Map();
         this._prevAliveStates = new Map();
         this._prevFleshHeapStacks = new Map(); // Track Flesh Heap stack changes
-        this._firstBloodDone = false;
         this._cameraInitialized = false;
 
         // Active item targeting state
@@ -123,9 +122,6 @@ export class MainScene {
 
                 if (eData.isDenied) {
                     this.killFeed.addDeny(eData.team, victimTeam);
-                } else if (!this._firstBloodDone) {
-                    this.killFeed.addFirstBlood(killerTeam);
-                    this._firstBloodDone = true;
                 } else if (eData.isHeadshot) {
                     this.killFeed.addKill(killerTeam, victimTeam, true);
                 } else {
