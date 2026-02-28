@@ -6,7 +6,7 @@ export class Rune {
         this.type = 'RUNE';
         this.x = x;
         this.y = y;
-        this.runeType = type; // 'haste', 'dd', 'heal', 'illusion'
+        this.runeType = type; // 'haste', 'dd', 'bounty'
         this.radius = 20;
 
         // Visual properties based on type
@@ -14,7 +14,7 @@ export class Rune {
             case 'haste': this.color = '#ff0000'; this.icon = '⚡'; break;
             case 'dd': this.color = '#0000ff'; this.icon = '⚔️'; break;
             case 'heal': this.color = '#00ff00'; this.icon = '💚'; break;
-            case 'illusion': this.color = '#ffff00'; this.icon = '👥'; break;
+            case 'bounty': this.color = '#ffd700'; this.icon = '💰'; break;
             default: this.color = '#ffffff'; this.icon = '❓'; break;
         }
 
@@ -65,9 +65,10 @@ export class Rune {
             case 'heal':
                 character.hp = Math.min(character.maxHp, character.hp + 100);
                 break;
-            case 'illusion':
-                // Simple version for now: doesn't physically spawn bots yet, just gives temp invuln
-                character.invulnerableTimer = 5;
+            case 'bounty':
+                // Bounty Rune: gives gold to the player
+                character.gold += 100;
+                console.log(`[BOUNTY] Player ${character.id} gets +100g! (Total: ${character.gold})`);
                 break;
         }
     }

@@ -43,9 +43,10 @@ export class Hook {
         this.ownerPrevY = owner.y;
         this.pathNodes = []; // List of breadcrumbs {x, y} for polyline chain
         
-        // Grapple target position (where hook hit the wall)
+        // Grapple target position (where hook hit the wall/ground)
         this.grappleTargetX = null;
         this.grappleTargetY = null;
+        this.grappleTimer = 0; // Timeout counter for grapple
     }
 
     update(dt, map, entityManager) {
@@ -282,7 +283,7 @@ export class Hook {
     }
 
     updateGrapple(moveAmt, entityManager, map) {
-        // Use grapple target position (where hook hit the wall)
+        // Use grapple target position (where hook hit the wall/ground)
         const targetX = this.grappleTargetX || this.x;
         const targetY = this.grappleTargetY || this.y;
         
@@ -302,6 +303,16 @@ export class Hook {
             this.owner.isPaused = false;
 
             // Reset grapple flag and remove hook
+            this.hasGrapple = false;
+            this.isGrappling = false;
+            entityManager.remove(this);
+            return;
+        }
+
+        // Timeout: if grapple lasts too long (>4 seconds), release player
+        this.grappleTimer = (this.grappleTimer || 0) + 1;
+        if (this.grappleTimer > 240) { // 240 ticks = ~4 seconds at 60 tickrate
+            this.owner.isPaused = false;
             this.hasGrapple = false;
             this.isGrappling = false;
             entityManager.remove(this);

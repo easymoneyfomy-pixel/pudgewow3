@@ -148,7 +148,7 @@ export class GameRules {
     }
 
     spawnRune(entityManager) {
-        const types = ['haste', 'dd', 'heal', 'illusion'];
+        const types = ['haste', 'dd', 'heal', 'bounty'];
         const type = types[Math.floor(Math.random() * types.length)];
 
         // Spawn at relative points around the middle of the map
