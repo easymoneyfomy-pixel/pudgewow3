@@ -4,6 +4,8 @@ import { GAME } from '../shared/GameConstants.js';
 
 export class Hook {
     constructor(owner, targetX, targetY) {
+        this.id = 'hook_' + owner.id + '_' + Date.now();
+        this.type = 'HOOK';
         this.owner = owner;
         this.x = owner.x;
         this.y = owner.y;
@@ -347,6 +349,7 @@ export class Hook {
     /** Returns a plain-data snapshot for server→client broadcast. */
     serialize() {
         return {
+            id: this.id,
             type: 'HOOK',
             x: this.x,
             y: this.y,
