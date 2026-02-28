@@ -174,7 +174,7 @@ export class MainScene {
                 
                 // Strygwyr's Claws: Rupture damage visual feedback
                 if (eData.ruptureJustHappened) {
-                    this.floatingTexts.add(eData.ruptureX, eData.ruptureY, `-${Math.round(eData.ruptureDamage)}`, '#cc0000');
+                    this.floatingTexts.addText(eData.ruptureX, eData.ruptureY, `-${Math.round(eData.ruptureDamage)}`, '#cc0000');
                     this.particles.spawnBlood(eData.ruptureX, eData.ruptureY, 3);
                 }
             }

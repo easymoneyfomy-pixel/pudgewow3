@@ -31,11 +31,6 @@ export class Hook {
         this.hasLifesteal = (owner.items || []).some(i => i.effect === 'lifesteal');
         this.hasLantern = (owner.items || []).some(i => i.effect === 'lantern');
         this.isFlaming = this.hasBurn; // Phase 25: Visual synchronization
-        
-        // Debug logging
-        if (this.hasRupture) {
-            console.log(`[HOOK] Created with Strygwyr's Claws! Owner ${owner.id} has ${owner.items?.length || 0} items`);
-        }
 
         this.currentDist = 0;
         this.isReturning = false;
@@ -246,9 +241,6 @@ export class Hook {
                 // Deal damage per second while hooked (~2 DPS = ~2 total damage over ~1 sec flight)
                 const ruptureDamage = 2 * dt;
                 this.hookedEntity.takeDamage(ruptureDamage, this.owner);
-                
-                // Debug logging
-                console.log(`[RUPTURE] Dealing ${ruptureDamage.toFixed(1)} damage to ${this.hookedEntity.id}`);
                 
                 // Set flag for visual feedback on client
                 this.ruptureJustHappened = true;
