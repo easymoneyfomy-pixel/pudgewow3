@@ -139,6 +139,80 @@ export class ParticleSystem {
         }
     }
 
+    spawnLevelUp(x, y) {
+        // Golden sparkles for level up
+        if (this.particles.length >= this.maxParticles) return;
+        const available = Math.min(20, this.maxParticles - this.particles.length);
+        for (let i = 0; i < available; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 80 + 40;
+            const life = Math.random() * 0.6 + 0.4;
+            const size = Math.random() * 4 + 2;
+            const color = ['#ffd700', '#ffff00', '#ffcc00'][Math.floor(Math.random() * 3)];
+            this.particles.push(new Particle(x, y, color, life, Math.cos(angle) * speed, Math.sin(angle) * speed - 50, size));
+        }
+    }
+
+    spawnHeal(x, y, amount) {
+        // Green healing particles
+        if (this.particles.length >= this.maxParticles) return;
+        const available = Math.min(15, this.maxParticles - this.particles.length);
+        for (let i = 0; i < available; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 50 + 30;
+            const life = Math.random() * 0.4 + 0.3;
+            const size = Math.random() * 3 + 2;
+            const color = `rgba(0, ${200 + Math.random() * 55}, 0, ${0.5 + Math.random() * 0.3})`;
+            this.particles.push(new Particle(x, y, color, life, Math.cos(angle) * speed, Math.sin(angle) * speed - 30, size));
+        }
+    }
+
+    spawnHaste(x, y) {
+        // Red lightning-like particles for haste rune
+        if (this.particles.length >= this.maxParticles) return;
+        const available = Math.min(10, this.maxParticles - this.particles.length);
+        for (let i = 0; i < available; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = Math.random() * 40;
+            const px = x + Math.cos(angle) * dist;
+            const py = y + Math.sin(angle) * dist;
+            const life = Math.random() * 0.2 + 0.1;
+            const size = Math.random() * 3 + 2;
+            const color = `rgba(255, 0, 0, ${0.6 + Math.random() * 0.4})`;
+            this.particles.push({
+                x: px, y: py, z: 10,
+                speedX: 0, speedY: 0,
+                speedZ: Math.random() * 40 + 20,
+                life: life, maxLife: life,
+                size: size,
+                color: color
+            });
+        }
+    }
+
+    spawnDoubleDamage(x, y) {
+        // Blue sword-like particles for DD rune
+        if (this.particles.length >= this.maxParticles) return;
+        const available = Math.min(10, this.maxParticles - this.particles.length);
+        for (let i = 0; i < available; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = Math.random() * 40;
+            const px = x + Math.cos(angle) * dist;
+            const py = y + Math.sin(angle) * dist;
+            const life = Math.random() * 0.2 + 0.1;
+            const size = Math.random() * 3 + 2;
+            const color = `rgba(0, 0, 255, ${0.6 + Math.random() * 0.4})`;
+            this.particles.push({
+                x: px, y: py, z: 10,
+                speedX: 0, speedY: 0,
+                speedZ: Math.random() * 40 + 20,
+                life: life, maxLife: life,
+                size: size,
+                color: color
+            });
+        }
+    }
+
     update(dt) {
         this.particles.forEach(p => p.update(dt));
         this.particles = this.particles.filter(p => p.life > 0);

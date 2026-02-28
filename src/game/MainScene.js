@@ -52,6 +52,8 @@ export class MainScene {
         this._prevHp = new Map();
         this._prevAliveStates = new Map();
         this._prevFleshHeapStacks = new Map(); // Track Flesh Heap stack changes
+        this._prevLevels = new Map(); // Track level changes for particles
+        this._prevSalveTimers = new Map(); // Track Healing Salve for particles
         this._cameraInitialized = false;
 
         // Active item targeting state
@@ -106,6 +108,30 @@ export class MainScene {
                 } else if (eData.team !== myTeam) {
                     this.enemies.push(eData);
                 }
+
+                // Level up particles
+                const prevLevel = this._prevLevels.get(eData.id) || 1;
+                if (eData.level > prevLevel && eData.level > 1) {
+                    this.particles.spawnLevelUp(eData.x, eData.y);
+                }
+                this._prevLevels.set(eData.id, eData.level);
+
+                // Haste rune particles (continuous while active)
+                if (eData.hasteTimer > 0) {
+                    this.particles.spawnHaste(eData.x, eData.y);
+                }
+
+                // Double Damage rune particles (continuous while active)
+                if (eData.ddTimer > 0) {
+                    this.particles.spawnDoubleDamage(eData.x, eData.y);
+                }
+
+                // Healing Salve particles (continuous while healing)
+                const prevSalve = this._prevSalveTimers.get(eData.id) || 0;
+                if (eData.salveTimer > 0 && eData.salveTimer !== prevSalve) {
+                    this.particles.spawnHeal(eData.x, eData.y, 20 * (prevSalve - eData.salveTimer));
+                }
+                this._prevSalveTimers.set(eData.id, eData.salveTimer || 0);
             }
         }
 

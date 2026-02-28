@@ -166,6 +166,11 @@ export class Character {
         this.xpToLevel = Math.floor(this.xpToLevel * 1.5);
         this.recalculateStats();
         this.hp = this.maxHp;
+        
+        // Set callback for level up particles (called on client)
+        if (this.onLevelUp) {
+            this.onLevelUp(this.x, this.y);
+        }
     }
 
     die() {
@@ -386,6 +391,7 @@ export class Character {
             isHealing: this.isHealing || false,
             hasteTimer: this.hasteTimer || 0,
             ddTimer: this.ddTimer || 0,
+            salveTimer: this.salveTimer || 0,
             speed: this.speed,
         };
     }
