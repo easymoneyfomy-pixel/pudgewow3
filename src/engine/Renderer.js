@@ -24,12 +24,6 @@ export class Renderer {
         this.landmineSprite = this._loadImage('assets/shop/mine.png');
         this.stoneSprite = this._loadImage('assets/rook1.png');
         this.stone2Sprite = this._loadImage('assets/rook2.png');
-        
-        // Additional sprites (unused but available)
-        this.pudgeSprite = this._loadImage('assets/pudge.png');
-        this.rotSprite = this._loadImage('assets/rot.png');
-        this.fleshHeapSprite = this._loadImage('assets/Flesh_Heap.png');
-        this.tinysArmSprite = this._loadImage("assets/shop/Tini's_Arm.png");
     }
 
     _loadImage(src) {
