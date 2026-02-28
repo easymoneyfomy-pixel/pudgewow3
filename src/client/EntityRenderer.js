@@ -351,6 +351,19 @@ export class EntityRenderer {
                         dirY: eData.dirY,
                         isReturning: eData.isReturning
                     });
+                } else {
+                    // Owner not found - draw hook at its position anyway
+                    EntityRenderer.drawHook(renderer, {
+                        x: eData.x,
+                        y: eData.y,
+                        ownerX: eData.x,
+                        ownerY: eData.y,
+                        radius: eData.radius,
+                        pathNodes: eData.pathNodes,
+                        dirX: eData.dirX,
+                        dirY: eData.dirY,
+                        isReturning: eData.isReturning
+                    });
                 }
                 break;
             }
