@@ -76,7 +76,7 @@ export class Game {
         if (this.deltaTime > 0.1) this.deltaTime = 0.1;
 
         if (this.lobbyUI.visible) {
-            this.renderer.clear();
+            this.renderer.clear(this.deltaTime);
             this.lobbyUI.render(this.renderer.ctx);
         } else {
             this.update(this.deltaTime);
@@ -92,7 +92,7 @@ export class Game {
     }
 
     render() {
-        this.renderer.clear();
+        this.renderer.clear(this.deltaTime);
         this.sceneManager.render(this.renderer);
     }
 }

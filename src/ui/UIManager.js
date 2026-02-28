@@ -5,16 +5,24 @@ export class UIManager {
     constructor(game) {
         this.game = game;
         this.shopOpen = false;
+        this.killFeed = null;
         this._lastPlayer = null;
         this.mmCache = null;
 
-        // Cache DOM elements for fast access
+        /** @type {string|null} - ID of skill/item currently hovered for tooltip */
+        this.hoveredObjectId = null;
+        this.hoveredType = null; // 'skill' or 'item'
+        this.hoverPos = { x: 0, y: 0 };
+
+        this._init();
+    }
+
+    _init() {
         this.dom = {
             gameUi: document.getElementById('game-ui'),
             scoreRed: document.getElementById('score-red'),
             scoreBlue: document.getElementById('score-blue'),
             gameTimer: document.getElementById('game-timer'),
-
             playerName: document.getElementById('player-name'),
             playerLevel: document.getElementById('player-level'),
             playerGold: document.getElementById('player-gold'),
@@ -22,52 +30,47 @@ export class UIManager {
             hpText: document.getElementById('hp-text'),
             xpBar: document.getElementById('xp-bar'),
             xpText: document.getElementById('xp-text'),
-
             statDmg: document.getElementById('stat-dmg'),
             statSpd: document.getElementById('stat-spd'),
             statMoveSpd: document.getElementById('stat-move-spd'),
             statRng: document.getElementById('stat-rng'),
             statRad: document.getElementById('stat-rad'),
-
-            // Skill elements (Q, W, E)
             cdQ: document.getElementById('cd-q'),
             cdTextQ: document.getElementById('cd-text-q'),
             activeQ: document.getElementById('active-q'),
-
             cdW: document.getElementById('cd-w'),
             cdTextW: document.getElementById('cd-text-w'),
             activeW: document.getElementById('active-w'),
-
             cdE: document.getElementById('cd-e'),
             cdTextE: document.getElementById('cd-text-e'),
-
-            // Item Grid
             inventoryGrid: document.getElementById('inventory-grid'),
-
-            // Shop elements
             shopOverlay: document.getElementById('shop-overlay'),
             shopItemsGrid: document.getElementById('shop-items-grid'),
             shopGoldVal: document.getElementById('shop-gold-val'),
             btnCloseShop: document.getElementById('btn-close-shop'),
-
-            // Game Over
             gameOverOverlay: document.getElementById('game-over'),
             victoryTitle: document.getElementById('victory-title'),
             finalScore: document.getElementById('final-score'),
             btnReturn: document.getElementById('btn-return'),
-            pingDisplay: document.getElementById('ping-display'), // Assumes we have this or we'll create it
+            pingDisplay: document.getElementById('ping-display'),
         };
 
         this._initShop();
         this._initInventorySlots();
+        this._setupTooltipListeners();
 
-        // Bind events
-        this.dom.btnCloseShop.addEventListener('click', () => {
-            this.shopOpen = false;
-        });
+        this.dom.btnCloseShop.addEventListener('click', () => { this.shopOpen = false; });
+        this.dom.btnReturn.addEventListener('click', () => { location.reload(); });
+    }
 
-        this.dom.btnReturn.addEventListener('click', () => {
-            location.reload();
+    _setupTooltipListeners() {
+        // Skill Slots
+        ['q', 'w', 'e'].forEach(key => {
+            const el = document.querySelector(`.skill-slot.${key}`);
+            if (el) {
+                el.addEventListener('mouseenter', () => { this.hoveredType = 'skill'; this.hoveredObjectId = key; });
+                el.addEventListener('mouseleave', () => { this.hoveredObjectId = null; });
+            }
         });
     }
 
@@ -82,7 +85,6 @@ export class UIManager {
                 <div class="cooldown-overlay" id="inv-cd-${i}"></div>
                 <div class="cooldown-text" id="inv-text-${i}"></div>
             `;
-
             slot.addEventListener('click', () => {
                 const scene = this.game.sceneManager.currentScene;
                 if (scene && scene.localPlayer) {
@@ -93,7 +95,8 @@ export class UIManager {
                     }
                 }
             });
-
+            slot.addEventListener('mouseenter', () => { this.hoveredType = 'item'; this.hoveredObjectId = i.toString(); });
+            slot.addEventListener('mouseleave', () => { this.hoveredObjectId = null; });
             this.dom.inventoryGrid.appendChild(slot);
         }
     }
@@ -104,282 +107,91 @@ export class UIManager {
             const el = document.createElement('div');
             el.className = 'shop-item';
             el.id = `shop-item-${item.id}`;
-            el.dataset.id = item.id;
-            el.dataset.cost = item.cost;
-
             const isIconPath = item.icon.startsWith('assets/');
             const iconHtml = isIconPath ? `<img src="${item.icon}" style="width:100%; height:100%; object-fit:cover;">` : item.icon;
-
             el.innerHTML = `
                 <div class="s-icon">${iconHtml}</div>
                 <div class="s-name">${item.label}</div>
                 <div class="s-desc">${item.desc}</div>
                 <div class="s-cost">${item.cost}g</div>
             `;
-
-            // Click to buy
             el.addEventListener('click', () => {
                 if (!this.shopOpen || !this._lastPlayer) return;
                 if (this._lastPlayer.gold >= item.cost) {
                     this.game.network.sendInput({ type: 'BUY_ITEM', itemId: item.id });
                 }
             });
-
             this.dom.shopItemsGrid.appendChild(el);
         });
     }
 
     render(ctx, rules, player, enemy, scene) {
         this._lastPlayer = player;
+        if (!player) return;
 
-        // Show UI if not visible
         if (this.dom.gameUi.classList.contains('hidden')) {
             this.dom.gameUi.classList.remove('hidden');
         }
 
-        // Top Bar
-        this.dom.scoreRed.innerText = rules.scoreRed !== undefined ? rules.scoreRed : 0;
-        this.dom.scoreBlue.innerText = rules.scoreBlue !== undefined ? rules.scoreBlue : 0;
-
+        this.dom.scoreRed.innerText = rules.scoreRed || 0;
+        this.dom.scoreBlue.innerText = rules.scoreBlue || 0;
         const mins = Math.floor(rules.roundTimeLeft / 60);
         const secs = Math.floor(rules.roundTimeLeft % 60).toString().padStart(2, '0');
         this.dom.gameTimer.innerText = `${mins}:${secs}`;
 
-        // Bottom HUD
-        this.updatePortraitAndStats(player);
-        this.updateSkills(player);
-        // Update Inventory
-        this.updateInventory(player);
+        this._renderMinimap(ctx, rules, player, enemy, scene);
+        this._renderStats(ctx, player);
+        this._renderSkills(ctx, player);
+        this._renderInventory(ctx, player);
+        this._renderTooltip(ctx, player);
+        this._updateHoverDetection();
 
-        // Phase 18 targeting feedback
-        if (scene && scene.activeItemSlot !== null && scene.activeItemSlot !== undefined) {
-            const slotEl = document.getElementById(`inv-slot-${scene.activeItemSlot}`);
-            if (slotEl) {
-                slotEl.classList.add('targeting-active');
-            }
-        } else {
-            // Remove from all slots if none active
-            document.querySelectorAll('.inv-slot').forEach(el => el.classList.remove('targeting-active'));
-        }
-
-        // Shop Mode
-        if (this.shopOpen && player) {
+        if (this.shopOpen) {
             this.dom.shopOverlay.classList.remove('hidden');
             this.dom.shopGoldVal.innerText = player.gold;
-
-            // Update affordable states
             SHOP_ITEMS.forEach(item => {
                 const el = document.getElementById(`shop-item-${item.id}`);
                 if (el) {
-                    if (player.gold >= item.cost) {
-                        el.classList.add('affordable');
-                        el.classList.remove('unaffordable');
-                    } else {
-                        el.classList.remove('affordable');
-                        el.classList.add('unaffordable');
-                    }
+                    if (player.gold >= item.cost) { el.classList.add('affordable'); el.classList.remove('unaffordable'); }
+                    else { el.classList.remove('affordable'); el.classList.add('unaffordable'); }
                 }
             });
         } else {
             this.dom.shopOverlay.classList.add('hidden');
         }
 
-        // Game Over
         if (rules.isGameOver) {
             this.dom.gameOverOverlay.classList.remove('hidden');
-            const winnerIsRed = rules.winner.includes('Red');
             this.dom.victoryTitle.innerText = `${rules.winner} VICTORY!`;
-            this.dom.victoryTitle.style.color = winnerIsRed ? 'var(--red)' : 'var(--blue)';
+            this.dom.victoryTitle.style.color = rules.winner.includes('Red') ? 'var(--red)' : 'var(--blue)';
             this.dom.finalScore.innerText = `Final Score: Red ${rules.scoreRed} — ${rules.scoreBlue} Blue`;
-        } else {
-            this.dom.gameOverOverlay.classList.add('hidden');
         }
 
-        // Minimap logic (Canvas Embedded)
-        this._drawMinimap(ctx, player);
-
-        // Update Ping
-        if (scene && scene.serverState && this.dom.pingDisplay) {
-            const serverTime = scene.serverState.serverTime;
-            const now = Date.now();
-            const latency = Math.floor(now - serverTime); // Rough estimation
-            this.dom.pingDisplay.innerText = `Ping: ${latency}ms`;
-            this.dom.pingDisplay.style.color = latency < 100 ? '#00ff00' : latency < 200 ? '#ffff00' : '#ff0000';
-        }
+        this._updatePing(scene);
     }
 
-    updatePortraitAndStats(player) {
-        if (!player) {
-            this.dom.playerName.innerText = "Pudge (Loading...)";
-            this.dom.playerLevel.innerText = "Lv 1";
-            this.dom.playerGold.innerText = "0";
-            this.dom.hpBar.style.width = "100%";
-            this.dom.hpText.innerText = "Connecting...";
-            this.dom.xpBar.style.width = "0%";
-            this.dom.xpText.innerText = "XP 0/100";
-            this.dom.statDmg.innerText = "---";
-            this.dom.statSpd.innerText = "---";
-            this.dom.statMoveSpd.innerText = "---";
-            this.dom.statRng.innerText = "---";
-            this.dom.statRad.innerText = "---";
-            return;
-        }
-        this.dom.playerName.innerText = `Pudge (${player.team.toUpperCase()})`;
-        this.dom.playerLevel.innerText = `Lv ${player.level}`;
-        this.dom.playerGold.innerText = player.gold;
-
-        // HP
-        const hpRatio = Math.max(0, Math.min(1, player.hp / player.maxHp));
-        this.dom.hpBar.style.width = `${hpRatio * 100}%`;
-        this.dom.hpText.innerText = `${Math.ceil(player.hp)} / ${player.maxHp}`;
-
-        // XP
-        const xpRatio = Math.max(0, Math.min(1, player.xp / player.xpToLevel));
-        this.dom.xpBar.style.width = `${xpRatio * 100}%`;
-        this.dom.xpText.innerText = `XP ${Math.floor(player.xp)}/${player.xpToLevel}`;
-
-        // Combat Stats
-        this.dom.statDmg.innerText = player.hookDamage;
-        this.dom.statSpd.innerText = player.hookSpeed;
-        this.dom.statMoveSpd.innerText = Math.round(player.speed || 280);
-        this.dom.statRng.innerText = player.hookMaxDist;
-        this.dom.statRad.innerText = player.hookRadius;
-    }
-
-    updateSkills(player) {
-        if (!player) return;
-        // Hook (Q)
-        this._updateSkillSlot(
-            this.dom.cdQ, this.dom.cdTextQ, this.dom.activeQ,
-            player.hookCooldown, player.maxHookCooldown, false
-        );
-
-        // Phase 25: Dynamic Icon toggle
-        const skillSlotQ = document.querySelector('.skill-slot .icon-hook');
-        if (skillSlotQ) {
-            const hasFlamingItem = (player.items || []).some(i => i.effect === 'burn');
-            if (hasFlamingItem) {
-                skillSlotQ.classList.add('flaming');
-            } else {
-                skillSlotQ.classList.remove('flaming');
-            }
-        }
-
-        // Rot (W)
-        this._updateSkillSlot(
-            this.dom.cdW, this.dom.cdTextW, this.dom.activeW,
-            0, 0, player.rotActive
-        );
-
-        // Flesh Heap (E) - Passive
-        if (this.dom.cdE) {
-            this.dom.cdE.style.height = '0%';
-            this.dom.cdTextE.innerText = player.fleshHeapStacks > 0 ? `+${player.fleshHeapStacks}` : '';
-            this.dom.cdTextE.style.fontSize = '12px';
-            this.dom.cdTextE.style.color = '#fff';
-        }
-    }
-
-    _updateSkillSlot(cdOverlay, cdText, activeGlow, cd, maxCd, isActive) {
-        if (cd > 0 && maxCd > 0) {
-            const ratio = cd / maxCd;
-            cdOverlay.style.height = `${ratio * 100}%`;
-            cdText.innerText = cd.toFixed(1);
-        } else {
-            cdOverlay.style.height = '0%';
-            cdText.innerText = '';
-        }
-
-        if (isActive) {
-            activeGlow.classList.remove('hide');
-        } else {
-            activeGlow.classList.add('hide');
-        }
-    }
-
-    updateInventory(player) {
-        if (!player) return;
-        const icons = {
-            'burn': 'assets/flaming_hook.png',
-            'bounce': '🔄',
-            'rupture': '🩸',
-            'grapple': '🪢',
-            'lifesteal': '🦇',
-            'blink': '⚡',
-            'speed': '🐾',
-            'mine': 'assets/mine.png',
-            'heal': '💊',
-            'toss': '💪',
-            'lantern': '🏮'
-        };
-
-        for (let i = 0; i < 6; i++) {
-            const item = player.items ? player.items[i] : null;
-            const iconEl = document.getElementById(`inv-icon-${i}`);
-            const cdOverlay = document.getElementById(`inv-cd-${i}`);
-            const cdText = document.getElementById(`inv-text-${i}`);
-            const slotEl = iconEl.parentElement;
-
-            if (item) {
-                slotEl.classList.add('has-item');
-                const icon = icons[item.effect] || '📦';
-                const isIconPath = icon.startsWith('assets/');
-                if (isIconPath) {
-                    iconEl.innerHTML = `<img src="${icon}" style="width:100%; height:100%; object-fit:cover;">`;
-                    iconEl.innerText = '';
-                } else {
-                    iconEl.innerHTML = '';
-                    iconEl.innerText = icon;
-                }
-
-                if (item.active && item.cooldown > 0) {
-                    const ratio = item.cooldown / item.maxCooldown;
-                    cdOverlay.style.height = `${ratio * 100}%`;
-                    cdText.innerText = item.cooldown.toFixed(1);
-                } else {
-                    cdOverlay.style.height = '0%';
-                    cdText.innerText = '';
-                }
-            } else {
-                slotEl.classList.remove('has-item');
-                iconEl.innerText = '';
-                cdOverlay.style.height = '0%';
-                cdText.innerText = '';
-            }
-        }
-    }
-
-    // Still draws logic into the local embedded minimap canvas ctx from MainScene
-    _drawMinimap(mainCtx, player) {
-        // The minimap has its own canvas now
+    _renderMinimap(ctx, rules, player, enemy, scene) {
         const mmCanvas = document.getElementById('minimapCanvas');
         if (!mmCanvas) return;
         const mmCtx = mmCanvas.getContext('2d');
         const size = mmCanvas.width;
 
-        // Draw static background from cache
         if (!this.mmCache) {
             this.mmCache = document.createElement('canvas');
             this.mmCache.width = size;
             this.mmCache.height = size;
             const cCtx = this.mmCache.getContext('2d');
-
-            // Clear
             cCtx.fillStyle = '#090909';
             cCtx.fillRect(0, 0, size, size);
-
-            // Map layout
             const tileSize = size / GAME.MAP_WIDTH;
             for (let gx = 0; gx < GAME.MAP_WIDTH; gx++) {
                 for (let gy = 0; gy < GAME.MAP_HEIGHT; gy++) {
                     const tx = gx * tileSize;
                     const ty = gy * tileSize;
-
                     if (gx < 2 || gy < 2 || gx >= GAME.MAP_WIDTH - 2 || gy >= GAME.MAP_HEIGHT - 2) {
                         cCtx.fillStyle = '#333';
                         cCtx.fillRect(tx, ty, tileSize, tileSize);
                     } else if (gx >= 10 && gx <= 13) {
-                        // Central River
                         cCtx.fillStyle = '#003366';
                         cCtx.fillRect(tx, ty, tileSize, tileSize);
                     } else {
@@ -390,23 +202,149 @@ export class UIManager {
             }
         }
 
-        // Copy cache to minimap canvas
         mmCtx.drawImage(this.mmCache, 0, 0);
+        const mapWorldSize = GAME.MAP_WIDTH * GAME.TILE_SIZE;
 
-        // Draw Player Location (Dynamic)
-        if (player) {
-            const mapWorldSize = GAME.MAP_WIDTH * GAME.TILE_SIZE;
-            const px = (player.x / mapWorldSize) * size;
-            const py = (player.y / mapWorldSize) * size;
+        // Phase 31: Draw Shops
+        mmCtx.fillStyle = '#ffcc00';
+        mmCtx.fillRect((1 * GAME.TILE_SIZE / mapWorldSize) * size, (1 * GAME.TILE_SIZE / mapWorldSize) * size, 4, 4);
+        mmCtx.fillRect(((GAME.MAP_WIDTH - 2) * GAME.TILE_SIZE / mapWorldSize) * size, ((GAME.MAP_HEIGHT - 2) * GAME.TILE_SIZE / mapWorldSize) * size, 4, 4);
 
-            mmCtx.fillStyle = player.team === 'red' ? '#ff4444' : '#4488ff';
-            mmCtx.beginPath();
-            mmCtx.arc(px, py, 3, 0, Math.PI * 2);
-            mmCtx.fill();
-            mmCtx.strokeStyle = '#fff';
-            mmCtx.lineWidth = 1;
-            mmCtx.stroke();
+        // Runes
+        if (scene && scene.runes) {
+            mmCtx.fillStyle = '#00ff00';
+            scene.runes.forEach(rune => {
+                const rx = (rune.x / mapWorldSize) * size;
+                const ry = (rune.y / mapWorldSize) * size;
+                mmCtx.beginPath(); mmCtx.arc(rx, ry, 2, 0, Math.PI * 2); mmCtx.fill();
+            });
+        }
+
+        // Radar visibility logic
+        if (scene && scene.entities) {
+            scene.entities.forEach(ent => {
+                if (ent.type === 'character' && ent.id !== player.id && ent.hp > 0) {
+                    const isEnemyOnMySide = (player.team === 'red' && ent.x < 10 * GAME.TILE_SIZE) ||
+                        (player.team === 'blue' && ent.x > 14 * GAME.TILE_SIZE);
+                    if (isEnemyOnMySide) {
+                        const ex = (ent.x / mapWorldSize) * size;
+                        const ey = (ent.y / mapWorldSize) * size;
+                        mmCtx.fillStyle = ent.team === 'red' ? '#ff4444' : '#4488ff';
+                        mmCtx.beginPath(); mmCtx.arc(ex, ey, 2.5, 0, Math.PI * 2); mmCtx.fill();
+                    }
+                }
+            });
+        }
+
+        const px = (player.x / mapWorldSize) * size;
+        const py = (player.y / mapWorldSize) * size;
+        mmCtx.fillStyle = player.team === 'red' ? '#ff4444' : '#4488ff';
+        mmCtx.beginPath(); mmCtx.arc(px, py, 3, 0, Math.PI * 2); mmCtx.fill();
+        mmCtx.strokeStyle = '#fff'; mmCtx.lineWidth = 1; mmCtx.stroke();
+    }
+
+    _renderStats(ctx, player) {
+        this.dom.playerName.innerText = `Pudge (${player.team.toUpperCase()})`;
+        this.dom.playerLevel.innerText = `Lv ${player.level}`;
+        this.dom.playerGold.innerText = player.gold;
+        const hpRatio = Math.max(0, Math.min(1, player.hp / player.maxHp));
+        this.dom.hpBar.style.width = `${hpRatio * 100}%`;
+        this.dom.hpText.innerText = `${Math.ceil(player.hp)} / ${player.maxHp}`;
+        const xpRatio = Math.max(0, Math.min(1, player.xp / player.xpToLevel));
+        this.dom.xpBar.style.width = `${xpRatio * 100}%`;
+        this.dom.xpText.innerText = `XP ${Math.floor(player.xp)}/${player.xpToLevel}`;
+        this.dom.statDmg.innerText = player.hookDamage;
+        this.dom.statSpd.innerText = player.hookSpeed;
+        this.dom.statMoveSpd.innerText = Math.round(player.speed || 280);
+        this.dom.statRng.innerText = player.hookMaxDist;
+        this.dom.statRad.innerText = player.hookRadius;
+    }
+
+    _renderSkills(ctx, player) {
+        this._updateSkillSlot(this.dom.cdQ, this.dom.cdTextQ, this.dom.activeQ, player.hookCooldown, player.maxHookCooldown, false);
+        const hasFlamingItem = (player.items || []).some(i => i.effect === 'burn');
+        const skillSlotQ = document.querySelector('.skill-slot .icon-hook');
+        if (skillSlotQ) { if (hasFlamingItem) skillSlotQ.classList.add('flaming'); else skillSlotQ.classList.remove('flaming'); }
+
+        this._updateSkillSlot(this.dom.cdW, this.dom.cdTextW, this.dom.activeW, 0, 0, player.rotActive);
+        if (this.dom.cdE) {
+            this.dom.cdE.style.height = '0%';
+            this.dom.cdTextE.innerText = player.fleshHeapStacks > 0 ? `+${player.fleshHeapStacks}` : '';
         }
     }
 
+    _updateSkillSlot(cdOverlay, cdText, activeGlow, cd, maxCd, isActive) {
+        if (cd > 0 && maxCd > 0) {
+            const ratio = cd / maxCd;
+            cdOverlay.style.height = `${ratio * 100}%`;
+            cdText.innerText = cd.toFixed(1);
+        } else { cdOverlay.style.height = '0%'; cdText.innerText = ''; }
+        if (isActive) activeGlow.classList.remove('hide'); else activeGlow.classList.add('hide');
+    }
+
+    _renderInventory(player) {
+        if (!player) return;
+        const icons = { 'burn': 'assets/flaming_hook.png', 'bounce': '🔄', 'rupture': '🩸', 'grapple': '🪢', 'lifesteal': '🦇', 'blink': '⚡', 'speed': '🐾', 'mine': 'assets/mine.png', 'heal': '💊', 'toss': '💪', 'lantern': '🏮' };
+        for (let i = 0; i < 6; i++) {
+            const item = player.items ? player.items[i] : null;
+            const iconEl = document.getElementById(`inv-icon-${i}`);
+            const cdOverlay = document.getElementById(`inv-cd-${i}`);
+            const cdText = document.getElementById(`inv-text-${i}`);
+            const slotEl = iconEl.parentElement;
+            if (item) {
+                slotEl.classList.add('has-item');
+                const icon = icons[item.effect] || '📦';
+                if (icon.startsWith('assets/')) { iconEl.innerHTML = `<img src="${icon}" style="width:100%; height:100%; object-fit:cover;">`; iconEl.innerText = ''; }
+                else { iconEl.innerHTML = ''; iconEl.innerText = icon; }
+                if (item.active && item.cooldown > 0) {
+                    const ratio = item.cooldown / item.maxCooldown;
+                    cdOverlay.style.height = `${ratio * 100}%`;
+                    cdText.innerText = item.cooldown.toFixed(1);
+                } else { cdOverlay.style.height = '0%'; cdText.innerText = ''; }
+            } else { slotEl.classList.remove('has-item'); iconEl.innerHTML = ''; iconEl.innerText = ''; cdOverlay.style.height = '0%'; cdText.innerText = ''; }
+        }
+    }
+
+    _updateHoverDetection() {
+        if (this.game.input && this.game.input.mousePos) {
+            this.hoverPos = { x: this.game.input.mousePos.x, y: this.game.input.mousePos.y };
+        }
+    }
+
+    _renderTooltip(ctx, player) {
+        if (!player || !this.hoveredObjectId) return;
+        let info = null;
+        if (this.hoveredType === 'skill') {
+            if (this.hoveredObjectId === 'q') info = { name: "Meat Hook", desc: `Damage: ${player.hookDamage}\nSpeed: ${player.hookSpeed}\nDistance: ${player.hookMaxDist}` };
+            if (this.hoveredObjectId === 'w') info = { name: "Rot", desc: "Toggle: Deals damage to self and enemies in a small radius. Slows targets." };
+            if (this.hoveredObjectId === 'e') info = { name: "Flesh Heap", desc: `Stacks: ${player.fleshHeapStacks}\nProvides permanent HP per kill.` };
+        } else if (this.hoveredType === 'item') {
+            const item = player.items ? player.items[parseInt(this.hoveredObjectId)] : null;
+            if (item) {
+                info = { name: item.label || "Item", desc: item.desc || "Active or Passive item upgrade." };
+                if (item.effect === 'lantern') info.desc += `\nScaling: +${((player.hookSpeed - 750) / 10).toFixed(1)} Hook Dmg.`;
+            }
+        }
+        if (info) {
+            const tx = this.hoverPos.x + 15;
+            const ty = this.hoverPos.y - 80;
+            ctx.save(); ctx.resetTransform();
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.85)'; ctx.strokeStyle = '#555'; ctx.lineWidth = 2;
+            const lines = info.desc.split('\n');
+            const h = 40 + lines.length * 20; const w = 220;
+            ctx.fillRect(tx, ty, w, h); ctx.strokeRect(tx, ty, w, h);
+            ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Inter, sans-serif'; ctx.fillText(info.name, tx + 10, ty + 25);
+            ctx.fillStyle = '#aaa'; ctx.font = '13px Inter, sans-serif';
+            lines.forEach((line, i) => { ctx.fillText(line, tx + 10, ty + 45 + i * 20); });
+            ctx.restore();
+        }
+    }
+
+    _updatePing(scene) {
+        if (scene && scene.serverState && this.dom.pingDisplay) {
+            const latency = Math.floor(Date.now() - scene.serverState.serverTime);
+            this.dom.pingDisplay.innerText = `Ping: ${latency}ms`;
+            this.dom.pingDisplay.style.color = latency < 100 ? '#00ff00' : latency < 200 ? '#ffff00' : '#ff0000';
+        }
+    }
 }

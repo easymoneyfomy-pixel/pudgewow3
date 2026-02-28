@@ -38,8 +38,29 @@ export class GameMap {
         }
         for (let y = 0; y < this.height; y++) {
             for (let b = 0; b < 2; b++) {
-                this.grid[b][y] = new Tile(TileType.OBSTACLE);
-                this.grid[this.width - 1 - b][y] = new Tile(TileType.OBSTACLE);
+                // Checkerboard Trees for a more structured but organic Felwood look
+                // Only place tree if (x+y) is even
+                if ((0 + y) % 2 === 0) {
+                    this.grid[b][y] = new Tile(TileType.OBSTACLE);
+                } else {
+                    // Place a stone/boulder on some "empty" checkerboard slots
+                    this.grid[b][y] = (Math.random() > 0.7) ? new Tile(TileType.STONE) : new Tile(TileType.GROUND);
+                }
+
+                if ((this.width - 1 - b + y) % 2 === 0) {
+                    this.grid[this.width - 1 - b][y] = new Tile(TileType.OBSTACLE);
+                } else {
+                    this.grid[this.width - 1 - b][y] = (Math.random() > 0.7) ? new Tile(TileType.STONE) : new Tile(TileType.GROUND);
+                }
+            }
+        }
+        // Top/Bottom boundaries
+        for (let x = 0; x < this.width; x++) {
+            for (let b = 0; b < 2; b++) {
+                if ((x + b) % 2 === 0) {
+                    this.grid[x][b] = new Tile(TileType.OBSTACLE);
+                    this.grid[x][this.height - 1 - b] = new Tile(TileType.OBSTACLE);
+                }
             }
         }
 
@@ -76,32 +97,30 @@ export class GameMap {
 
     render(renderer, dt) {
         this._animTime += dt || 0.05;
-
         const ctx = renderer.ctx;
+        const size = this.tileSize;
 
+        // 1. FIRST PASS: DRAW GROUND & WATER ON ALL TILES
+        // This prevents transparency gaps/bleeding when drawing trees/shops on top
         for (let x = 0; x < this.width; x++) {
             for (let y = 0; y < this.height; y++) {
+                const px = x * size;
+                const py = y * size;
                 const tile = this.grid[x][y];
-                const px = x * this.tileSize;
-                const py = y * this.tileSize;
-                const size = this.tileSize;
 
-                if (tile.type === TileType.GROUND) {
-                    if (x >= 14 && renderer.direFloorSprite && renderer.direFloorSprite.complete) {
-                        ctx.drawImage(renderer.direFloorSprite, px, py, size, size);
-                    } else {
-                        // WC3 Ashenvale/Felwood style dark bluish-green grass
-                        ctx.fillStyle = '#1e2420';
-                        ctx.fillRect(px, py, size, size);
-
-                        // Slightly lighter/bluish grass speckles (original polish)
-                        ctx.fillStyle = '#26302a';
-                        ctx.fillRect(px + 10, py + 10, 4, 4);
-                        ctx.fillRect(px + 40, py + 30, 4, 4);
-                    }
+                // Base Ground ( Felwood dark green )
+                if (x >= 14 && renderer.direFloorSprite && renderer.direFloorSprite.complete) {
+                    ctx.drawImage(renderer.direFloorSprite, px, py, size, size);
+                } else {
+                    ctx.fillStyle = '#1e2420';
+                    ctx.fillRect(px, py, size, size);
+                    ctx.fillStyle = '#26302a';
+                    ctx.fillRect(px + 10, py + 10, 4, 4);
+                    ctx.fillRect(px + 40, py + 30, 4, 4);
                 }
-                else if (tile.type === TileType.WATER) {
-                    // Dark swampy/felwood water (Using assets/water.png)
+
+                // Water Over Ground (if applicable)
+                if (tile.type === TileType.WATER) {
                     if (renderer.waterSprite && renderer.waterSprite.complete) {
                         ctx.drawImage(renderer.waterSprite, px, py, size, size);
                     } else {
@@ -111,82 +130,52 @@ export class GameMap {
                         grad.addColorStop(1, '#113333');
                         ctx.fillStyle = grad;
                         ctx.fillRect(px, py, size, size);
-
-                        // Subtle highlights
                         ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
                         ctx.fillRect(px + size / 2 + waveOffset, py + size / 2, size / 4, size / 8);
                     }
                 }
-                else if (tile.type === TileType.WALL) {
-                    // Stone pillars/walls
-                    ctx.fillStyle = '#2a2a2a';
-                    ctx.fillRect(px, py, size, size);
+            }
+        }
 
-                    // Wall bevel
-                    ctx.fillStyle = '#444';
-                    ctx.fillRect(px, py, size, 4);
-                    ctx.fillRect(px, py, 4, size);
-                    ctx.fillStyle = '#111';
-                    ctx.fillRect(px, py + size - 4, size, 4);
-                    ctx.fillRect(px + size - 4, py, 4, size);
-                }
-                else if (tile.type === TileType.OBSTACLE) {
-                    // Trees (WC3 Ashenvale/Felwood dark pines)
-                    ctx.fillStyle = '#141a14'; // Darker forest green floor
-                    ctx.fillRect(px, py, size, size);
+        // 2. SECOND PASS: DRAW DECORATIONS (TREES, STONES, SHOPS, RUNES)
+        for (let x = 0; x < this.width; x++) {
+            for (let y = 0; y < this.height; y++) {
+                const px = x * size;
+                const py = y * size;
+                const tile = this.grid[x][y];
 
-                    // Organic Tree Placement: Spaced out for beauty, but collision remains grid-square
+                if (tile.type === TileType.OBSTACLE) {
                     const seed = (x * 12.9898 + y * 78.233) * 43758.5453;
                     const rand = seed - Math.floor(seed);
+                    const treeSprite = rand > 0.82 ? renderer.treeRedSprite : renderer.treeSprite;
 
-                    // 55% chance to have a tree sprite on this obstacle tile
-                    if (rand > 0.45) {
-                        const treeSprite = rand > 0.82 ? renderer.treeRedSprite : renderer.treeSprite;
-                        if (treeSprite && treeSprite.complete) {
-                            ctx.save();
-                            ctx.translate(px + size / 2, py + size / 2);
-
-                            // Visual Jitter for organic look
-                            const scale = 1.3 + (rand * 0.5);
-                            const rotation = (rand - 0.5) * 0.4;
-                            ctx.rotate(rotation);
-
-                            ctx.drawImage(treeSprite, -size * scale / 2, -size * scale / 2, size * scale, size * scale);
-                            ctx.restore();
-                        } else {
-                            // Fallback tree shape
-                            ctx.fillStyle = '#1c3624';
-                            ctx.beginPath();
-                            ctx.moveTo(px + size / 2, py + 5);
-                            ctx.lineTo(px + size - 5, py + size - 10);
-                            ctx.lineTo(px + 5, py + size - 10);
-                            ctx.closePath();
-                            ctx.fill();
-                        }
+                    if (treeSprite && treeSprite.complete && treeSprite.naturalWidth > 0) {
+                        ctx.save();
+                        ctx.translate(px + size / 2, py + size / 2);
+                        const scale = 1.3 + (rand * 0.5);
+                        const rotation = (rand - 0.5) * 0.4;
+                        ctx.rotate(rotation);
+                        ctx.drawImage(treeSprite, -size * scale / 2, -size * scale / 2, size * scale, size * scale);
+                        ctx.restore();
+                    }
+                }
+                else if (tile.type === TileType.STONE) {
+                    if (renderer.stoneSprite && renderer.stoneSprite.complete && renderer.stoneSprite.naturalWidth > 0) {
+                        ctx.drawImage(renderer.stoneSprite, px, py, size, size);
+                    } else {
+                        ctx.fillStyle = '#444';
+                        ctx.beginPath();
+                        ctx.arc(px + size / 2, py + size * 0.7, size / 3, 0, Math.PI * 2);
+                        ctx.fill();
                     }
                 }
                 else if (tile.type === TileType.SHOP) {
-                    // Shop Pad with Buildings/Assets
-                    if (renderer.shopBuildingSprite && renderer.shopBuildingSprite.complete) {
-                        const scale = 1.2;
-                        ctx.drawImage(renderer.shopBuildingSprite, px - (size * (scale - 1)) / 2, py - (size * (scale - 1)) / 2, size * scale, size * scale);
-                    } else {
-                        ctx.fillStyle = '#3a2a1a';
-                        ctx.fillRect(px, py, size, size);
-                        ctx.strokeStyle = '#c4a44a';
-                        ctx.lineWidth = 2;
-                        ctx.strokeRect(px + 4, py + 4, size - 8, size - 8);
-                        ctx.fillStyle = '#f0d78c';
-                        ctx.font = '24px Georgia';
-                        ctx.textAlign = 'center';
-                        ctx.fillText('⚖', px + size / 2, py + size / 2 + 8);
+                    if (renderer.shopBuildingSprite && renderer.shopBuildingSprite.complete && renderer.shopBuildingSprite.naturalWidth > 0) {
+                        const scale = 1.25;
+                        ctx.drawImage(renderer.shopBuildingSprite, px - (size * (scale - 1)) / 2, py - (size * (scale - 1)) / 4, size * scale, size * scale);
                     }
                 }
                 else if (tile.type === TileType.RUNE) {
-                    ctx.fillStyle = '#1a221a';
-                    ctx.fillRect(px, py, size, size);
-
-                    // Glowing healing rune
                     const glowParams = Math.abs(Math.sin(this._animTime * 3)) * 20;
                     ctx.shadowBlur = 10 + glowParams;
                     ctx.shadowColor = '#00ff00';
@@ -194,15 +183,7 @@ export class GameMap {
                     ctx.beginPath();
                     ctx.arc(px + size / 2, py + size / 2, size / 4, 0, Math.PI * 2);
                     ctx.fill();
-                    ctx.shadowBlur = 0; // Reset
-                }
-                else if (tile.type === TileType.SPAWN_RED || tile.type === TileType.SPAWN_BLUE) {
-                    // WC3 Pudge Wars: spawn zones look like regular ground (no colored lines)
-                    ctx.fillStyle = '#1e2420';
-                    ctx.fillRect(px, py, size, size);
-                    ctx.fillStyle = '#26302a';
-                    ctx.fillRect(px + 10, py + 10, 4, 4);
-                    ctx.fillRect(px + 40, py + 30, 4, 4);
+                    ctx.shadowBlur = 0;
                 }
             }
         }

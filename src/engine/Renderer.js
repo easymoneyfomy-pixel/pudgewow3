@@ -42,11 +42,32 @@ export class Renderer {
 
         this.landmineSprite = new Image();
         this.landmineSprite.src = 'assets/mine.png';
+
+        this.stoneSprite = new Image();
+        this.stoneSprite.src = 'assets/rook1.png'; // Using rook1 for rocks/stones
     }
 
-    clear() {
-        this.ctx.fillStyle = '#1a1a1a';
+    clear(dt) {
+        // Phase 30: Sky/Cloud Background (Floating Island effect)
+        this._skyTime = (this._skyTime || 0) + (dt || 0.016);
+        const scrollX = this._skyTime * 20;
+        const scrollY = this._skyTime * 10;
+
+        // Deep blue sky base
+        this.ctx.fillStyle = '#0a0d14';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // Simple procedural clouds (grid based for performance)
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+        for (let i = -1; i < 5; i++) {
+            for (let j = -1; j < 5; j++) {
+                const x = ((i * 400 + scrollX) % (this.canvas.width + 400)) - 200;
+                const y = ((j * 400 + scrollY) % (this.canvas.height + 400)) - 200;
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, 150, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
+        }
     }
 
     save() { this.ctx.save(); }

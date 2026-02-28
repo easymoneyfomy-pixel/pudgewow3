@@ -42,7 +42,7 @@ export class EntityRenderer {
         // Pudge Sprite (Phase 20: Team-specific skins)
         const teamSprite = (char.team === 'red') ? renderer.radiantSprite : renderer.direSprite;
 
-        if (teamSprite && teamSprite.complete) {
+        if (teamSprite && teamSprite.complete && teamSprite.naturalWidth > 0) {
             ctx.save();
             ctx.rotate(char.rot || 0);
             const targetSize = char.radius * 3.5 || 84;
@@ -207,7 +207,7 @@ export class EntityRenderer {
                     ctx.translate(lx, ly);
                     ctx.rotate(linkAngle);
 
-                    if (linkSprite && linkSprite.complete) {
+                    if (linkSprite && linkSprite.complete && linkSprite.naturalWidth > 0) {
                         ctx.drawImage(linkSprite, -linkSize / 2, -linkSize / 4, linkSize, linkSize / 2);
                     } else {
                         // Procedural fallback (Meat Links)
@@ -237,7 +237,7 @@ export class EntityRenderer {
 
         const tipSprite = hook.isFlaming ? renderer.flamingHookSprite : renderer.hookTipSprite;
 
-        if (tipSprite && tipSprite.complete) {
+        if (tipSprite && tipSprite.complete && tipSprite.naturalWidth > 0) {
             const size = (hook.radius || 20) * 2.5;
             ctx.drawImage(tipSprite, -size / 2, -size / 2, size, size);
         } else {
@@ -265,7 +265,7 @@ export class EntityRenderer {
         ctx.globalAlpha = mine.isArmed ? 0.35 : 1.0;
 
         // Use the new high-quality sprite if loaded
-        if (renderer.landmineSprite && renderer.landmineSprite.complete) {
+        if (renderer.landmineSprite && renderer.landmineSprite.complete && renderer.landmineSprite.naturalWidth > 0) {
             const size = 32; // Standard mine size for 64px grid
             ctx.drawImage(renderer.landmineSprite, -size / 2, -size / 2, size, size);
         } else {

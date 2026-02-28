@@ -2,12 +2,16 @@ export class Camera {
     constructor(x, y, zoom = 1) {
         this.x = x;
         this.y = y;
-        this.zoom = zoom;
+        this.zoom = 1.3; // Locked in Phase 30 for tactical parity
 
         this.shakeIntensity = 0;
         this.shakeDecay = 40;
         this.shakeX = 0;
         this.shakeY = 0;
+    }
+
+    setZoom(val) {
+        // Locked in Phase 30
     }
 
     shake(intensity) {
