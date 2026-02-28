@@ -4,6 +4,8 @@ import { GAME } from '../shared/GameConstants.js';
 
 export class Hook {
     constructor(owner, targetX, targetY) {
+        this.id = 'hook_' + owner.id + '_' + Date.now();
+        this.type = 'HOOK';
         this.owner = owner;
         this.x = owner.x;
         this.y = owner.y;
@@ -133,7 +135,7 @@ export class Hook {
     checkEntityCollisions(entityManager) {
         // Grapple hook ignores entities - only collides with walls
         if (this.hasGrapple) return;
-        
+
         for (const entity of entityManager.entities) {
             if (entity === this || entity === this.owner) continue;
 
@@ -144,31 +146,11 @@ export class Hook {
 
             if (distSq < rSum * rSum) {
                 if (entity instanceof Hook) {
-                    // Hook clash - hooks bounce off each other
+                    // Hook clash - just trigger visual effect, hooks pass through
                     if (!entity.isReturning) {
                         this.clashJustHappened = true;
                         entity.clashJustHappened = true;
-                        
-                        // Bounce logic - deflect hooks perpendicular to collision
-                        const collisionAngle = Math.atan2(dy, dx);
-                        const bounceForce = 150; // Bounce strength
-                        
-                        // Bounce this hook
-                        this.dirX = Math.cos(collisionAngle + Math.PI) * 0.5 + (Math.random() - 0.5) * 0.5;
-                        this.dirY = Math.sin(collisionAngle + Math.PI) * 0.5 + (Math.random() - 0.5) * 0.5;
-                        this.x += this.dirX * bounceForce;
-                        this.y += this.dirY * bounceForce;
-                        
-                        // Bounce other hook
-                        entity.dirX = Math.cos(collisionAngle) * 0.5 + (Math.random() - 0.5) * 0.5;
-                        entity.dirY = Math.sin(collisionAngle) * 0.5 + (Math.random() - 0.5) * 0.5;
-                        entity.x += entity.dirX * bounceForce;
-                        entity.y += entity.dirY * bounceForce;
-                        
-                        // Reset distance tracking so hook doesn't immediately return
-                        this.currentDist = Math.min(this.currentDist, this.maxDist * 0.5);
-                        entity.currentDist = Math.min(entity.currentDist, entity.maxDist * 0.5);
-                        
+                        // In WC3 Pudge Wars, hooks don't bounce - they continue flying
                         return;
                     }
                 } else if (entity.takeDamage && entity.state !== State.DEAD) {
