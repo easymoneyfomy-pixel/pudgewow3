@@ -267,8 +267,8 @@ export class Hook {
         const dy = this.y - this.owner.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         
-        // Grapple pulls 3x faster than normal hook
-        const grappleSpeed = moveAmt * 3;
+        // Grapple pulls at normal hook speed (x1)
+        const grappleSpeed = moveAmt;
 
         if (dist <= grappleSpeed) {
             // Final snap - teleport owner to hook position
