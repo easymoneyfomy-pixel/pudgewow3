@@ -165,6 +165,10 @@ export class Hook {
                         entity.x += entity.dirX * bounceForce;
                         entity.y += entity.dirY * bounceForce;
                         
+                        // Reset distance tracking so hook doesn't immediately return
+                        this.currentDist = Math.min(this.currentDist, this.maxDist * 0.5);
+                        entity.currentDist = Math.min(entity.currentDist, entity.maxDist * 0.5);
+                        
                         return;
                     }
                 } else if (entity.takeDamage && entity.state !== State.DEAD) {
