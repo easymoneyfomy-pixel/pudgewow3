@@ -64,13 +64,21 @@ export class GameMap {
         this.grid[11][11] = new Tile(TileType.RUNE);
         this.grid[12][12] = new Tile(TileType.RUNE);
 
-        // 5. SHOPS — 4 corners of the open arena (like WC3)
-        // Red shops (left side corners)
-        this.grid[2][2] = new Tile(TileType.SHOP);
-        this.grid[2][this.height - 3] = new Tile(TileType.SHOP);
-        // Blue shops (right side corners)
-        this.grid[this.width - 3][2] = new Tile(TileType.SHOP);
-        this.grid[this.width - 3][this.height - 3] = new Tile(TileType.SHOP);
+        // 5. SHOPS — 2x2 in each corner of the open arena (like WC3)
+        // Red shops (left side corners) - 2x2 size
+        for (let sx = 1; sx <= 2; sx++) {
+            for (let sy = 1; sy <= 2; sy++) {
+                this.grid[sx][sy] = new Tile(TileType.SHOP);
+                this.grid[sx][this.height - 1 - sy] = new Tile(TileType.SHOP);
+            }
+        }
+        // Blue shops (right side corners) - 2x2 size
+        for (let sx = 1; sx <= 2; sx++) {
+            for (let sy = 1; sy <= 2; sy++) {
+                this.grid[this.width - 1 - sx][sy] = new Tile(TileType.SHOP);
+                this.grid[this.width - 1 - sx][this.height - 1 - sy] = new Tile(TileType.SHOP);
+            }
+        }
 
         // 6. SPAWN ZONES — Vertical strips behind the shops/near edges
         const midY = Math.floor(this.height / 2);

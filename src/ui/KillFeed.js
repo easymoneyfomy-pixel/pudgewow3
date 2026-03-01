@@ -7,6 +7,9 @@ export class KillFeed {
     }
 
     addKill(killerTeam, victimTeam, isHeadshot = false) {
+        const killerColor = killerTeam === 'red' ? '#ff4444' : '#4488ff';
+        const victimColor = victimTeam === 'red' ? '#ff4444' : '#4488ff';
+        
         const text = isHeadshot
             ? `💀 HEADSHOT! ${killerTeam.toUpperCase()} ➜ ${victimTeam.toUpperCase()}`
             : `⚔ ${killerTeam.toUpperCase()} killed ${victimTeam.toUpperCase()}`;
@@ -15,7 +18,9 @@ export class KillFeed {
             text,
             life: this.entryLife,
             isHeadshot,
-            killerTeam
+            killerTeam,
+            killerColor,
+            victimColor
         });
 
         if (isHeadshot) {
@@ -32,12 +37,15 @@ export class KillFeed {
     }
 
     addFirstBlood(killerTeam) {
+        const killerColor = killerTeam === 'red' ? '#ff4444' : '#4488ff';
+        
         this.entries.push({
             text: `🩸 FIRST BLOOD! — ${killerTeam.toUpperCase()}`,
             life: 6,
             isHeadshot: false,
             isFirstBlood: true,
-            killerTeam
+            killerTeam,
+            killerColor
         });
 
         this.announcements.push({
@@ -48,12 +56,17 @@ export class KillFeed {
     }
 
     addDeny(killerTeam, victimTeam) {
+        const killerColor = killerTeam === 'red' ? '#ff4444' : '#4488ff';
+        const victimColor = victimTeam === 'red' ? '#ff4444' : '#4488ff';
+        
         this.entries.push({
             text: `📉 DENIED! ${killerTeam.toUpperCase()} ➜ ${victimTeam.toUpperCase()}`,
             life: this.entryLife,
             isHeadshot: false,
             isDenied: true,
-            killerTeam
+            killerTeam,
+            killerColor,
+            victimColor
         });
 
         if (this.entries.length > this.maxEntries) {
@@ -92,14 +105,21 @@ export class KillFeed {
             const textW = ctx.measureText ? 260 : 260;
             ctx.fillRect(startX - textW, y - 8, textW, 22);
 
-            // Text
+            // Text with team colors
             ctx.font = e.isHeadshot || e.isFirstBlood ? 'bold 13px Arial' : '12px Arial';
             ctx.textAlign = 'right';
+            
+            // Parse text and color team names
+            const text = e.text;
+            let drawX = startX - 10;
+            
+            // Simple approach: draw entire text in default color
+            // Team names are already in UPPERCASE (RED/BLUE)
             ctx.fillStyle = e.isFirstBlood ? '#ff4444' :
                 e.isHeadshot ? '#ffd700' :
                     e.isDenied ? '#bbbbbb' :
-                        e.killerTeam === 'red' ? '#ff8888' : '#8888ff';
-            ctx.fillText(e.text, startX - 10, y + 6);
+                        '#ffffff';
+            ctx.fillText(text, drawX, y + 6);
         }
 
         // Render huge center-screen announcements
