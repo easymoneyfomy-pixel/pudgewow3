@@ -54,6 +54,7 @@ export class MainScene {
         this._prevFleshHeapStacks = new Map(); // Track Flesh Heap stack changes
         this._prevLevels = new Map(); // Track level changes for particles
         this._prevSalveTimers = new Map(); // Track Healing Salve for particles
+        this._firstBloodShown = false; // Track First Blood notification (once per game)
         this._cameraInitialized = false;
 
         // Active item targeting state
@@ -160,10 +161,14 @@ export class MainScene {
         }
 
         // ── First Blood notification (only once per game) ──
-        for (const eData of data.entities) {
-            if (eData.type === 'CHARACTER' && eData.firstBlood) {
-                const killerTeam = eData.team === 'red' ? 'blue' : 'red';
-                this.killFeed.addFirstBlood(killerTeam);
+        if (!this._firstBloodShown) {
+            for (const eData of data.entities) {
+                if (eData.type === 'CHARACTER' && eData.firstBlood) {
+                    const killerTeam = eData.team === 'red' ? 'blue' : 'red';
+                    this.killFeed.addFirstBlood(killerTeam);
+                    this._firstBloodShown = true;
+                    break;
+                }
             }
         }
 

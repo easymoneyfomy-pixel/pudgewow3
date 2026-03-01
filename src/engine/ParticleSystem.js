@@ -148,7 +148,7 @@ export class ParticleSystem {
             const dist = Math.random() * 40;
             const px = x + Math.cos(angle) * dist;
             const py = y + Math.sin(angle) * dist;
-            const life = Math.random() * 0.3 + 0.2; // Shorter duration
+            const life = Math.random() * 0.5 + 0.3; // Longer duration (0.3-0.8 sec)
             const size = Math.random() * 3 + 2;
             const color = `rgba(255, 255, 255, ${0.7 + Math.random() * 0.3})`;
             this.particles.push(new Particle(px, py, color, life, 0, 0, size));
@@ -156,13 +156,13 @@ export class ParticleSystem {
     }
 
     spawnHeal(x, y, amount) {
-        // Green healing particles (shorter duration)
+        // Green healing particles (very short duration)
         if (this.particles.length >= this.maxParticles) return;
-        const available = Math.min(10, this.maxParticles - this.particles.length);
+        const available = Math.min(8, this.maxParticles - this.particles.length);
         for (let i = 0; i < available; i++) {
             const angle = Math.random() * Math.PI * 2;
             const speed = Math.random() * 50 + 30;
-            const life = Math.random() * 0.2 + 0.15; // Shorter duration (0.15-0.35 sec)
+            const life = Math.random() * 0.15 + 0.1; // Very short duration (0.1-0.25 sec)
             const size = Math.random() * 3 + 2;
             const color = `rgba(0, ${200 + Math.random() * 55}, 0, ${0.5 + Math.random() * 0.3})`;
             this.particles.push(new Particle(x, y, color, life, Math.cos(angle) * speed, Math.sin(angle) * speed - 30, size));
