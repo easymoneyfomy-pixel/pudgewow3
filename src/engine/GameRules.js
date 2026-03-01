@@ -47,53 +47,71 @@ export class GameRules {
     }
 
     handleDeath(entity) {
+        // ── DENY CHECK ──
+        // Deny = ally killed ally (no gold, no XP, no First Blood, no score)
         if (entity.deniedJustHappened) {
-            // It's a deny! NO gold, NO First Blood for denies
-            // Just return without any rewards
-            return;
+            return; // NO gold, NO XP, NO First Blood, NO score
         }
 
-        // WC3 Pudge Wars: Mine kills do NOT award score points
+        // ── MINE KILLS ──
+        // Mine kills by enemy = normal kill (gold + score)
+        // Mine kills by ally = deny (no gold, no score)
         if (entity.killedByMine) {
-            entity.killedByMine = false; // Reset for next life
-            return;
+            const mineKiller = entity.lastAttacker;
+            if (mineKiller && mineKiller.team !== entity.team) {
+                // Enemy mine kill = normal kill
+                entity.killedByMine = false;
+                // Continue to normal kill processing below
+            } else {
+                // Ally mine kill = deny
+                entity.killedByMine = false;
+                return; // NO score, NO gold
+            }
         }
 
+        // ── SCORE UPDATE ──
         if (entity.team === 'red') {
             this.scoreBlue++;
         } else if (entity.team === 'blue') {
             this.scoreRed++;
         }
 
-        // FLESH HEAP & Rewards: If there's an attacker (killer), give them rewards
+        // ── KILLER REWARDS ──
         if (entity.lastAttacker) {
             const killer = entity.lastAttacker;
 
-            // Base gold for kill
-            let goldReward = 65;
+            // Check if killer is enemy (not ally)
+            const isEnemyKill = killer.team !== entity.team;
 
-            // First Blood bonus (x2) - only once per game
-            if (!this._firstBloodDone) {
-                goldReward = 130;
-                this._firstBloodDone = true;
-                killer.firstBlood = true; // Set flag for client notification
-                console.log(`[FIRST BLOOD] Player ${killer.id} gets ${goldReward}g!`);
+            if (isEnemyKill) {
+                // Base gold for enemy kill
+                let goldReward = 65;
+
+                // ── FIRST BLOOD ──
+                // First enemy kill of the match (only once per game)
+                if (!this._firstBloodDone) {
+                    goldReward = 130; // First Blood bonus (x2)
+                    this._firstBloodDone = true;
+                    killer.firstBlood = true; // Set flag for client notification
+                    console.log(`[FIRST BLOOD] Player ${killer.id} gets ${goldReward}g!`);
+                }
+
+                // ── HEADSHOT BONUS ──
+                if (entity.headshotJustHappened) {
+                    goldReward = 150;
+                    console.log(`[HEADSHOT] Player ${killer.id} gets ${goldReward}g!`);
+                }
+
+                // ── MULTI-KILL TRACKING ──
+                this._trackMultiKill(killer);
+
+                // ── APPLY REWARDS ──
+                if (killer.gainFleshHeap) killer.gainFleshHeap();
+                if (killer.gainXp) killer.gainXp(50); // XP for kill
+                killer.gold += goldReward;
+                console.log(`[GOLD] Kill reward: Player ${killer.id} +${goldReward}g (Total: ${killer.gold})`);
             }
-
-            // Headshot bonus
-            if (entity.headshotJustHappened) {
-                goldReward = 150;
-                console.log(`[HEADSHOT] Player ${killer.id} gets ${goldReward}g!`);
-            }
-
-            // Multi-kill tracking (notifications only)
-            this._trackMultiKill(killer);
-
-            // Apply rewards
-            if (killer.gainFleshHeap) killer.gainFleshHeap();
-            if (killer.gainXp) killer.gainXp(50); // XP for kill
-            killer.gold += goldReward;
-            console.log(`[GOLD] Kill reward: Player ${killer.id} +${goldReward}g (Total: ${killer.gold})`);
+            // Ally kills (deny) give NO gold, NO XP - already handled at top
         }
 
         this.checkWinCondition();
