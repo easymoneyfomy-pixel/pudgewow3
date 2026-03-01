@@ -47,6 +47,8 @@ export class GameRules {
     }
 
     handleDeath(entity) {
+        console.log(`[GameRules.handleDeath] Player ${entity.id} died, deniedJustHappened=${entity.deniedJustHappened}, team=${entity.team}`);
+        
         // ── DENY CHECK ──
         // Deny = ally killed ally (no gold, no XP, no First Blood, no score)
         if (entity.deniedJustHappened) {

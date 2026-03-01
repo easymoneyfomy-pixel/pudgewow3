@@ -310,7 +310,6 @@ export class MainScene {
         if (this.game.input.isKeyPressed('Digit3')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'DISTANCE' });
         if (this.game.input.isKeyPressed('Digit4')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'RADIUS' });
         if (this.game.input.isKeyPressed('Digit5')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'MOVE_SPEED' });
-        if (this.game.input.isKeyPressed('Digit6')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'FLESH_HEAP' });
 
         // Active items (Z,X,C,V,D,F → slots 0-5)
         const itemKeys = ['KeyZ', 'KeyX', 'KeyC', 'KeyV', 'KeyD', 'KeyF'];

@@ -132,10 +132,6 @@ export class ServerGame {
                     character.moveSpeedUpgrades = (character.moveSpeedUpgrades || 0) + 1;
                     character.gold -= cost;
                     break;
-                case 'FLESH_HEAP':
-                    character.fleshHeapUpgrades = (character.fleshHeapUpgrades || 0) + 1;
-                    character.gold -= cost;
-                    break;
             }
             character.recalculateStats();
         }
