@@ -10,7 +10,6 @@ export const SHOP_ITEMS = [
     { id: 'lycan_paws', label: "Lycan's Paws", cost: 200, icon: 'assets/shop/Lycan\'s_Paws.png', desc: '+40 Move Speed', effect: 'speed' },
     { id: 'techies_barrel', label: "Techie's Barrel", cost: 400, icon: 'assets/shop/mine.png', desc: 'Place a landmine', effect: 'mine', active: true, cooldown: 20 },
     { id: 'tinys_arm', label: "Tiny's Arm", cost: 600, icon: 'assets/shop/Tini\'s_Arm.png', desc: 'Toss a nearby unit', effect: 'toss', active: true, cooldown: 12 },
-    { id: 'flesh_heap', label: "Flesh Heap", cost: 100, icon: 'assets/Flesh_Heap.png', desc: '+10 Max HP', effect: 'flesh_heap_item' },
     { id: 'barathrums_lantern', label: "Barathrum's Lantern", cost: 700, icon: 'assets/shop/Baratrum\'s_lantern.png', desc: '+Dmg based on Hook Spd', effect: 'lantern' },
 ];
 

@@ -323,7 +323,9 @@ export class UIManager {
         this._updateSkillSlot(this.dom.cdW, this.dom.cdTextW, this.dom.activeW, 0, 0, player.rotActive);
         if (this.dom.cdE) {
             this.dom.cdE.style.height = '0%';
-            this.dom.cdTextE.innerText = player.fleshHeapStacks > 0 ? `+${player.fleshHeapStacks}` : '';
+            // Show Flesh Heap upgrades + stacks on E skill
+            const totalFleshHeap = (player.fleshHeapUpgrades || 0) + (player.fleshHeapStacks || 0);
+            this.dom.cdTextE.innerText = totalFleshHeap > 0 ? `+${totalFleshHeap}` : '';
         }
     }
 
