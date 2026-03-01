@@ -30,7 +30,7 @@ export class GameMap {
 
         // 2. Thick outer impenetrable boundary (Trees/Obstacles)
         // In WC3, the arena is bordered by dense Felwood trees
-        // Fill entire 2-tile border with obstacles (no gaps)
+        // Mix trees and stones for variety (no gaps)
         for (let x = 0; x < this.width; x++) {
             for (let b = 0; b < 2; b++) {
                 this.grid[x][b] = new Tile(TileType.OBSTACLE);
@@ -39,8 +39,14 @@ export class GameMap {
         }
         for (let y = 0; y < this.height; y++) {
             for (let b = 0; b < 2; b++) {
-                this.grid[b][y] = new Tile(TileType.OBSTACLE);
-                this.grid[this.width - 1 - b][y] = new Tile(TileType.OBSTACLE);
+                // Mix trees and stones for organic look
+                if ((b + y) % 3 === 0) {
+                    this.grid[b][y] = new Tile(TileType.STONE);
+                    this.grid[this.width - 1 - b][y] = new Tile(TileType.STONE);
+                } else {
+                    this.grid[b][y] = new Tile(TileType.OBSTACLE);
+                    this.grid[this.width - 1 - b][y] = new Tile(TileType.OBSTACLE);
+                }
             }
         }
 

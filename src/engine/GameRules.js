@@ -48,10 +48,11 @@ export class GameRules {
 
     handleDeath(entity) {
         if (entity.deniedJustHappened) {
-            // It's a deny! Give 10g to the killer (ally kill)
+            // It's a deny! Give 65g to the killer (ally kill)
+            // NO First Blood for denies
             if (entity.lastAttacker) {
-                entity.lastAttacker.gold += 10;
-                console.log(`[DENY] Player ${entity.lastAttacker.id} gets 10g for deny`);
+                entity.lastAttacker.gold += 65;
+                console.log(`[DENY] Player ${entity.lastAttacker.id} gets 65g for deny`);
             }
             return;
         }

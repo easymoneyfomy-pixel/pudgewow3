@@ -140,7 +140,7 @@ export class ParticleSystem {
     }
 
     spawnLevelUp(x, y) {
-        // White sparkles for level up (LONG duration - visible)
+        // White sparkles for level up (VERY LONG duration - very visible)
         if (this.particles.length >= this.maxParticles) return;
         const available = Math.min(20, this.maxParticles - this.particles.length);
         for (let i = 0; i < available; i++) {
@@ -148,7 +148,7 @@ export class ParticleSystem {
             const dist = Math.random() * 40;
             const px = x + Math.cos(angle) * dist;
             const py = y + Math.sin(angle) * dist;
-            const life = Math.random() * 0.6 + 0.4; // Long duration (0.4-1.0 sec)
+            const life = Math.random() * 1.2 + 0.8; // VERY Long duration (0.8-2.0 sec) - 2x longer
             const size = Math.random() * 4 + 3;
             const color = `rgba(255, 255, 255, ${0.8 + Math.random() * 0.2})`;
             this.particles.push(new Particle(px, py, color, life, 0, 0, size));
