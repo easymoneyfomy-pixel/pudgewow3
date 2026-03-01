@@ -64,7 +64,6 @@ export class Character {
         this.distUpgrades = 0;
         this.radUpgrades = 0;
         this.moveSpeedUpgrades = 0;
-        this.fleshHeapUpgrades = 0; // Flesh Heap upgrades (+10 HP per purchase)
 
         // Headshot flag
         this.headshotJustHappened = false;
