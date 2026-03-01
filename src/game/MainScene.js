@@ -149,6 +149,7 @@ export class MainScene {
                 const killerTeam = victimTeam === 'red' ? 'blue' : 'red';
 
                 if (eData.isDenied) {
+                    console.log('[CLIENT] Deny detected for', eData.id, 'isDenied=' + eData.isDenied);
                     this.killFeed.addDeny(eData.team, victimTeam);
                 } else if (eData.isHeadshot) {
                     this.killFeed.addKill(killerTeam, victimTeam, true);

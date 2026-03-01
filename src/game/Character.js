@@ -182,6 +182,7 @@ export class Character {
         this.rotActive = false;
         // Save deny state for client visualization (will be reset by server after broadcast)
         this.wasDenied = this.deniedJustHappened;
+        console.log(`[Character.die] Player ${this.id} died, wasDenied=${this.wasDenied}, deniedJustHappened=${this.deniedJustHappened}`);
     }
 
     respawn() {
@@ -433,6 +434,7 @@ export class Character {
             if (item.effect === 'burn') this.hasBurn = true;
             if (item.effect === 'rupture') this.hasRupture = true;
             if (item.effect === 'lifesteal') this.hasLifesteal = true;
+            if (item.effect === 'flesh_heap_item') this.maxHp += 10; // Flesh Heap item
         }
     }
 }
