@@ -108,33 +108,37 @@ export class KillFeed {
             // Text with team colors
             ctx.font = e.isHeadshot || e.isFirstBlood ? 'bold 13px Arial' : '12px Arial';
             ctx.textAlign = 'right';
-
+            
             // Draw text with colored team names
             const text = e.text;
             
-            // Draw full text first to get width
-            ctx.fillStyle = '#ffffff';
+            // Simple approach: draw entire text in appropriate color
+            if (e.isDenied) {
+                ctx.fillStyle = '#bbbbbb'; // Gray for deny
+            } else if (e.isFirstBlood) {
+                ctx.fillStyle = '#ff4444'; // Red for First Blood
+            } else if (e.isHeadshot) {
+                ctx.fillStyle = '#ffd700'; // Gold for Headshot
+            } else {
+                ctx.fillStyle = '#ffffff'; // White for normal kills
+            }
             ctx.fillText(text, startX - 10, y + 6);
-
-            // Now draw team names in color over the white text
-            const textMetrics = ctx.measureText(text);
-            const textStartX = startX - 10 - textMetrics.width;
-
-            // Parse and draw RED/BLUE in color
+            
+            // Now draw RED/BLUE team names in their colors over the white text
             const words = text.split(' ');
-            let currentX = startX - 10;
+            let wordX = startX - 10;
             for (let i = words.length - 1; i >= 0; i--) {
                 const word = words[i];
                 const wordWidth = ctx.measureText(word + ' ').width;
-
-                if (word.includes('RED')) {
+                
+                if (word === 'RED' || word === 'RED➜') {
                     ctx.fillStyle = '#ff4444';
-                    ctx.fillText(word, currentX, y + 6);
-                } else if (word.includes('BLUE')) {
+                    ctx.fillText(word, wordX, y + 6);
+                } else if (word === 'BLUE' || word === 'BLUE➜') {
                     ctx.fillStyle = '#4488ff';
-                    ctx.fillText(word, currentX, y + 6);
+                    ctx.fillText(word, wordX, y + 6);
                 }
-                currentX -= wordWidth;
+                wordX -= wordWidth;
             }
         }
 
