@@ -68,6 +68,8 @@ export class Character {
         this.headshotJustHappened = false;
         // Deny flag
         this.deniedJustHappened = false;
+        // Was denied (saved after death for client visualization)
+        this.wasDenied = false;
         // First Blood flag (for notification)
         this.firstBlood = false;
 
@@ -177,7 +179,8 @@ export class Character {
         this.state = State.DEAD;
         this.respawnTimer = this.respawnDelay;
         this.rotActive = false;
-        // DON'T reset deniedJustHappened here - server needs to check it first!
+        // Save deny state for client visualization (will be reset by server after broadcast)
+        this.wasDenied = this.deniedJustHappened;
     }
 
     respawn() {
@@ -189,6 +192,7 @@ export class Character {
         this.targetX = this.spawnX;
         this.targetY = this.spawnY;
         this.isDeathProcessed = false;
+        this.wasDenied = false; // Reset wasDenied on respawn
 
         this.burnTimer = 0;
         this.ruptureTimer = 0;
@@ -378,7 +382,7 @@ export class Character {
             hookMaxDist: this.hookMaxDist,
             hookRadius: this.hookRadius,
             isHeadshot: this.headshotJustHappened,
-            isDenied: this.deniedJustHappened,
+            isDenied: this.wasDenied, // Use wasDenied (saved at death) instead of deniedJustHappened
             firstBlood: this.firstBlood || false,
             rotActive: this.rotActive,
             fleshHeapStacks: this.fleshHeapStacks || 0,
