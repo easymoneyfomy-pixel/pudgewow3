@@ -47,15 +47,9 @@ export class GameRules {
     }
 
     handleDeath(entity) {
-        console.log(`[GameRules.handleDeath] Player ${entity.id} died, deniedJustHappened=${entity.deniedJustHappened}, headshotJustHappened=${entity.headshotJustHappened}, killedByMine=${entity.killedByMine}, team=${entity.team}`);
-        
         // ── DENY CHECK ──
-        // Deny = ally killed ally OR self-kill (no gold, no XP, no First Blood, no score)
-        // Types of deny: Rot suicide, Hook headshot on ally, Mine kill on ally
-        const isDeny = entity.deniedJustHappened || entity.headshotJustHappened || entity.killedByMine;
-        
-        if (isDeny) {
-            console.log(`[SERVER] Deny detected for player ${entity.id} (Rot=${entity.deniedJustHappened}, Headshot=${entity.headshotJustHappened}, Mine=${entity.killedByMine})`);
+        // Deny = ally killed ally (no gold, no XP, no First Blood, no score)
+        if (entity.deniedJustHappened) {
             return; // NO gold, NO XP, NO First Blood, NO score
         }
 
