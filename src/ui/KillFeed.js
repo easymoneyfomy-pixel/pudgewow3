@@ -109,17 +109,36 @@ export class KillFeed {
             ctx.font = e.isHeadshot || e.isFirstBlood ? 'bold 13px Arial' : '12px Arial';
             ctx.textAlign = 'right';
             
-            // Parse text and color team names
+            // Draw text with colored team names
             const text = e.text;
+            const killerColor = e.killerTeam === 'red' ? '#ff4444' : '#4488ff';
+            const victimColor = e.killerTeam === 'red' ? '#4488ff' : '#ff4444'; // Opposite team
+            
+            // Parse text and draw with colors
+            // Format: "⚔ RED killed BLUE" or "🩸 FIRST BLOOD! — RED"
             let drawX = startX - 10;
             
-            // Simple approach: draw entire text in default color
-            // Team names are already in UPPERCASE (RED/BLUE)
-            ctx.fillStyle = e.isFirstBlood ? '#ff4444' :
-                e.isHeadshot ? '#ffd700' :
-                    e.isDenied ? '#bbbbbb' :
-                        '#ffffff';
-            ctx.fillText(text, drawX, y + 6);
+            // Split by spaces and draw each part
+            const parts = text.split(' ');
+            for (const part of parts) {
+                ctx.save();
+                if (part === 'RED' || part === 'RED➜') {
+                    ctx.fillStyle = '#ff4444';
+                } else if (part === 'BLUE' || part === 'BLUE➜') {
+                    ctx.fillStyle = '#4488ff';
+                } else if (e.isFirstBlood) {
+                    ctx.fillStyle = '#ff4444';
+                } else if (e.isHeadshot) {
+                    ctx.fillStyle = '#ffd700';
+                } else if (e.isDenied) {
+                    ctx.fillStyle = '#bbbbbb';
+                } else {
+                    ctx.fillStyle = '#ffffff';
+                }
+                ctx.fillText(part + ' ', drawX - ctx.measureText(part + ' ').width, y + 6);
+                drawX -= ctx.measureText(part + ' ').width;
+                ctx.restore();
+            }
         }
 
         // Render huge center-screen announcements

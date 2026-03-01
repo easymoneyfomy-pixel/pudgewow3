@@ -48,12 +48,8 @@ export class GameRules {
 
     handleDeath(entity) {
         if (entity.deniedJustHappened) {
-            // It's a deny! Give 10g to the killer (ally kill)
-            // NO First Blood for denies
-            if (entity.lastAttacker) {
-                entity.lastAttacker.gold += 10;
-                console.log(`[DENY] Player ${entity.lastAttacker.id} gets 10g for deny`);
-            }
+            // It's a deny! NO gold, NO First Blood for denies
+            // Just return without any rewards
             return;
         }
 
@@ -72,10 +68,10 @@ export class GameRules {
         // FLESH HEAP & Rewards: If there's an attacker (killer), give them rewards
         if (entity.lastAttacker) {
             const killer = entity.lastAttacker;
-            
+
             // Base gold for kill
             let goldReward = 65;
-            
+
             // First Blood bonus (x2) - only once per game
             if (!this._firstBloodDone) {
                 goldReward = 130;
@@ -83,16 +79,16 @@ export class GameRules {
                 killer.firstBlood = true; // Set flag for client notification
                 console.log(`[FIRST BLOOD] Player ${killer.id} gets ${goldReward}g!`);
             }
-            
+
             // Headshot bonus
             if (entity.headshotJustHappened) {
                 goldReward = 150;
                 console.log(`[HEADSHOT] Player ${killer.id} gets ${goldReward}g!`);
             }
-            
+
             // Multi-kill tracking (notifications only)
             this._trackMultiKill(killer);
-            
+
             // Apply rewards
             if (killer.gainFleshHeap) killer.gainFleshHeap();
             if (killer.gainXp) killer.gainXp(50); // XP for kill

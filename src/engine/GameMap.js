@@ -65,6 +65,7 @@ export class GameMap {
         this.grid[12][12] = new Tile(TileType.RUNE);
 
         // 5. SHOPS — 2x2 in each corner of the open arena (like WC3)
+        // Each shop is a single 2x2 object (one building)
         // Red shops (left side corners) - 2x2 size
         for (let sx = 1; sx <= 2; sx++) {
             for (let sy = 1; sy <= 2; sy++) {
