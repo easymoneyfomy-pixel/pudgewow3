@@ -145,11 +145,13 @@ export class ParticleSystem {
         const available = Math.min(15, this.maxParticles - this.particles.length);
         for (let i = 0; i < available; i++) {
             const angle = Math.random() * Math.PI * 2;
-            const speed = Math.random() * 60 + 40;
+            const dist = Math.random() * 40;
+            const px = x + Math.cos(angle) * dist;
+            const py = y + Math.sin(angle) * dist;
             const life = Math.random() * 0.3 + 0.2; // Shorter duration
             const size = Math.random() * 3 + 2;
             const color = `rgba(255, 255, 255, ${0.7 + Math.random() * 0.3})`;
-            this.particles.push(new Particle(x, y, color, life, Math.cos(angle) * speed, Math.sin(angle) * speed, size));
+            this.particles.push(new Particle(px, py, color, life, 0, 0, size));
         }
     }
 
