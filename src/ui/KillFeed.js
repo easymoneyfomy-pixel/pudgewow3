@@ -108,25 +108,25 @@ export class KillFeed {
             // Text with team colors
             ctx.font = e.isHeadshot || e.isFirstBlood ? 'bold 13px Arial' : '12px Arial';
             ctx.textAlign = 'right';
-            
+
             // Draw text with colored team names
-            ctx.textAlign = 'right';
+            const text = e.text;
             
             // Draw full text first to get width
             ctx.fillStyle = '#ffffff';
             ctx.fillText(text, startX - 10, y + 6);
-            
+
             // Now draw team names in color over the white text
             const textMetrics = ctx.measureText(text);
             const textStartX = startX - 10 - textMetrics.width;
-            
+
             // Parse and draw RED/BLUE in color
             const words = text.split(' ');
             let currentX = startX - 10;
             for (let i = words.length - 1; i >= 0; i--) {
                 const word = words[i];
                 const wordWidth = ctx.measureText(word + ' ').width;
-                
+
                 if (word.includes('RED')) {
                     ctx.fillStyle = '#ff4444';
                     ctx.fillText(word, currentX, y + 6);

@@ -177,9 +177,7 @@ export class Character {
         this.state = State.DEAD;
         this.respawnTimer = this.respawnDelay;
         this.rotActive = false;
-        
-        // Reset deny flag after death is processed
-        this.deniedJustHappened = false;
+        // DON'T reset deniedJustHappened here - server needs to check it first!
     }
 
     respawn() {
