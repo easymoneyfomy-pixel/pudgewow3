@@ -338,20 +338,20 @@ export class UIManager {
 
     _renderInventory(ctx, player) {
         if (!player) return;
-        const icons = { 
-            'burn': 'assets/shop/flaming_hook.png', 
-            'bounce': 'assets/shop/Ricochet_Turbline.png', 
-            'rupture': 'assets/shop/Stragwyr\'s_Claws.png', 
-            'grapple': 'assets/shop/Grappling_Hook.png', 
-            'lifesteal': 'assets/shop/naix\'s_jaws.png', 
-            'blink': 'assets/shop/Blink_Dagger.png', 
-            'speed': 'assets/shop/Lycan\'s_Paws.png', 
-            'mine': 'assets/shop/mine.png', 
-            'heal': 'assets/shop/Healling_salve.png', 
-            'toss': 'assets/shop/Tini\'s_Arm.png', 
-            'lantern': '🏮' 
+        const icons = {
+            'burn': 'assets/shop/flaming_hook.png',
+            'bounce': 'assets/shop/Ricochet_Turbline.png',
+            'rupture': 'assets/shop/Stragwyr\'s_Claws.png',
+            'grapple': 'assets/shop/Grappling_Hook.png',
+            'lifesteal': 'assets/shop/naix\'s_jaws.png',
+            'blink': 'assets/shop/Blink_Dagger.png',
+            'speed': 'assets/shop/Lycan\'s_Paws.png',
+            'mine': 'assets/shop/mine.png',
+            'heal': 'assets/shop/Healling_salve.png',
+            'toss': 'assets/shop/Tini\'s_Arm.png',
+            'lantern': '🏮'
         };
-        
+
         // Check if player has Flaming Hook (for skill Q icon update)
         const hasFlamingHook = player.items && player.items.some(item => item.effect === 'burn');
         const hookIconEl = document.querySelector('.icon-hook');
@@ -364,7 +364,7 @@ export class UIManager {
                 hookIconEl.classList.remove('flaming');
             }
         }
-        
+
         for (let i = 0; i < 6; i++) {
             const item = player.items ? player.items[i] : null;
             const iconEl = document.getElementById(`inv-icon-${i}`);
@@ -373,7 +373,9 @@ export class UIManager {
             const slotEl = iconEl.parentElement;
             if (item) {
                 slotEl.classList.add('has-item');
-                const icon = icons[item.effect] || '📦';
+                // Try to get icon by item.id first, then by effect
+                let icon = icons[item.effect] || '📦';
+                if (item.id === 'healing_salve') icon = 'assets/shop/Healling_salve.png';
                 if (icon.startsWith('assets/')) {
                     iconEl.innerHTML = `<img src="${icon}" style="width:100%; height:100%; object-fit:cover;">`;
                 }

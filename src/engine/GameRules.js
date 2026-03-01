@@ -71,14 +71,11 @@ export class GameRules {
             // Base gold for kill
             let goldReward = 65;
             
-            // First Blood bonus (x2) + announcement
+            // First Blood bonus (x2) - only once per game
             if (!this._firstBloodDone) {
                 goldReward = 130;
                 this._firstBloodDone = true;
                 console.log(`[FIRST BLOOD] Player ${killer.id} gets ${goldReward}g!`);
-                
-                // Mark entity for First Blood announcement
-                entity.firstBloodJustHappened = true;
             }
             
             // Headshot bonus

@@ -149,8 +149,6 @@ export class MainScene {
 
                 if (eData.isDenied) {
                     this.killFeed.addDeny(eData.team, victimTeam);
-                } else if (eData.firstBloodJustHappened) {
-                    this.killFeed.addFirstBlood(killerTeam);
                 } else if (eData.isHeadshot) {
                     this.killFeed.addKill(killerTeam, victimTeam, true);
                 } else {

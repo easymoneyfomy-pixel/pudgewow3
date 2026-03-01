@@ -68,8 +68,6 @@ export class Character {
         this.headshotJustHappened = false;
         // Deny flag
         this.deniedJustHappened = false;
-        // First Blood flag
-        this.firstBloodJustHappened = false;
 
         // Robust death processing flag (Phase 15 fix)
         this.isDeathProcessed = false;
@@ -378,7 +376,6 @@ export class Character {
             hookRadius: this.hookRadius,
             isHeadshot: this.headshotJustHappened,
             isDenied: this.deniedJustHappened,
-            firstBloodJustHappened: this.firstBloodJustHappened || false,
             rotActive: this.rotActive,
             fleshHeapStacks: this.fleshHeapStacks || 0,
             items: this.items || [],
