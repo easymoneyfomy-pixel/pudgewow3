@@ -133,11 +133,20 @@ export class GameMap {
         }
 
         // 2. SECOND PASS: DRAW DECORATIONS (TREES, STONES, SHOPS, RUNES)
+        // Track which tiles we've already drawn (for 2x2 shops)
+        const drawnShops = new Set();
+        
         for (let x = 0; x < this.width; x++) {
             for (let y = 0; y < this.height; y++) {
                 const px = x * size;
                 const py = y * size;
                 const tile = this.grid[x][y];
+
+                // Skip if this shop tile was already drawn as part of a 2x2 shop
+                const shopKey = `${x},${y}`;
+                if (tile.type === TileType.SHOP && drawnShops.has(shopKey)) {
+                    continue;
+                }
 
                 if (tile.type === TileType.OBSTACLE) {
                     const seed = (x * 12.9898 + y * 78.233) * 43758.5453;
@@ -167,10 +176,24 @@ export class GameMap {
                     }
                 }
                 else if (tile.type === TileType.SHOP) {
+                    // Draw 2x2 shop as one large building
                     if (renderer.shopBuildingSprite && renderer.shopBuildingSprite.complete && renderer.shopBuildingSprite.naturalWidth > 0) {
-                        const scale = 1.25;
-                        ctx.drawImage(renderer.shopBuildingSprite, px - (size * (scale - 1)) / 2, py - (size * (scale - 1)) / 4, size * scale, size * scale);
+                        const shopSize = size * 2; // 2x2 tiles
+                        const scale = 1.15;
+                        // Draw one large sprite covering all 4 tiles
+                        ctx.drawImage(
+                            renderer.shopBuildingSprite,
+                            px - (shopSize * (scale - 1)) / 4,
+                            py - (shopSize * (scale - 1)) / 4,
+                            shopSize * scale,
+                            shopSize * scale
+                        );
                     }
+                    // Mark all 4 tiles as drawn
+                    drawnShops.add(`${x},${y}`);
+                    drawnShops.add(`${x+1},${y}`);
+                    drawnShops.add(`${x},${y+1}`);
+                    drawnShops.add(`${x+1},${y+1}`);
                 }
                 else if (tile.type === TileType.RUNE) {
                     const glowParams = Math.abs(Math.sin(this._animTime * 3)) * 20;

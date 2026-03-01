@@ -110,34 +110,31 @@ export class KillFeed {
             ctx.textAlign = 'right';
             
             // Draw text with colored team names
-            const text = e.text;
-            const killerColor = e.killerTeam === 'red' ? '#ff4444' : '#4488ff';
-            const victimColor = e.killerTeam === 'red' ? '#4488ff' : '#ff4444'; // Opposite team
+            ctx.textAlign = 'right';
             
-            // Parse text and draw with colors
-            // Format: "⚔ RED killed BLUE" or "🩸 FIRST BLOOD! — RED"
-            let drawX = startX - 10;
+            // Draw full text first to get width
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(text, startX - 10, y + 6);
             
-            // Split by spaces and draw each part
-            const parts = text.split(' ');
-            for (const part of parts) {
-                ctx.save();
-                if (part === 'RED' || part === 'RED➜') {
+            // Now draw team names in color over the white text
+            const textMetrics = ctx.measureText(text);
+            const textStartX = startX - 10 - textMetrics.width;
+            
+            // Parse and draw RED/BLUE in color
+            const words = text.split(' ');
+            let currentX = startX - 10;
+            for (let i = words.length - 1; i >= 0; i--) {
+                const word = words[i];
+                const wordWidth = ctx.measureText(word + ' ').width;
+                
+                if (word.includes('RED')) {
                     ctx.fillStyle = '#ff4444';
-                } else if (part === 'BLUE' || part === 'BLUE➜') {
+                    ctx.fillText(word, currentX, y + 6);
+                } else if (word.includes('BLUE')) {
                     ctx.fillStyle = '#4488ff';
-                } else if (e.isFirstBlood) {
-                    ctx.fillStyle = '#ff4444';
-                } else if (e.isHeadshot) {
-                    ctx.fillStyle = '#ffd700';
-                } else if (e.isDenied) {
-                    ctx.fillStyle = '#bbbbbb';
-                } else {
-                    ctx.fillStyle = '#ffffff';
+                    ctx.fillText(word, currentX, y + 6);
                 }
-                ctx.fillText(part + ' ', drawX - ctx.measureText(part + ' ').width, y + 6);
-                drawX -= ctx.measureText(part + ' ').width;
-                ctx.restore();
+                currentX -= wordWidth;
             }
         }
 
