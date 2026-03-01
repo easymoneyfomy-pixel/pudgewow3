@@ -427,8 +427,7 @@ export class Character {
         // Move Speed upgrades
         this.speed += (this.moveSpeedUpgrades || 0) * 10;
 
-        // Flesh Heap upgrades (+10 HP per purchase) + stacks from kills
-        this.maxHp += (this.fleshHeapUpgrades || 0) * 10;
+        // Flesh Heap from stacks (kills)
         this.maxHp += (this.fleshHeapStacks || 0) * (this.fleshHeapHpPerStack || 8);
 
         for (const item of this.items || []) {
@@ -437,6 +436,7 @@ export class Character {
             if (item.effect === 'burn') this.hasBurn = true;
             if (item.effect === 'rupture') this.hasRupture = true;
             if (item.effect === 'lifesteal') this.hasLifesteal = true;
+            if (item.effect === 'flesh_heap_item') this.maxHp += 10; // Flesh Heap item
         }
     }
 }
