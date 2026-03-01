@@ -75,6 +75,7 @@ export class GameRules {
             if (!this._firstBloodDone) {
                 goldReward = 130;
                 this._firstBloodDone = true;
+                killer.firstBlood = true; // Set flag for client notification
                 console.log(`[FIRST BLOOD] Player ${killer.id} gets ${goldReward}g!`);
             }
             

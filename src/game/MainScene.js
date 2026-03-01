@@ -159,6 +159,14 @@ export class MainScene {
             this._prevAliveStates.set(eData.id, !isDead);
         }
 
+        // ── First Blood notification (only once per game) ──
+        for (const eData of data.entities) {
+            if (eData.type === 'CHARACTER' && eData.firstBlood) {
+                const killerTeam = eData.team === 'red' ? 'blue' : 'red';
+                this.killFeed.addFirstBlood(killerTeam);
+            }
+        }
+
         // ── Hook events (Clashing & Hits) ──
         for (const eData of data.entities) {
             if (eData.type === 'HOOK') {
