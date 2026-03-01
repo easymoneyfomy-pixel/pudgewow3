@@ -63,6 +63,8 @@ export class Character {
         this.spdUpgrades = 0;
         this.distUpgrades = 0;
         this.radUpgrades = 0;
+        this.moveSpeedUpgrades = 0;
+        this.fleshHeapUpgrades = 0;
 
         // Headshot flag
         this.headshotJustHappened = false;
@@ -423,6 +425,8 @@ export class Character {
         // Move Speed upgrades
         this.speed += (this.moveSpeedUpgrades || 0) * 10;
 
+        // Flesh Heap upgrades (+8 HP per upgrade)
+        this.maxHp += (this.fleshHeapUpgrades || 0) * 8;
         this.maxHp += (this.fleshHeapStacks || 0) * (this.fleshHeapHpPerStack || 8);
 
         for (const item of this.items || []) {
