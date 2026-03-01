@@ -148,8 +148,18 @@ export class MainScene {
                 const victimTeam = eData.team;
                 const killerTeam = victimTeam === 'red' ? 'blue' : 'red';
 
-                if (eData.isDenied) {
-                    console.log('[CLIENT] Deny detected for', eData.id, 'isDenied=' + eData.isDenied);
+                // Check for deny (Rot suicide, Headshot on ally, Mine kill on ally)
+                const isDeny = eData.isDenied || 
+                              (eData.isHeadshot && eData.lastAttackerTeam === victimTeam) ||
+                              (eData.killedByMine && eData.lastAttackerTeam === victimTeam);
+                
+                if (isDeny) {
+                    console.log('[CLIENT] Deny detected for', eData.id, 
+                        'Rot=' + eData.isDenied, 
+                        'Headshot=' + eData.isHeadshot, 
+                        'Mine=' + eData.killedByMine,
+                        'lastAttackerTeam=' + eData.lastAttackerTeam,
+                        'victimTeam=' + victimTeam);
                     this.killFeed.addDeny(eData.team, victimTeam);
                 } else if (eData.isHeadshot) {
                     this.killFeed.addKill(killerTeam, victimTeam, true);
@@ -309,6 +319,7 @@ export class MainScene {
         if (this.game.input.isKeyPressed('Digit3')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'DISTANCE' });
         if (this.game.input.isKeyPressed('Digit4')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'RADIUS' });
         if (this.game.input.isKeyPressed('Digit5')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'MOVE_SPEED' });
+        if (this.game.input.isKeyPressed('Digit6')) this.game.network.sendInput({ type: 'UPGRADE', upgradeType: 'FLESH_HEAP' });
 
         // Active items (Z,X,C,V,D,F → slots 0-5)
         const itemKeys = ['KeyZ', 'KeyX', 'KeyC', 'KeyV', 'KeyD', 'KeyF'];
