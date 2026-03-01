@@ -48,7 +48,11 @@ export class GameRules {
 
     handleDeath(entity) {
         if (entity.deniedJustHappened) {
-            // It's a deny! No points for the enemy team.
+            // It's a deny! Give 10g to the killer (ally kill)
+            if (entity.lastAttacker) {
+                entity.lastAttacker.gold += 10;
+                console.log(`[DENY] Player ${entity.lastAttacker.id} gets 10g for deny`);
+            }
             return;
         }
 

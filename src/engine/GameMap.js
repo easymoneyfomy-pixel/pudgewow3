@@ -30,6 +30,7 @@ export class GameMap {
 
         // 2. Thick outer impenetrable boundary (Trees/Obstacles)
         // In WC3, the arena is bordered by dense Felwood trees
+        // Fill entire 2-tile border with obstacles (no gaps)
         for (let x = 0; x < this.width; x++) {
             for (let b = 0; b < 2; b++) {
                 this.grid[x][b] = new Tile(TileType.OBSTACLE);
@@ -38,29 +39,8 @@ export class GameMap {
         }
         for (let y = 0; y < this.height; y++) {
             for (let b = 0; b < 2; b++) {
-                // Checkerboard Trees for a more structured but organic Felwood look
-                // Only place tree if (x+y) is even
-                if ((0 + y) % 2 === 0) {
-                    this.grid[b][y] = new Tile(TileType.OBSTACLE);
-                } else {
-                    // Place a stone/boulder on some "empty" checkerboard slots
-                    this.grid[b][y] = (Math.random() > 0.7) ? new Tile(TileType.STONE) : new Tile(TileType.GROUND);
-                }
-
-                if ((this.width - 1 - b + y) % 2 === 0) {
-                    this.grid[this.width - 1 - b][y] = new Tile(TileType.OBSTACLE);
-                } else {
-                    this.grid[this.width - 1 - b][y] = (Math.random() > 0.7) ? new Tile(TileType.STONE) : new Tile(TileType.GROUND);
-                }
-            }
-        }
-        // Top/Bottom boundaries
-        for (let x = 0; x < this.width; x++) {
-            for (let b = 0; b < 2; b++) {
-                if ((x + b) % 2 === 0) {
-                    this.grid[x][b] = new Tile(TileType.OBSTACLE);
-                    this.grid[x][this.height - 1 - b] = new Tile(TileType.OBSTACLE);
-                }
+                this.grid[b][y] = new Tile(TileType.OBSTACLE);
+                this.grid[this.width - 1 - b][y] = new Tile(TileType.OBSTACLE);
             }
         }
 

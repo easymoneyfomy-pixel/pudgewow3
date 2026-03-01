@@ -140,30 +140,30 @@ export class ParticleSystem {
     }
 
     spawnLevelUp(x, y) {
-        // White sparkles for level up (like DD rune but shorter duration)
+        // White sparkles for level up (LONG duration - visible)
         if (this.particles.length >= this.maxParticles) return;
-        const available = Math.min(15, this.maxParticles - this.particles.length);
+        const available = Math.min(20, this.maxParticles - this.particles.length);
         for (let i = 0; i < available; i++) {
             const angle = Math.random() * Math.PI * 2;
             const dist = Math.random() * 40;
             const px = x + Math.cos(angle) * dist;
             const py = y + Math.sin(angle) * dist;
-            const life = Math.random() * 0.5 + 0.3; // Longer duration (0.3-0.8 sec)
-            const size = Math.random() * 3 + 2;
-            const color = `rgba(255, 255, 255, ${0.7 + Math.random() * 0.3})`;
+            const life = Math.random() * 0.6 + 0.4; // Long duration (0.4-1.0 sec)
+            const size = Math.random() * 4 + 3;
+            const color = `rgba(255, 255, 255, ${0.8 + Math.random() * 0.2})`;
             this.particles.push(new Particle(px, py, color, life, 0, 0, size));
         }
     }
 
     spawnHeal(x, y, amount) {
-        // Green healing particles (very short duration)
+        // Green healing particles (VERY short duration)
         if (this.particles.length >= this.maxParticles) return;
-        const available = Math.min(8, this.maxParticles - this.particles.length);
+        const available = Math.min(6, this.maxParticles - this.particles.length);
         for (let i = 0; i < available; i++) {
             const angle = Math.random() * Math.PI * 2;
             const speed = Math.random() * 50 + 30;
-            const life = Math.random() * 0.15 + 0.1; // Very short duration (0.1-0.25 sec)
-            const size = Math.random() * 3 + 2;
+            const life = Math.random() * 0.1 + 0.05; // Very short duration (0.05-0.15 sec)
+            const size = Math.random() * 2 + 2;
             const color = `rgba(0, ${200 + Math.random() * 55}, 0, ${0.5 + Math.random() * 0.3})`;
             this.particles.push(new Particle(x, y, color, life, Math.cos(angle) * speed, Math.sin(angle) * speed - 30, size));
         }

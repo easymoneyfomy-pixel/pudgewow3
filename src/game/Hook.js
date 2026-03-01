@@ -99,13 +99,15 @@ export class Hook {
             // 3. Tile Collision (Walls & Obstacles)
             const tile = map.getTileAt(this.x, this.y);
 
-            // Grapple flies over everything (including water) - only stops at solid walls
+            // Grapple flies over water ONLY - stops at trees, obstacles, walls
+            const isWater = tile && tile.type === TileType.WATER;
             const isSolid = tile && !tile.isHookable;
+            const isTree = tile && tile.type === 'obstacle';
 
-            if (isSolid) {
+            if (isSolid || isTree) {
                 if (this.hasGrapple || this.isGrappling) {
                     this.isGrappling = true;
-                    // Save the position where hook hit the wall for grapple
+                    // Save the position where hook hit for grapple
                     this.grappleTargetX = this.x;
                     this.grappleTargetY = this.y;
                     // Reset grapple timer when grapple starts
@@ -117,6 +119,9 @@ export class Hook {
                     this.startReturning();
                 }
             }
+            
+            // Grapple can fly over water - don't stop on water tiles
+            // Water is flyable, everything else stops grapple
 
             // Check collisions with entities (unless already returning)
             this.checkEntityCollisions(entityManager);
