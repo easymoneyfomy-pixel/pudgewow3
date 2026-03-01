@@ -171,6 +171,14 @@ export class ServerGame {
 
         character.gold -= itemDef.cost;
 
+        // Flesh Heap is an upgrade, not a regular item - doesn't go into inventory
+        if (itemId === 'flesh_heap') {
+            character.fleshHeapUpgrades = (character.fleshHeapUpgrades || 0) + 1;
+            character.recalculateStats();
+            console.log(`[SHOP] Player ${character.id} bought Flesh Heap upgrade (+10 HP)`);
+            return;
+        }
+
         if (itemDef.consumable) {
             return;
         }
