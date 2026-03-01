@@ -64,6 +64,7 @@ export class Character {
         this.distUpgrades = 0;
         this.radUpgrades = 0;
         this.moveSpeedUpgrades = 0;
+        this.fleshHeapUpgrades = 0; // Flesh Heap upgrades (+10 HP per purchase)
 
         // Headshot flag
         this.headshotJustHappened = false;
@@ -385,6 +386,7 @@ export class Character {
             hookRadius: this.hookRadius,
             isHeadshot: this.headshotJustHappened,
             isDenied: this.wasDenied, // Use wasDenied (saved at death) instead of deniedJustHappened
+            killedByMine: this.killedByMine || false,
             firstBlood: this.firstBlood || false,
             rotActive: this.rotActive,
             fleshHeapStacks: this.fleshHeapStacks || 0,
@@ -425,7 +427,8 @@ export class Character {
         // Move Speed upgrades
         this.speed += (this.moveSpeedUpgrades || 0) * 10;
 
-        // Flesh Heap from items/stacks
+        // Flesh Heap upgrades (+10 HP per purchase) + stacks from kills
+        this.maxHp += (this.fleshHeapUpgrades || 0) * 10;
         this.maxHp += (this.fleshHeapStacks || 0) * (this.fleshHeapHpPerStack || 8);
 
         for (const item of this.items || []) {
@@ -434,7 +437,6 @@ export class Character {
             if (item.effect === 'burn') this.hasBurn = true;
             if (item.effect === 'rupture') this.hasRupture = true;
             if (item.effect === 'lifesteal') this.hasLifesteal = true;
-            if (item.effect === 'flesh_heap') this.maxHp += 8; // Flesh Heap item
         }
     }
 }
